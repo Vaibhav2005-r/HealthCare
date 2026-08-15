@@ -1,51 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 45 14% 96%; /* #F6F5F2 */
+    --foreground: 160 10% 13%; /* #1D2321 */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 160 10% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 189 94% 43%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 142 76% 36%;
-    --secondary-foreground: 355.7 100% 97.3%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 189 94% 43%;
-    --radius: 0.75rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 189 94% 43%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 142 70% 45%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 262 83% 58%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 189 94% 43%;
+    --popover-foreground: 160 10% 13%;
+    --primary: 339 68% 45%; /* #C2255C Prahari Rose */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 170 66% 24%; /* #146356 Sentinel Teal */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 40 12% 92%; /* #EAE8E3 */
+    --muted-foreground: 168 5% 38%; /* #5B6663 Slate */
+    --accent: 34 83% 51%; /* #E8901A Alert Amber */
+    --accent-foreground: 160 10% 13%;
+    --destructive: 4 64% 47%; /* #C6362C SOS Red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 15% 91%;
+    --input: 214 15% 91%;
+    --ring: 339 68% 45%;
+    --radius: 0.5rem;
   }
 }
 
@@ -54,7 +34,46 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background-color: #F6F5F2;
+    color: #1D2321;
+    font-family: 'Noto Sans', 'Noto Sans Devanagari', system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  .font-mono, [data-tabular] {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
   }
 }
+
+/* Grayscale Print Support for Official Government Bulletins */
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .card, .border {
+    border: 1px solid #000000 !important;
+    box-shadow: none !important;
+  }
+  
+  /* Retain high-contrast readability */
+  .badge-low, .badge-moderate, .badge-high, .badge-critical {
+    border: 1px solid #000000 !important;
+    background: transparent !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+  }
+}
+

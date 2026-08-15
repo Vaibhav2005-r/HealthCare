@@ -20,39 +20,52 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['"Noto Sans"', '"Noto Sans Devanagari"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'Consolas', 'monospace'],
+      },
       colors: {
+        // Arogya Prahari Brand Tokens
+        'prahari-rose': '#C2255C',
+        'sentinel-teal': '#146356',
+        'alert-amber': '#E8901A',
+        'sos-red': '#C6362C',
+        'command-paper': '#F6F5F2',
+        'ink': '#1D2321',
+        'slate-gov': '#5B6663',
+        
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: '#C2255C',
+          foreground: '#FFFFFF',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: '#146356',
+          foreground: '#FFFFFF',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: '#C6362C',
+          foreground: '#FFFFFF',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: '#EAE8E3',
+          foreground: '#5B6663',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: '#E8901A',
+          foreground: '#1D2321',
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))',
+          DEFAULT: '#FFFFFF',
+          foreground: '#1D2321',
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
+          DEFAULT: '#FFFFFF',
+          foreground: '#1D2321',
         },
       },
       borderRadius: {
@@ -69,10 +82,16 @@ const config: Config = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        pulseRing: {
+          '0%': { transform: 'scale(0.95)', opacity: '1' },
+          '50%': { transform: 'scale(1.3)', opacity: '0.4' },
+          '100%': { transform: 'scale(0.95)', opacity: '1' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-ring': 'pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
@@ -80,3 +99,4 @@ const config: Config = {
 };
 
 export default config;
+
