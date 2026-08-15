@@ -13,67 +13,139 @@ class ProfileScreen extends ConsumerWidget {
     final profile = mockData.getWorkerProfile();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
         children: [
-          const CircleAvatar(
-            radius: 40,
-            backgroundColor: AppColors.primary,
-            child: Icon(Icons.person, size: 40, color: Colors.white),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            profile['name'],
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            profile['id'],
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 32),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.location_on, color: AppColors.primary),
-              title: const Text('Primary Health Center'),
-              subtitle: Text('${profile['phc']}, ${profile['district']}'),
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border, width: 2),
+                  ),
+                  child: const CircleAvatar(
+                    radius: 48,
+                    backgroundColor: AppColors.primaryLight,
+                    child: Icon(Icons.person, size: 48, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  profile['name'],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.bolt, size: 16, color: AppColors.riskAmber),
+                    const SizedBox(width: 4),
+                    const Text('88% Efficiency', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Container(width: 1, height: 12, color: AppColors.border),
+                    const SizedBox(width: 8),
+                    const Text('Pro Member', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
             ),
           ),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.bar_chart, color: AppColors.primary),
-              title: const Text('Reports This Week'),
-              trailing: Text(
-                '${profile['reportsThisWeek']}',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
-              ),
+          const SizedBox(height: 48),
+          const Text(
+            'Account Details',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
+          const SizedBox(height: 12),
           Card(
-            child: ListTile(
-              leading: const Icon(Icons.language, color: AppColors.primary),
-              title: const Text('Language'),
-              trailing: DropdownButton<String>(
-                value: 'English',
-                items: const [
-                  DropdownMenuItem(value: 'English', child: Text('English')),
-                  DropdownMenuItem(value: 'Hindi', child: Text('Hindi')),
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.badge_outlined, color: AppColors.primary),
+                    ),
+                    title: const Text('Worker ID', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(profile['id']),
+                  ),
+                  const Divider(color: AppColors.border, indent: 64),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.location_on_outlined, color: AppColors.primary),
+                    ),
+                    title: const Text('Primary Health Center', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('${profile['phc']}, ${profile['district']}'),
+                  ),
+                  const Divider(color: AppColors.border, indent: 64),
+                  ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.bar_chart_outlined, color: AppColors.primary),
+                    ),
+                    title: const Text('Reports This Week', style: TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: Text(
+                      '${profile['reportsThisWeek']}',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    ),
+                  ),
                 ],
-                onChanged: (_) {},
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.language, color: AppColors.primary),
+                ),
+                title: const Text('Language', style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: DropdownButton<String>(
+                  value: 'English',
+                  underline: const SizedBox(),
+                  icon: const Icon(Icons.expand_more, color: AppColors.textSecondary),
+                  items: const [
+                    DropdownMenuItem(value: 'English', child: Text('English', style: TextStyle(fontWeight: FontWeight.w600))),
+                    DropdownMenuItem(value: 'Hindi', child: Text('Hindi', style: TextStyle(fontWeight: FontWeight.w600))),
+                  ],
+                  onChanged: (_) {},
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 48),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.surface,
               foregroundColor: AppColors.riskRed,
-              side: const BorderSide(color: AppColors.riskRed),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              elevation: 0,
+              side: const BorderSide(color: AppColors.riskRed, width: 2),
             ),
             icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
+            label: const Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             onPressed: () {
               context.go('/login');
             },

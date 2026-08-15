@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary
-  static const Color primary = Color(0xFF0891B2); // Cyan 600
-  static const Color primaryLight = Color(0xFF22D3EE);
-  static const Color primaryDark = Color(0xFF155E75);
+  // Primary (Sage Green)
+  static const Color primary = Color(0xFF2D4A3E); 
+  static const Color primaryLight = Color(0xFF416556);
+  static const Color primaryDark = Color(0xFF1E332A);
 
-  // Background
-  static const Color background = Color(0xFFF8FAFC); // Slate 50
-  static const Color surface = Colors.white;
+  // Background (Cream/Beige)
+  static const Color background = Color(0xFFF5F0E8); 
+  static const Color surface = Color(0xFFFCFBF8); // Soft off-white for cards
 
   // Text
-  static const Color textPrimary = Color(0xFF0F172A); // Slate 900
-  static const Color textSecondary = Color(0xFF64748B); // Slate 500
-  static const Color textDisabled = Color(0xFF94A3B8); // Slate 400
+  static const Color textPrimary = Color(0xFF1A1A1A); 
+  static const Color textSecondary = Color(0xFF5C6A64); // Muted gray-green
+  static const Color textDisabled = Color(0xFFA3ADAA); 
 
   // Borders
-  static const Color border = Color(0xFFE2E8F0); // Slate 200
+  static const Color border = Color(0xFFE2DFD8);
 
-  // Risk Taxonomy Colors (loaded from shared-spec/design-system.json)
+  // Status/Pill Colors from reference
+  static const Color pillLow = Color(0xFF83A697);
+  static const Color pillRem = Color(0xFFD9936B);
+  static const Color pillInsomniac = Color(0xFF2E2E2E);
+  
+  // Risk Taxonomy Colors (loaded from shared-spec/design-system.json - UNCHANGED)
   static const Color riskGreen = Color(0xFF16A34A);
   static const Color riskAmber = Color(0xFFF59E0B);
   static const Color riskRed = Color(0xFFDC2626);

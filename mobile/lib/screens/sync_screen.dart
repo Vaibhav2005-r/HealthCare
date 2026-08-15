@@ -15,14 +15,42 @@ class SyncScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sync Queue'),
+        title: const Text('Sync Queue', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           Row(
             children: [
-              Text(isOnline ? 'Online' : 'Offline', style: const TextStyle(fontSize: 12)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isOnline ? AppColors.riskGreen.withOpacity(0.1) : AppColors.textDisabled.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isOnline ? AppColors.riskGreen : AppColors.textDisabled,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isOnline ? 'Online' : 'Offline', 
+                      style: TextStyle(
+                        fontSize: 12, 
+                        fontWeight: FontWeight.bold,
+                        color: isOnline ? AppColors.riskGreen : AppColors.textSecondary,
+                      )
+                    ),
+                  ],
+                ),
+              ),
               Switch(
                 value: isOnline,
-                activeColor: Colors.white,
+                activeColor: AppColors.primary,
+                activeTrackColor: AppColors.primaryLight.withOpacity(0.5),
                 onChanged: (val) {
                   ref.read(syncServiceProvider.notifier).toggleOnline();
                 },
@@ -34,8 +62,15 @@ class SyncScreen extends ConsumerWidget {
       body: pendingAsync.when(
         data: (reports) {
           if (reports.isEmpty) {
-            return const Center(
-              child: Text('All reports synced!', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_done_outlined, size: 64, color: AppColors.riskGreen.withOpacity(0.5)),
+                  const SizedBox(height: 16),
+                  const Text('All reports synced!', style: TextStyle(color: AppColors.textSecondary, fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
             );
           }
 
@@ -43,35 +78,87 @@ class SyncScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   itemCount: reports.length,
                   itemBuilder: (context, index) {
                     final report = reports[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: _getRiskColor(report.riskTier),
-                        radius: 8,
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _getRiskColor(report.riskTier),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${report.age}y ${report.sex} • ${report.village}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${report.symptoms.take(3).join(", ")}${report.symptoms.length > 3 ? "..." : ""}',
+                                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _getStatusBadge(report.syncStatus),
+                          ],
+                        ),
                       ),
-                      title: Text('${report.age}y ${report.sex} • ${report.village}'),
-                      subtitle: Text('Symptoms: ${report.symptoms.join(", ")}'),
-                      trailing: _getStatusIcon(report.syncStatus),
                     );
                   },
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.sync),
-                  label: const Text('Sync Now'),
-                  onPressed: () async {
-                    await ref.read(syncServiceProvider.notifier).syncReports();
-                    ref.invalidate(pendingReportsProvider);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(isOnline ? 'Sync Complete' : 'Sync Failed: Offline')),
-                      );
-                    }
-                  },
+              Container(
+                padding: const EdgeInsets.all(24.0),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      offset: const Offset(0, -4),
+                      blurRadius: 16,
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                    ),
+                    icon: const Icon(Icons.sync),
+                    label: const Text('Sync Now', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    onPressed: () async {
+                      await ref.read(syncServiceProvider.notifier).syncReports();
+                      ref.invalidate(pendingReportsProvider);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isOnline ? 'Sync Complete' : 'Sync Failed: Offline'),
+                            backgroundColor: isOnline ? AppColors.riskGreen : AppColors.riskRed,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                 ),
               )
             ],
@@ -91,14 +178,48 @@ class SyncScreen extends ConsumerWidget {
     }
   }
 
-  Widget _getStatusIcon(SyncStatus status) {
+  Widget _getStatusBadge(SyncStatus status) {
+    Color bgColor;
+    Color textColor;
+    String label;
+
     switch (status) {
       case SyncStatus.syncing:
-        return const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2));
+        bgColor = AppColors.pillLow.withOpacity(0.2);
+        textColor = AppColors.pillLow;
+        label = 'Syncing';
+        break;
       case SyncStatus.syncFailed:
-        return const Icon(Icons.error, color: AppColors.riskRed);
+        bgColor = AppColors.riskRed.withOpacity(0.2);
+        textColor = AppColors.riskRed;
+        label = 'Failed';
+        break;
+      case SyncStatus.synced:
+        bgColor = AppColors.riskGreen.withOpacity(0.2);
+        textColor = AppColors.riskGreen;
+        label = 'Synced';
+        break;
       default:
-        return const Icon(Icons.cloud_upload_outlined, color: AppColors.textSecondary);
+        bgColor = AppColors.pillRem.withOpacity(0.2);
+        textColor = AppColors.pillRem;
+        label = 'Pending';
+        break;
     }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 }

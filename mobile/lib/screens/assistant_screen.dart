@@ -43,9 +43,6 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
     setState(() {
       _isLoading = false;
-      // The mock data returns the user message and response, we only need to add the response
-      // But actually, getAssistantResponses returns both. So we can just replace or append.
-      // Let's just append the assistant's part (isUser == false)
       for (var msg in responses) {
         if (!msg.isUser) {
           _messages.add(msg);
@@ -57,12 +54,14 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Clinical Assistant')),
+      appBar: AppBar(
+        title: const Text('Clinical Assistant', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final msg = _messages[index];
@@ -72,33 +71,63 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
           ),
           if (_isLoading)
             const Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(16.0),
               child: CircularProgressIndicator(),
             ),
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: AppColors.border)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a symptom or question...',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send, color: AppColors.primary),
-                  onPressed: _sendMessage,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  offset: const Offset(0, -4),
+                  blurRadius: 16,
                 ),
               ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        hintText: 'Type a symptom or question...',
+                        hintStyle: const TextStyle(color: AppColors.textDisabled),
+                        filled: true,
+                        fillColor: AppColors.background,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onSubmitted: (_) => _sendMessage(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_upward, color: Colors.white),
+                      onPressed: _sendMessage,
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         ],
@@ -111,12 +140,22 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isUser ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: isUser ? null : Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(24).copyWith(
+            bottomRight: isUser ? Radius.zero : const Radius.circular(24),
+            bottomLeft: isUser ? const Radius.circular(24) : Radius.zero,
+          ),
+          boxShadow: [
+            if (!isUser)
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+          ],
         ),
         constraints: const BoxConstraints(maxWidth: 300),
         child: Column(
@@ -124,19 +163,29 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
           children: [
             Text(
               msg.text,
-              style: TextStyle(color: isUser ? Colors.white : AppColors.textPrimary),
+              style: TextStyle(
+                color: isUser ? Colors.white : AppColors.textPrimary,
+                fontSize: 16,
+              ),
             ),
             if (msg.citation != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryLight.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  color: AppColors.primaryLight.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Text(
-                  msg.citation!,
-                  style: const TextStyle(fontSize: 10, color: AppColors.primaryDark),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.library_books_outlined, size: 14, color: AppColors.primaryLight),
+                    const SizedBox(width: 4),
+                    Text(
+                      msg.citation!,
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                    ),
+                  ],
                 ),
               ),
             ]

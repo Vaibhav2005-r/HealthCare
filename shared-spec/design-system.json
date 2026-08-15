@@ -1,0 +1,41 @@
+{
+  "colors": {
+    "brand": {
+      "primary": "#2D4A3E",
+      "primaryLight": "#416556",
+      "primaryDark": "#1E332A"
+    },
+    "background": {
+      "default": "#F5F0E8",
+      "surface": "#FCFBF8"
+    },
+    "text": {
+      "primary": "#1A1A1A",
+      "secondary": "#5C6A64",
+      "disabled": "#A3ADAA"
+    },
+    "border": {
+      "default": "#E2DFD8"
+    },
+    "status": {
+      "success": "#16A34A",
+      "warning": "#F59E0B",
+      "danger": "#DC2626"
+    },
+    "pills": {
+      "low": "#83A697",
+      "rem": "#D9936B",
+      "insomniac": "#2E2E2E"
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter, system-ui, sans-serif"
+  },
+  "shape": {
+    "borderRadius": {
+      "card": "24px",
+      "button": "12px",
+      "pill": "16px"
+    }
+  }
+}

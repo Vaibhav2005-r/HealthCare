@@ -15,7 +15,14 @@ class LoginScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(Icons.health_and_safety, size: 80, color: AppColors.primary),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.health_and_safety, size: 80, color: AppColors.primary),
+              ),
               const SizedBox(height: 32),
               const Text(
                 'Smart Health',
@@ -46,10 +53,13 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
                 onPressed: () {
                   context.go('/report');
                 },
-                child: const Text('Login'),
+                child: const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
