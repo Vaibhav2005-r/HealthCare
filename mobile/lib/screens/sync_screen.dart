@@ -4,6 +4,7 @@ import '../providers/providers.dart';
 import '../services/sync_service.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
+import '../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class SyncScreen extends ConsumerWidget {
   const SyncScreen({super.key});
@@ -84,6 +85,11 @@ class SyncScreen extends ConsumerWidget {
                     final report = reports[index];
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(color: AppColors.border.withOpacity(0.5)),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
@@ -130,20 +136,15 @@ class SyncScreen extends ConsumerWidget {
                   color: AppColors.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      offset: const Offset(0, -4),
-                      blurRadius: 16,
+                      color: AppColors.primary.withOpacity(0.05),
+                      offset: const Offset(0, -8),
+                      blurRadius: 24,
                     ),
                   ],
                 ),
                 child: SafeArea(
                   top: false,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(56),
-                    ),
-                    icon: const Icon(Icons.sync),
-                    label: const Text('Sync Now', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: import_scale_btn.AnimatedScaleButton(
                     onPressed: () async {
                       await ref.read(syncServiceProvider.notifier).syncReports();
                       ref.invalidate(pendingReportsProvider);
@@ -158,6 +159,28 @@ class SyncScreen extends ConsumerWidget {
                         );
                       }
                     },
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.sync, color: Colors.white),
+                          const SizedBox(width: 8),
+                          const Text('Sync Now', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               )

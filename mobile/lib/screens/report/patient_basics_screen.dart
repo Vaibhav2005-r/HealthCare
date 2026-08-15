@@ -5,6 +5,7 @@ import '../../providers/providers.dart';
 import '../../providers/report_draft_provider.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class PatientBasicsScreen extends ConsumerStatefulWidget {
   const PatientBasicsScreen({super.key});
@@ -23,17 +24,21 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
     final mockData = ref.watch(mockDataProvider);
     final villages = mockData.getVillages();
     
-    // Using pending async to drive a "metric"
-    final pendingAsync = ref.watch(pendingReportsProvider);
-    final int pendingCount = pendingAsync.maybeWhen(
+    // Metrics
+    final reportsAsync = ref.watch(pendingReportsProvider);
+    final int pendingCount = reportsAsync.maybeWhen(
       data: (reports) => reports.where((r) => r.syncStatus != SyncStatus.synced).length,
+      orElse: () => 0,
+    );
+    final int todayCount = reportsAsync.maybeWhen(
+      data: (reports) => reports.where((r) => r.createdAt.day == DateTime.now().day).length,
       orElse: () => 0,
     );
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -43,131 +48,177 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                 children: [
                   Row(
                     children: [
-                      const CircleAvatar(
-                        radius: 24,
-                        backgroundColor: AppColors.primaryLight,
-                        child: Icon(Icons.person, color: Colors.white),
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 2),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 26,
+                          backgroundColor: AppColors.primaryLight,
+                          child: Icon(Icons.person, color: Colors.white, size: 28),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Hey, Medic 👋',
+                            'Hello, Medic 👋',
                             style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
                               color: AppColors.textPrimary,
+                              letterSpacing: -0.5,
                             ),
                           ),
                           Text(
                             'Ready for today\'s rounds?',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 15,
                               color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.more_horiz),
-                    onPressed: () {},
-                  ),
                 ],
               ),
               const SizedBox(height: 32),
 
-              // Score-style summary card
-              const Text(
-                'System Status',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      Expanded(
+              // Summary Cards Row
+              Row(
+                children: [
+                  // Sync Health Card
+                  Expanded(
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Sync Health',
-                              style: TextStyle(
-                                fontSize: 16,
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: pendingCount == 0 ? AppColors.riskGreen.withOpacity(0.1) : AppColors.riskAmber.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: pendingCount == 0 ? AppColors.riskGreen.withOpacity(0.3) : AppColors.riskAmber.withOpacity(0.3),
+                                  width: 4,
+                                ),
+                              ),
+                              child: Icon(
+                                pendingCount == 0 ? Icons.cloud_done : Icons.cloud_sync,
+                                color: pendingCount == 0 ? AppColors.riskGreen : AppColors.riskAmber,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              pendingCount == 0 ? 'OK' : '$pendingCount',
+                              style: const TextStyle(
+                                fontSize: 28,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              pendingCount == 0 
-                                ? 'All data is synced and up to date.'
-                                : 'You have $pendingCount pending reports to sync.',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary,
-                              ),
+                            const Text(
+                              'Sync Health',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: pendingCount == 0 ? AppColors.riskGreen.withOpacity(0.1) : AppColors.riskAmber.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          pendingCount == 0 ? 'OK' : '$pendingCount',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: pendingCount == 0 ? AppColors.riskGreen : AppColors.riskAmber,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // "Smart Health Metrics" / Form Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'New Report Basics',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('See All', style: TextStyle(color: AppColors.textSecondary)),
+                  const SizedBox(width: 16),
+                  // Today's Reports Card
+                  Expanded(
+                    child: Card(
+                      margin: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.primary.withOpacity(0.2),
+                                  width: 4,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.assignment_turned_in,
+                                color: AppColors.primary,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '$todayCount',
+                              style: const TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const Text(
+                              'Today\'s Reports',
+                              style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 32),
+
+              // "New Report Basics" Section
+              const Text(
+                'New Report Basics',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 16),
 
               Card(
                 margin: EdgeInsets.zero,
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Progress Bar
+                      Row(
+                        children: List.generate(4, (index) {
+                          return Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: index == 0 ? AppColors.primary : AppColors.border,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 32),
+
                       TextField(
                         controller: _ageController,
                         decoration: const InputDecoration(
@@ -176,7 +227,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                         ),
                         keyboardType: TextInputType.number,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
                         value: _sex,
                         decoration: const InputDecoration(
@@ -190,7 +241,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                           setState(() => _sex = val!);
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                       DropdownButtonFormField<String>(
                         value: _village,
                         decoration: const InputDecoration(
@@ -204,8 +255,8 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                           setState(() => _village = val);
                         },
                       ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
+                      const SizedBox(height: 32),
+                      import_scale_btn.AnimatedScaleButton(
                         onPressed: () {
                           final age = int.tryParse(_ageController.text);
                           if (age != null && _village != null) {
@@ -226,13 +277,29 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                             );
                           }
                         },
-                        child: const Text('Continue to Symptoms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: Container(
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.2),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Text('Continue to Symptoms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
             ],
           ),
         ),

@@ -6,6 +6,7 @@ import '../../providers/report_draft_provider.dart';
 import '../../providers/providers.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class ReviewScreen extends ConsumerWidget {
   const ReviewScreen({super.key});
@@ -20,10 +21,27 @@ class ReviewScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Progress Bar (Step 4 of 4)
+              Row(
+                children: List.generate(4, (index) {
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 32),
+
               Card(
                 margin: EdgeInsets.zero,
                 child: Padding(
@@ -105,10 +123,7 @@ class ReviewScreen extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                ),
+              import_scale_btn.AnimatedScaleButton(
                 onPressed: () async {
                   final triage = ref.read(triageProvider);
                   final riskTier = triage.classify(draft.symptoms, draft.durationDays ?? 1);
@@ -128,7 +143,23 @@ class ReviewScreen extends ConsumerWidget {
                   // Pass the report to the triage result screen
                   context.go('/triage-result', extra: report);
                 },
-                child: const Text('Submit & Triage', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text('Submit & Triage', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                ),
               ),
             ],
           ),

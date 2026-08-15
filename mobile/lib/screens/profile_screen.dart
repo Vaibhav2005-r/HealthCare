@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/providers.dart';
 import '../theme/app_colors.dart';
+import '../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -27,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: AppColors.background,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border, width: 2),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 3),
                   ),
                   child: const CircleAvatar(
                     radius: 48,
@@ -69,6 +70,11 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Card(
             margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Column(
@@ -112,6 +118,11 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           Card(
             margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: ListTile(
@@ -135,20 +146,26 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 48),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.surface,
-              foregroundColor: AppColors.riskRed,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 0,
-              side: const BorderSide(color: AppColors.riskRed, width: 2),
-            ),
-            icon: const Icon(Icons.logout),
-            label: const Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          import_scale_btn.AnimatedScaleButton(
             onPressed: () {
               context.go('/login');
             },
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.textSecondary.withOpacity(0.3), width: 1.5),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.logout, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
           ),
         ],
       ),

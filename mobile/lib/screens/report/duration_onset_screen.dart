@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/report_draft_provider.dart';
 import '../../theme/app_colors.dart';
+import '../../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class DurationOnsetScreen extends ConsumerStatefulWidget {
   const DurationOnsetScreen({super.key});
@@ -31,10 +32,27 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Progress Bar (Step 3 of 4)
+              Row(
+                children: List.generate(4, (index) {
+                  return Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: index < 3 ? AppColors.primary : AppColors.border,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 32),
+
               Card(
                 margin: EdgeInsets.zero,
                 child: Padding(
@@ -107,15 +125,28 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                 ),
               ),
               const Spacer(),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(56),
-                ),
+              import_scale_btn.AnimatedScaleButton(
                 onPressed: () {
                   ref.read(reportDraftProvider.notifier).updateDuration(_days.toInt());
                   context.go('/report/review');
                 },
-                child: const Text('Next: Review', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text('Next: Review', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                ),
               ),
             ],
           ),

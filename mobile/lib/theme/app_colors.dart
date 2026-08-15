@@ -8,7 +8,7 @@ class AppColors {
 
   // Background (Cream/Beige)
   static const Color background = Color(0xFFF5F0E8); 
-  static const Color surface = Color(0xFFFCFBF8); // Soft off-white for cards
+  static const Color surface = Color(0xFFFFFDF8); // Soft off-white for cards
 
   // Text
   static const Color textPrimary = Color(0xFF1A1A1A); 
