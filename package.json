@@ -1,0 +1,23 @@
+{
+  "name": "smarthealth-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "shared/*",
+    "web",
+    "mobile"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "web": "npm run dev --workspace=web",
+    "mobile": "npm run start --workspace=mobile",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
