@@ -1,3 +1,4 @@
+import 'dart:math' as dart_math;
 import '../models/models.dart';
 
 class MockDataService {
@@ -50,5 +51,62 @@ class MockDataService {
 
   List<String> getVillages() {
     return ['Rampur', 'Madhopur', 'Bishunpur', 'Kalyanpur', 'Chandipur'];
+  }
+
+  List<Report> generateHistoricalReports() {
+    final List<Report> reports = [];
+    final now = DateTime.now();
+    final random = dart_math.Random(42); // deterministic
+
+    final symptomSets = [
+      ['Fever', 'Cough'],
+      ['Headache', 'Nausea', 'Vomiting'],
+      ['Diarrhea', 'Dehydration'],
+      ['Shortness of breath', 'Chest pain'],
+      ['Rash', 'Itching'],
+      ['Fatigue', 'Muscle aches'],
+      ['Loss of taste', 'Loss of smell'],
+      ['Sore throat', 'Runny nose'],
+    ];
+
+    for (int i = 0; i < 45; i++) { // Last 45 days
+      final date = now.subtract(Duration(days: i));
+      
+      // Randomly generate 0 to 4 reports per day
+      int reportsToday = 0;
+      double chance = random.nextDouble();
+      if (chance > 0.8) { reportsToday = 3; }
+      else if (chance > 0.5) { reportsToday = 2; }
+      else if (chance > 0.2) { reportsToday = 1; }
+
+      for (int j = 0; j < reportsToday; j++) {
+        final r = random.nextDouble();
+        RiskTier tier = RiskTier.green;
+        if (r > 0.85) { tier = RiskTier.red; }
+        else if (r > 0.5) { tier = RiskTier.amber; }
+
+        final symptoms = symptomSets[random.nextInt(symptomSets.length)];
+        
+        final reportDate = date.subtract(Duration(hours: random.nextInt(8)));
+
+        reports.add(
+          Report(
+            id: 'mock_${i}_$j',
+            patientName: 'Patient ${random.nextInt(1000)}',
+            age: 18 + random.nextInt(50),
+            sex: random.nextBool() ? 'Male' : 'Female',
+            village: getVillages()[random.nextInt(getVillages().length)],
+            symptoms: symptoms,
+            comorbidities: const [],
+            durationDays: 1 + random.nextInt(5),
+            riskTier: tier,
+            syncStatus: SyncStatus.synced,
+            createdAt: reportDate,
+          )
+        );
+      }
+    }
+
+    return reports;
   }
 }

@@ -10,6 +10,7 @@ import 'screens/auth/unlock_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/home_screen.dart';
 import 'screens/report/patient_basics_screen.dart';
+import 'screens/report/medical_background_screen.dart';
 import 'screens/report/image_capture_screen.dart';
 import 'screens/report/symptoms_screen.dart';
 import 'screens/report/duration_onset_screen.dart';
@@ -85,12 +86,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const PatientBasicsScreen(),
             routes: [
               GoRoute(
+                path: 'medical-background',
+                builder: (context, state) => const MedicalBackgroundScreen(),
+              ),
+              GoRoute(
                 path: 'image',
                 builder: (context, state) => const ImageCaptureScreen(),
               ),
               GoRoute(
                 path: 'symptoms',
-                builder: (context, state) => const SymptomsScreen(),
+                builder: (context, state) => SymptomsScreen(),
               ),
               GoRoute(
                 path: 'duration',

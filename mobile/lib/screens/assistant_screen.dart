@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../theme/app_colors.dart';
 import '../services/voice_service.dart';
+import '../widgets/coach_mark.dart';
 
 class AssistantScreen extends ConsumerStatefulWidget {
   const AssistantScreen({super.key});
@@ -35,7 +37,13 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
 
     setState(() {
       _controller.clear();
-      _messages.add(AssistantMessage(id: DateTime.now().toString(), text: query, isUser: true));
+      _messages.add(
+        AssistantMessage(
+          id: DateTime.now().toString(),
+          text: query,
+          isUser: true,
+        ),
+      );
       _isLoading = true;
     });
 
@@ -56,7 +64,10 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Clinical Assistant', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Clinical Assistant',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [
@@ -96,10 +107,15 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                       controller: _controller,
                       decoration: InputDecoration(
                         hintText: 'Type a symptom or question...',
-                        hintStyle: const TextStyle(color: AppColors.textDisabled),
+                        hintStyle: const TextStyle(
+                          color: AppColors.textDisabled,
+                        ),
                         filled: true,
                         fillColor: AppColors.background,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -117,20 +133,29 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_upward, color: Colors.white),
-                      onPressed: _sendMessage,
+                  CoachMark(
+                    id: 'assistant_mic',
+                    title: 'Voice Input',
+                    message: 'Tap the mic to dictate your notes in your native language.',
+                    icon: Icons.mic,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.mic,
+                          color: Colors.white,
+                        ),
+                        onPressed: _sendMessage,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -177,7 +202,11 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                 ),
                 if (!isUser)
                   IconButton(
-                    icon: const Icon(Icons.volume_up_outlined, size: 20, color: AppColors.primary),
+                    icon: Icon(
+                      Icons.volume_up,
+                      size: 20,
+                      color: AppColors.primary,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () {
@@ -189,7 +218,10 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
             if (msg.citation != null) ...[
               const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
@@ -197,16 +229,24 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.library_books_outlined, size: 14, color: AppColors.primaryLight),
+                    Icon(
+                      Icons.library_books_outlined,
+                      size: 14,
+                      color: AppColors.primaryLight,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       msg.citation!,
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryDark,
+                      ),
                     ),
                   ],
                 ),
               ),
-            ]
+            ],
           ],
         ),
       ),

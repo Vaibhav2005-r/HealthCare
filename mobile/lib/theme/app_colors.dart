@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary (Sage Green)
-  static const Color primary = Color(0xFF2D4A3E); 
-  static const Color primaryLight = Color(0xFF416556);
-  static const Color primaryDark = Color(0xFF1E332A);
+  // Primary (Deep Teal / Blue)
+  static const Color primary = Color(0xFF1A5F7A); 
+  static const Color primaryLight = Color(0xFF2C7D9E);
+  static const Color primaryDark = Color(0xFF104052);
 
-  // Background (Cream/Beige)
-  static const Color background = Color(0xFFF5F0E8); 
-  static const Color surface = Color(0xFFFFFDF8); // Soft off-white for cards
+  // Background (Soft blue-gray / pale mint)
+  static const Color background = Color(0xFFF2F6F7); // Soft blue-gray
+  static const Color surface = Color(0xFFFFFFFF); // Clean white for cards
 
   // Text
-  static const Color textPrimary = Color(0xFF1A1A1A); 
-  static const Color textSecondary = Color(0xFF5C6A64); // Muted gray-green
-  static const Color textDisabled = Color(0xFFA3ADAA); 
+  static const Color textPrimary = Color(0xFF1E293B); 
+  static const Color textSecondary = Color(0xFF64748B); // Muted slate gray
+  static const Color textDisabled = Color(0xFF94A3B8); 
 
   // Borders
   static const Color border = Color(0xFFE2DFD8);

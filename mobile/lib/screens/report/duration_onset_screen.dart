@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../providers/report_draft_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animated_scale_button.dart' as import_scale_btn;
@@ -9,7 +10,8 @@ class DurationOnsetScreen extends ConsumerStatefulWidget {
   const DurationOnsetScreen({super.key});
 
   @override
-  ConsumerState<DurationOnsetScreen> createState() => _DurationOnsetScreenState();
+  ConsumerState<DurationOnsetScreen> createState() =>
+      _DurationOnsetScreenState();
 }
 
 class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
@@ -26,16 +28,12 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const bgColor = Color(0xFFF5F0E8);
-    const accentColor = Color(0xFF1A5F7A);
-    const surfaceColor = Color(0xFFFFFDF8);
-
     return Scaffold(
-      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Step 4 of 5: Duration', style: TextStyle(fontSize: 16, color: Color(0xFF5B6663))),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: const Text(
+          'Step 5 of 6: Onset Date',
+          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+        ),
         centerTitle: true,
       ),
       body: SafeArea(
@@ -46,13 +44,15 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
             children: [
               // Progress Bar
               Row(
-                children: List.generate(5, (index) {
+                children: List.generate(6, (index) {
                   return Expanded(
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index <= 3 ? accentColor : Colors.grey.withOpacity(0.3),
+                        color: index <= 4
+                            ? AppColors.primary
+                            : Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -60,24 +60,24 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                 }),
               ),
               const SizedBox(height: 24),
-              
+
               const Text(
-                'How long have they felt sick?',
+                'When did symptoms begin?',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1D2321),
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 24),
 
               Container(
                 decoration: BoxDecoration(
-                  color: surfaceColor,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -89,51 +89,88 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.access_time, size: 32, color: accentColor),
+                      child: Icon(
+                        Icons.schedule,
+                        size: 32,
+                        color: AppColors.primary,
+                      ),
                     ),
-                    const SizedBox(height: 48),
+                    const SizedBox(height: 24),
                     Text(
-                      '${_days.toInt()} Day${_days.toInt() == 1 ? '' : 's'}',
+                      '${_days.toInt()} Day${_days.toInt() == 1 ? '' : 's'} Ago',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 48,
-                        color: accentColor,
+                        fontSize: 32,
+                        color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                         height: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 48),
-                    SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: accentColor,
-                        inactiveTrackColor: accentColor.withOpacity(0.3),
-                        thumbColor: accentColor,
-                        overlayColor: accentColor.withOpacity(0.2),
-                        trackHeight: 8.0,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14.0),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 28.0),
-                      ),
-                      child: Slider(
-                        value: _days,
-                        min: 1,
-                        max: 14,
-                        divisions: 13,
-                        onChanged: (val) {
-                          setState(() => _days = val);
-                        },
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('1', style: TextStyle(color: Color(0xFF5B6663), fontWeight: FontWeight.bold)),
-                          Text('14', style: TextStyle(color: Color(0xFF5B6663), fontWeight: FontWeight.bold)),
-                        ],
+                    const SizedBox(height: 24),
+                    import_scale_btn.AnimatedScaleButton(
+                      onPressed: () async {
+                        final now = DateTime.now();
+                        final initialDate = now.subtract(
+                          Duration(days: _days.toInt()),
+                        );
+
+                        final selected = await showDatePicker(
+                          context: context,
+                          initialDate: initialDate,
+                          firstDate: now.subtract(const Duration(days: 30)),
+                          lastDate: now,
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: AppColors.primary,
+                                  onPrimary: Colors.white,
+                                  onSurface: AppColors.textPrimary,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+
+                        if (selected != null) {
+                          final diff = now.difference(selected).inDays;
+                          setState(() {
+                            // Ensure at least 1 day if it's today
+                            _days = diff < 1 ? 1.0 : diff.toDouble();
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_month,
+                              color: AppColors.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Select Date',
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -142,17 +179,26 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
               const Spacer(),
               import_scale_btn.AnimatedScaleButton(
                 onPressed: () {
-                  ref.read(reportDraftProvider.notifier).updateDuration(_days.toInt());
+                  ref
+                      .read(reportDraftProvider.notifier)
+                      .updateDuration(_days.toInt());
                   context.push('/report/review');
                 },
                 child: Container(
                   height: 56,
                   decoration: BoxDecoration(
-                    color: accentColor,
+                    color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
-                    child: Text('Next: Review', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: Text(
+                      'Next: Review',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
               ),

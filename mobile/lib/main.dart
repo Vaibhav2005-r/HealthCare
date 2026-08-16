@@ -4,7 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'router.dart';
 
-void main() {
+import 'services/local_db_service.dart';
+import 'services/mock_data.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Seed database
+  final dbService = LocalDbService();
+  final mockDataService = MockDataService();
+  await dbService.seedDatabaseIfNeeded(mockDataService.generateHistoricalReports());
+
   runApp(
     const ProviderScope(
       child: SmartHealthApp(),

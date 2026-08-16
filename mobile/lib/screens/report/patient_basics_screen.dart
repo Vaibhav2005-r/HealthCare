@@ -15,6 +15,8 @@ class PatientBasicsScreen extends ConsumerStatefulWidget {
 }
 
 class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
+  final _nameController = TextEditingController();
+  final _contactController = TextEditingController();
   final _ageController = TextEditingController();
   String _sex = 'Male';
   String? _village;
@@ -93,6 +95,8 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _contactController.dispose();
     _ageController.dispose();
     super.dispose();
   }
@@ -149,7 +153,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Step 1 of 5: Patient Basics', style: TextStyle(fontSize: 16, color: Color(0xFF5B6663))),
+        title: const Text('Step 1 of 6: Patient Basics', style: TextStyle(fontSize: 16, color: Color(0xFF5B6663))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -162,7 +166,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
             children: [
               // Progress Bar
               Row(
-                children: List.generate(5, (index) {
+                children: List.generate(6, (index) {
                   return Expanded(
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -208,6 +212,17 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
+                    TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Patient Name (or local ID)',
+                        prefixIcon: Icon(Icons.badge, color: accentColor),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        filled: true,
+                        fillColor: bgColor,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Expanded(
@@ -216,7 +231,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               labelText: 'Age',
-                              prefixIcon: const Icon(Icons.cake_outlined, color: accentColor),
+                              prefixIcon: Icon(Icons.cake, color: accentColor),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                               filled: true,
                               fillColor: bgColor,
@@ -229,7 +244,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                             value: _sex,
                             decoration: InputDecoration(
                               labelText: 'Sex',
-                              prefixIcon: const Icon(Icons.people_outline, color: accentColor),
+                              prefixIcon: Icon(Icons.wc, color: accentColor),
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                               filled: true,
                               fillColor: bgColor,
@@ -247,13 +262,25 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                       value: _village,
                       decoration: InputDecoration(
                         labelText: 'Village / PHC',
-                        prefixIcon: const Icon(Icons.location_on_outlined, color: accentColor),
+                        prefixIcon: Icon(Icons.location_on, color: accentColor),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         filled: true,
                         fillColor: bgColor,
                       ),
                       items: villages.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
                       onChanged: (val) => setState(() => _village = val),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _contactController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'Contact Number (Optional)',
+                        prefixIcon: Icon(Icons.call, color: accentColor),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        filled: true,
+                        fillColor: bgColor,
+                      ),
                     ),
                   ],
                 ),
@@ -263,10 +290,13 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
               import_scale_btn.AnimatedScaleButton(
                 onPressed: () {
                   final age = int.tryParse(_ageController.text);
-                  if (age != null && _village != null) {
+                  final name = _nameController.text.trim();
+                  if (age != null && _village != null && name.isNotEmpty) {
                     ref.read(reportDraftProvider.notifier).updateBasics(
+                      patientName: name,
                       age: age,
                       sex: _sex,
+                      contactNumber: _contactController.text.trim().isEmpty ? null : _contactController.text.trim(),
                       village: _village!,
                     );
                     ref.read(reportDraftProvider.notifier).updateLocation(
@@ -275,7 +305,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                       accuracy: _location?.accuracy,
                       reason: _manualLocationReason,
                     );
-                    context.push('/report/image');
+                    context.push('/report/medical-background');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -293,7 +323,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
-                    child: Text('Continue to Image Capture', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: Text('Continue to Medical Background', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ),

@@ -1,11 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ReportDraft {
+  final String? patientName;
   final int? age;
   final String? sex;
+  final String? contactNumber;
   final String? village;
   final List<String> symptoms;
   final int? durationDays;
+  final double? temperature;
+  final String? temperatureUnit;
+  final List<String> comorbidities;
+  final String? medicationTaken;
   final double? locationLat;
   final double? locationLng;
   final double? locationAccuracy;
@@ -13,11 +19,17 @@ class ReportDraft {
   final String? imagePath;
 
   ReportDraft({
+    this.patientName,
     this.age,
     this.sex,
+    this.contactNumber,
     this.village,
     this.symptoms = const [],
     this.durationDays,
+    this.temperature,
+    this.temperatureUnit = 'C',
+    this.comorbidities = const [],
+    this.medicationTaken,
     this.locationLat,
     this.locationLng,
     this.locationAccuracy,
@@ -26,11 +38,17 @@ class ReportDraft {
   });
 
   ReportDraft copyWith({
+    String? patientName,
     int? age,
     String? sex,
+    String? contactNumber,
     String? village,
     List<String>? symptoms,
     int? durationDays,
+    double? temperature,
+    String? temperatureUnit,
+    List<String>? comorbidities,
+    String? medicationTaken,
     double? locationLat,
     double? locationLng,
     double? locationAccuracy,
@@ -38,11 +56,17 @@ class ReportDraft {
     String? imagePath,
   }) {
     return ReportDraft(
+      patientName: patientName ?? this.patientName,
       age: age ?? this.age,
       sex: sex ?? this.sex,
+      contactNumber: contactNumber ?? this.contactNumber,
       village: village ?? this.village,
       symptoms: symptoms ?? this.symptoms,
       durationDays: durationDays ?? this.durationDays,
+      temperature: temperature != null ? (temperature == -1 ? null : temperature) : this.temperature,
+      temperatureUnit: temperatureUnit ?? this.temperatureUnit,
+      comorbidities: comorbidities ?? this.comorbidities,
+      medicationTaken: medicationTaken ?? this.medicationTaken,
       locationLat: locationLat ?? this.locationLat,
       locationLng: locationLng ?? this.locationLng,
       locationAccuracy: locationAccuracy ?? this.locationAccuracy,
@@ -55,8 +79,34 @@ class ReportDraft {
 class ReportDraftNotifier extends StateNotifier<ReportDraft> {
   ReportDraftNotifier() : super(ReportDraft());
 
-  void updateBasics({required int age, required String sex, required String village}) {
-    state = state.copyWith(age: age, sex: sex, village: village);
+  void updateBasics({
+    required String patientName,
+    required int age,
+    required String sex,
+    String? contactNumber,
+    required String village,
+  }) {
+    state = state.copyWith(
+      patientName: patientName,
+      age: age,
+      sex: sex,
+      contactNumber: contactNumber,
+      village: village,
+    );
+  }
+
+  void updateMedicalBackground({
+    double? temperature,
+    String? temperatureUnit,
+    List<String>? comorbidities,
+    String? medicationTaken,
+  }) {
+    state = state.copyWith(
+      temperature: temperature ?? -1, // Use -1 to indicate clearing if null
+      temperatureUnit: temperatureUnit,
+      comorbidities: comorbidities,
+      medicationTaken: medicationTaken,
+    );
   }
 
   void updateLocation({double? lat, double? lng, double? accuracy, String? reason}) {

@@ -71,7 +71,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       backgroundColor: AppColors.border,
                     ),
                     Center(
-                      child: Icon(Icons.favorite, size: 80, color: AppColors.primary),
+                      child: Icon(Icons.monitor_heart, size: 80, color: AppColors.primary),
                     ),
                   ],
                 ),
@@ -105,7 +105,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                     const SizedBox(height: 8),
                     // Main Risk Card
               Card(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
                 margin: EdgeInsets.zero,
@@ -116,13 +116,13 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          report.riskTier == RiskTier.green ? Icons.check_circle_outline :
-                          report.riskTier == RiskTier.amber ? Icons.warning_amber_rounded :
-                          Icons.emergency_outlined, 
+                          report.riskTier == RiskTier.green ? Icons.check_circle :
+                          report.riskTier == RiskTier.amber ? Icons.warning :
+                          Icons.error, 
                           size: 80, 
                           color: Colors.white
                         ),
@@ -136,7 +136,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Based on reported indicators',
-                        style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -168,7 +168,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                         children: report.symptoms.map((s) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1A5F7A).withOpacity(0.1),
+                            color: const Color(0xFF1A5F7A).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
@@ -186,7 +186,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.timer_outlined, color: const Color(0xFF5B6663), size: 24),
+                            Icon(Icons.history, color: const Color(0xFF5B6663), size: 24),
                             const SizedBox(width: 12),
                             Text(
                               'Duration: ${report.durationDays} days',
@@ -213,7 +213,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.auto_awesome, color: const Color(0xFF1A5F7A)),
+                      Icon(Icons.library_books, color: const Color(0xFF1A5F7A)),
                       const SizedBox(width: 8),
                       Text('View Clinical Guidance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1D2321))),
                     ],
@@ -245,8 +245,13 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                     border: Border.all(color: Colors.white, width: 2),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Center(
-                    child: Text('Save Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.save, color: Colors.white),
+                      const SizedBox(width: 8),
+                      const Text('Save Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ],
                   ),
                 ),
               ),

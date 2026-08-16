@@ -66,7 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: accentColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.health_and_safety,
                     size: 40,
                     color: accentColor,
@@ -115,7 +115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
                     labelStyle: TextStyle(color: const Color(0xFF1D2321).withOpacity(0.5)),
-                    prefixIcon: const Icon(Icons.phone_outlined, color: accentColor),
+                    prefixIcon: Icon(Icons.phone, color: accentColor),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide.none,
@@ -152,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         value: role,
                         child: Row(
                           children: [
-                            const Icon(Icons.badge_outlined, color: accentColor, size: 20),
+                            Icon(Icons.badge, color: accentColor, size: 20),
                             const SizedBox(width: 12),
                             Text(role),
                           ],
@@ -198,7 +198,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.lock_outline, size: 14, color: const Color(0xFF5B6663).withOpacity(0.8)),
+                  Icon(Icons.lock, size: 14, color: const Color(0xFF5B6663).withOpacity(0.8)),
                   const SizedBox(width: 6),
                   Text(
                     'Secure · Works Offline',
