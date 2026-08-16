@@ -248,8 +248,8 @@ function MapViewUpdater({ center, zoom }: { center: [number, number]; zoom: numb
 function createCustomPin(color: string, label: string, isCritical = false) {
   const html = `
     <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-      ${isCritical ? `<div style="position: absolute; width: 34px; height: 34px; border-radius: 50%; background-color: ${color}; opacity: 0.4; animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>` : ''}
-      <div style="width: 22px; height: 22px; border-radius: 50%; background-color: ${color}; border: 2.5px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px; font-family: monospace;">
+      ${isCritical ? `<div style="position: absolute; width: 38px; height: 38px; border-radius: 50%; background-color: ${color}; opacity: 0.3; filter: blur(4px); animation: ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>` : ''}
+      <div style="width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, ${color}dd, ${color}); backdrop-filter: blur(4px); border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 11px; font-family: monospace;">
         ${label}
       </div>
     </div>
@@ -257,9 +257,9 @@ function createCustomPin(color: string, label: string, isCritical = false) {
   return L.divIcon({
     html,
     className: 'custom-outbreak-pin',
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -14],
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -16],
   });
 }
 
@@ -350,25 +350,26 @@ export default function MapComponent({
               {/* Outer Spread Ring */}
               <Circle
                 center={[cluster.lat, cluster.lng]}
-                radius={isHighRisk ? 38000 * intensity : 24000 * intensity}
+                radius={isHighRisk ? 42000 * intensity : 28000 * intensity}
                 pathOptions={{
                   color: color,
                   fillColor: color,
-                  fillOpacity: isHighRisk ? 0.18 : 0.09,
-                  weight: 1,
-                  dashArray: isHighRisk ? '4, 4' : undefined
+                  fillOpacity: isHighRisk ? 0.35 : 0.20,
+                  weight: 0,
+                  className: 'heatmap-circle'
                 }}
               />
 
               {/* Core Outbreak Density Heat Circle */}
               <Circle
                 center={[cluster.lat, cluster.lng]}
-                radius={isHighRisk ? 18000 * intensity : 12000 * intensity}
+                radius={isHighRisk ? 22000 * intensity : 14000 * intensity}
                 pathOptions={{
                   color: color,
                   fillColor: color,
-                  fillOpacity: isHighRisk ? 0.45 : 0.25,
-                  weight: 2,
+                  fillOpacity: isHighRisk ? 0.65 : 0.40,
+                  weight: 0,
+                  className: 'heatmap-core'
                 }}
               />
             </React.Fragment>

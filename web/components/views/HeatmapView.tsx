@@ -137,29 +137,29 @@ export function HeatmapView({ districts, activeFilter, selectedDistrict, onSelec
         </div>
 
         {/* Map Legend Overlay (Bottom Left) */}
-        <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-sm border border-[#E2E8F0] p-3.5 rounded-xl shadow-lg text-xs space-y-2">
-          <div className="font-bold text-[#1D2321] text-[11px] uppercase tracking-wider">
-            Risk Classification Scale
+        <div className="absolute bottom-4 left-4 z-[400] bg-white/80 backdrop-blur-md border border-[#E2E8F0]/50 p-4 rounded-xl shadow-xl text-xs space-y-3">
+          <div className="font-extrabold text-[#1D2321] text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-1.5 h-4 bg-[#C2255C] rounded-sm inline-block"></span> Risk Classification
           </div>
-          <div className="space-y-1.5 text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#8B0000] border border-white shadow-sm animate-pulse" />
-              <span className="font-medium text-[#1D2321]">Critical Outbreak (&gt;0.80)</span>
+          <div className="space-y-2 text-[11px]">
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-gradient-to-br from-[#8B0000] to-[#8B0000]/60 shadow-[0_0_8px_rgba(139,0,0,0.5)] animate-pulse" />
+              <span className="font-semibold text-[#1D2321]">Critical Outbreak (&gt;0.80)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#C6362C] border border-white shadow-sm" />
-              <span className="font-medium text-[#1D2321]">High Risk (&gt;0.70)</span>
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-gradient-to-br from-[#C6362C] to-[#C6362C]/60 shadow-[0_0_6px_rgba(198,54,44,0.4)]" />
+              <span className="font-semibold text-[#1D2321]">High Risk (&gt;0.70)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#E8901A] border border-white shadow-sm" />
-              <span className="font-medium text-[#1D2321]">Moderate Risk (0.40 - 0.70)</span>
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-gradient-to-br from-[#E8901A] to-[#E8901A]/60 shadow-[0_0_4px_rgba(232,144,26,0.3)]" />
+              <span className="font-semibold text-[#1D2321]">Moderate Risk (0.40 - 0.70)</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-[#146356] border border-white shadow-sm" />
-              <span className="font-medium text-[#1D2321]">Low / Normal (&lt;0.40)</span>
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-gradient-to-br from-[#146356] to-[#146356]/60 shadow-[0_0_4px_rgba(20,99,86,0.3)]" />
+              <span className="font-semibold text-[#1D2321]">Low / Normal (&lt;0.40)</span>
             </div>
           </div>
-          <div className="pt-2 border-t border-[#E2E8F0] text-[10px] text-[#5B6663]">
+          <div className="pt-2 border-t border-[#E2E8F0] text-[10px] text-[#5B6663] font-medium">
             Desaturated CartoDB base tiles for optical clarity
           </div>
         </div>

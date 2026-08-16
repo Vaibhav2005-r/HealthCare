@@ -28,6 +28,7 @@ import {
 import RagAdminSection from '@/components/features/RagAdminSection';
 import ResourceManagementSection from '@/components/features/ResourceManagementSection';
 import { toast } from 'sonner';
+import { useLanguage, Language } from '@/lib/i18n';
 
 export default function ArogyaPrahariDashboard() {
   const [activeTab, setActiveTab] = useState<NavTab>('overview');
@@ -124,6 +125,7 @@ export default function ArogyaPrahariDashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
   const [activeUtilityModal, setActiveUtilityModal] = useState<'NONE' | 'RAG' | 'RESOURCES'>('NONE');
+  const { t, language, setLanguage } = useLanguage();
 
   // Load live telemetry from FastAPI backend
   const loadData = async () => {
@@ -239,15 +241,15 @@ export default function ArogyaPrahariDashboard() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-[#1D2321] capitalize tracking-tight">
-                  {activeTab === 'overview' && 'Executive Surveillance Overview'}
-                  {activeTab === 'heatmap' && 'GIS Spatiotemporal Heatmap'}
-                  {activeTab === 'districts' && 'District Surveillance Matrix'}
-                  {activeTab === 'alerts' && 'Incident & LLM Alert Feed'}
-                  {activeTab === 'reports' && 'Government Governance Bulletin'}
+                  {activeTab === 'overview' && t('header.executive_overview')}
+                  {activeTab === 'heatmap' && t('header.gis_heatmap')}
+                  {activeTab === 'districts' && t('header.district_matrix')}
+                  {activeTab === 'alerts' && t('header.incident_feed')}
+                  {activeTab === 'reports' && t('header.gov_bulletin')}
                 </span>
                 <span className="text-xs text-[#5B6663] hidden sm:inline">•</span>
                 <span className="text-xs font-semibold text-[#5B6663] hidden sm:inline">
-                  Maharashtra Surveillance Grid
+                  {t('header.maharashtra_grid')}
                 </span>
               </div>
             </div>
@@ -255,6 +257,22 @@ export default function ArogyaPrahariDashboard() {
 
           {/* Quick Header Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
+            
+            {/* Language Switcher */}
+            <div className="flex items-center bg-[#F6F5F2] border border-[#E2E8F0] rounded-lg p-0.5 mr-2">
+              <button 
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${language === 'en' ? 'bg-white shadow-sm text-[#1D2321]' : 'text-[#5B6663] hover:text-[#1D2321]'}`}
+              >EN</button>
+              <button 
+                onClick={() => setLanguage('mr')}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${language === 'mr' ? 'bg-white shadow-sm text-[#1D2321]' : 'text-[#5B6663] hover:text-[#1D2321]'}`}
+              >MR</button>
+              <button 
+                onClick={() => setLanguage('hi')}
+                className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${language === 'hi' ? 'bg-white shadow-sm text-[#1D2321]' : 'text-[#5B6663] hover:text-[#1D2321]'}`}
+              >HI</button>
+            </div>
             
             {/* RAG Query Helper */}
             <button
@@ -266,7 +284,7 @@ export default function ArogyaPrahariDashboard() {
               }`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>Medical Guidelines RAG</span>
+              <span>{t('header.rag')}</span>
             </button>
 
             {/* PHC Resource Management */}
@@ -279,7 +297,7 @@ export default function ArogyaPrahariDashboard() {
               }`}
             >
               <Package className="w-3.5 h-3.5" />
-              <span>PHC Buffer Stock</span>
+              <span>{t('header.phc')}</span>
             </button>
 
             {/* Refresh Live Telemetry */}

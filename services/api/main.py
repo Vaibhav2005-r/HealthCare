@@ -3,7 +3,11 @@ import sys
 import math
 import torch
 import pandas as pd
+import httpx
+import asyncio
+import random
 from fastapi import FastAPI
+from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
 from typing import List, Optional
 from sklearn.preprocessing import MinMaxScaler
@@ -48,7 +52,9 @@ async def lifespan(app: FastAPI):
         scaler = MinMaxScaler(feature_range=(-1, 1))
         scaler.fit(df[features].values)
         
-    print("FastAPI is ready!")
+    print("FastAPI is ready! Starting background telemetry worker...")
+    asyncio.create_task(telemetry_worker())
+    
     yield
     print("Shutting down...")
 
@@ -70,6 +76,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(gis.router)
+app.include_router(analytics.router)
+app.include_router(telemetry.router)
+app.include_router(resources.router)
+app.include_router(rag_admin.router)
+app.include_router(exports.router)
 
 class SymptomReportCreate(BaseModel):
     worker_id: str
@@ -291,6 +304,72 @@ DISTRICTS_DATA = [
         "last_reported": "5 hours ago"
     }
 ]
+
+async def refresh_district_telemetry():
+    global DISTRICTS_DATA, lstm_model, scaler
+    print("Refreshing district telemetry via Open-Meteo & LSTM...")
+    try:
+        async with httpx.AsyncClient() as client:
+            for district in DISTRICTS_DATA:
+                # 1. Fetch live weather
+                lat, lng = district["centroid_lat"], district["centroid_lng"]
+                url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto"
+                res = await client.get(url)
+                if res.status_code == 200:
+                    data = res.json()
+                    temp = data["current"]["temperature_2m"]
+                    humidity = data["current"]["relative_humidity_2m"]
+                    precip = data["current"]["precipitation"]
+                    
+                    # Update district weather data
+                    district["rainfall_mm"] = precip
+                    district["humidity_pct"] = humidity
+                    
+                    # 2. LSTM Inference
+                    if lstm_model and scaler:
+                        # Construct a mock 14-day sequence, where the last day is the live weather
+                        base_cases = district["active_cases"]
+                        sequence = []
+                        for i in range(13):
+                            sequence.append([0.0, temp, humidity, max(0, base_cases - (13-i))])
+                        sequence.append([precip, temp, humidity, base_cases])
+                        
+                        scaled_data = scaler.transform(sequence)
+                        input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
+                        
+                        with torch.no_grad():
+                            raw_score = lstm_model(input_tensor).item()
+                            risk_score = 1.0 / (1.0 + math.exp(-raw_score))
+                            
+                        # Re-assign risk
+                        district["risk_score"] = round(risk_score, 4)
+                        if risk_score > 0.80:
+                            district["risk_level"] = "CRITICAL"
+                        elif risk_score > 0.65:
+                            district["risk_level"] = "HIGH"
+                        elif risk_score > 0.40:
+                            district["risk_level"] = "MODERATE"
+                        else:
+                            district["risk_level"] = "LOW"
+                            
+                        # Simulate case fluctuation based on live risk
+                        if random.random() > 0.5:
+                            if district["risk_level"] in ["HIGH", "CRITICAL"]:
+                                district["active_cases"] += random.randint(1, 3)
+                            else:
+                                district["active_cases"] = max(0, district["active_cases"] - random.randint(0, 2))
+                                
+                    district["last_reported"] = "Just now (Live)"
+    except Exception as e:
+        print(f"Error during telemetry refresh: {e}")
+
+async def telemetry_worker():
+    # Initial pause to let server start
+    await asyncio.sleep(5)
+    while True:
+        await refresh_district_telemetry()
+        # Wait 10 minutes before refreshing again
+        await asyncio.sleep(600)
 
 @app.get("/")
 def read_root():
