@@ -16,6 +16,7 @@ import {
   Cpu,
   UserCheck
 } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n';
 
 export type NavTab = 'overview' | 'heatmap' | 'districts' | 'alerts' | 'reports';
 
@@ -26,42 +27,44 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 }: SidebarProps) {
+  const { t } = useLanguage();
+
   const navItems = [
     {
       id: 'overview' as NavTab,
-      label: 'Overview',
-      labelHi: 'सिंहावलोकन',
+      label: t('nav.overview'),
+      labelHi: '', // Handled dynamically in translations
       icon: LayoutDashboard,
-      desc: 'National Executive Summary'
+      desc: t('nav.overview.desc')
     },
     {
       id: 'heatmap' as NavTab,
-      label: 'Heatmap',
-      labelHi: 'स्थानिक नक़्शा',
+      label: t('nav.heatmap'),
+      labelHi: '',
       icon: MapIcon,
-      desc: 'GIS Spatiotemporal Layers'
+      desc: t('nav.heatmap.desc')
     },
     {
       id: 'districts' as NavTab,
-      label: 'Districts',
-      labelHi: 'ज़िला सूची',
+      label: t('nav.districts'),
+      labelHi: '',
       icon: Building2,
-      desc: 'Sortable Surveillance Matrix'
+      desc: t('nav.districts.desc')
     },
     {
       id: 'alerts' as NavTab,
-      label: 'Alerts',
-      labelHi: 'आपातकालीन अलर्ट',
+      label: t('nav.alerts'),
+      labelHi: '',
       icon: AlertOctagon,
-      desc: 'LLM Briefs & Field SOS',
+      desc: t('nav.alerts.desc'),
       badge: unacknowledgedAlertsCount
     },
     {
       id: 'reports' as NavTab,
-      label: 'Reports',
-      labelHi: 'शासकीय बुलेटिन',
+      label: t('nav.reports'),
+      labelHi: '',
       icon: FileText,
-      desc: 'Official Record Bulletin'
+      desc: t('nav.reports.desc')
     }
   ];
 
@@ -75,10 +78,10 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
           </div>
           <div>
             <h1 className="text-base font-extrabold text-[#1D2321] tracking-tight flex items-center gap-1.5">
-              Arogya Prahari
+              {t('brand.title')}
             </h1>
             <p className="text-[11px] font-bold text-[#C2255C] tracking-wide uppercase">
-              Command Dashboard
+              {t('brand.subtitle')}
             </p>
           </div>
         </div>
@@ -86,10 +89,10 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
         {/* Dual Language Tagline */}
         <div className="mt-3 pt-2.5 border-t border-[#E2E8F0]/80">
           <p className="text-[11px] font-semibold text-[#1D2321] leading-tight">
-            &ldquo;One view, every district&rsquo;s risk.&rdquo;
+            &ldquo;{t('brand.tagline')}&rdquo;
           </p>
           <p className="text-[11px] font-medium text-[#5B6663] mt-0.5 font-sans leading-tight">
-            &ldquo;एक नज़र, हर ज़िले की स्थिति&rdquo;
+            &ldquo;{t('brand.tagline2')}&rdquo;
           </p>
         </div>
       </div>
@@ -122,7 +125,6 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm">{item.label}</span>
-                    <span className="text-[11px] font-normal text-[#5B6663]">({item.labelHi})</span>
                   </div>
                   <div className="text-[10px] font-normal text-[#5B6663]">{item.desc}</div>
                 </div>

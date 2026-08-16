@@ -35,6 +35,8 @@ import {
 import { LiveDashboardData, DistrictData } from '@/lib/api';
 import { RiskFilterType } from '../RiskPulseBar';
 import dynamic from 'next/dynamic';
+import { useLanguage } from '@/lib/i18n';
+import { WeatherWidget } from '../WeatherWidget';
 
 const CompactMap = dynamic(() => import('@/components/Map'), { 
   ssr: false, 
@@ -53,6 +55,8 @@ interface OverviewViewProps {
 }
 
 export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistrict }: OverviewViewProps) {
+  const { t } = useLanguage();
+
   // Filter top districts if a risk filter is active
   const filteredDistricts = activeFilter === 'ALL'
     ? data.top_at_risk
@@ -62,13 +66,16 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
 
   return (
     <div className="space-y-6">
+      {/* Real-time Weather Strip */}
+      <WeatherWidget />
+
       {/* 1. Top KPI Summary Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Monitored Districts */}
         <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5B6663] uppercase tracking-wider">
-              Monitored Districts
+              {t('overview.monitored_districts')}
             </span>
             <Building2 className="w-4 h-4 text-[#5B6663]" />
           </div>
@@ -76,11 +83,11 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
             <span className="text-3xl font-mono font-bold text-[#1D2321]">
               {data.summary.total_monitored_districts}
             </span>
-            <span className="text-xs text-[#5B6663] font-medium">Districts active</span>
+            <span className="text-xs text-[#5B6663] font-medium">{t('overview.districts_active')}</span>
           </div>
           <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
-            <span>Coverage: Maharashtra State</span>
-            <span className="font-mono text-[#146356] font-semibold">100% Synced</span>
+            <span>{t('overview.coverage')}</span>
+            <span className="font-mono text-[#146356] font-semibold">{t('overview.synced')}</span>
           </div>
         </div>
 
@@ -89,7 +96,7 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#C6362C] uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#C6362C] animate-pulse" />
-              High/Critical Outbreaks
+              {t('overview.high_critical')}
             </span>
             <AlertTriangle className="w-4 h-4 text-[#C6362C]" />
           </div>
@@ -98,16 +105,16 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
               {data.summary.high_critical_districts}
             </span>
             <span className="text-xs font-bold text-[#C6362C] bg-red-50 px-2 py-0.5 rounded-full">
-              Requires DHO Action
+              {t('overview.dho_action')}
             </span>
           </div>
           <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
-            <span>Pune & Nashik clusters</span>
+            <span>{t('overview.clusters')}</span>
             <button 
               onClick={() => onNavigateTab('alerts')}
               className="text-[#C2255C] font-semibold hover:underline"
             >
-              View Feed &rarr;
+              {t('overview.view_feed')} &rarr;
             </button>
           </div>
         </div>
@@ -116,7 +123,7 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
         <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5B6663] uppercase tracking-wider">
-              7-Day Case Velocity
+              {t('overview.case_velocity')}
             </span>
             <Activity className="w-4 h-4 text-[#E8901A]" />
           </div>
@@ -125,12 +132,12 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
               {data.summary.case_delta_7d_pct}
             </span>
             <span className="text-xs font-bold text-[#E8901A] flex items-center">
-              <ArrowUpRight className="w-3.5 h-3.5" /> vs prev week
+              <ArrowUpRight className="w-3.5 h-3.5" /> {t('overview.vs_prev_week')}
             </span>
           </div>
           <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
-            <span>Active Cases Total</span>
-            <span className="font-mono font-bold text-[#1D2321]">{data.summary.active_cases_total} patients</span>
+            <span>{t('overview.active_cases_total')}</span>
+            <span className="font-mono font-bold text-[#1D2321]">{data.summary.active_cases_total} {t('overview.patients')}</span>
           </div>
         </div>
 
@@ -138,7 +145,7 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
         <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5B6663] uppercase tracking-wider">
-              Active ASHA Telemetry
+              {t('overview.asha_telemetry')}
             </span>
             <Users className="w-4 h-4 text-[#146356]" />
           </div>
@@ -146,10 +153,10 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
             <span className="text-3xl font-mono font-bold text-[#146356]">
               {data.summary.active_asha_workers}
             </span>
-            <span className="text-xs text-[#5B6663] font-medium">Workers reporting</span>
+            <span className="text-xs text-[#5B6663] font-medium">{t('overview.workers_reporting')}</span>
           </div>
           <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
-            <span>Field Uploads Today</span>
+            <span>{t('overview.field_uploads')}</span>
             <span className="font-mono text-[#146356] font-semibold">1,248 visits</span>
           </div>
         </div>
