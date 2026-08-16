@@ -100,11 +100,11 @@ class SymptomsScreen extends ConsumerWidget {
               
               Expanded(
                 child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 180,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1.1,
+                    mainAxisExtent: 140, // Height enough for 2 lines
                   ),
                   itemCount: availableSymptoms.length,
                   itemBuilder: (context, index) {
@@ -155,6 +155,8 @@ class SymptomsScreen extends ConsumerWidget {
                                 color: isSelected ? Colors.white : const Color(0xFF1D2321),
                               ),
                               textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),

@@ -154,7 +154,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             Icon(Icons.badge, color: accentColor, size: 20),
                             const SizedBox(width: 12),
-                            Text(role),
+                            Expanded(
+                              child: Text(role, overflow: TextOverflow.ellipsis),
+                            ),
                           ],
                         ),
                       );

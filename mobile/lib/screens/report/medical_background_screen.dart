@@ -145,6 +145,7 @@ class _MedicalBackgroundScreenState extends ConsumerState<MedicalBackgroundScree
                         Expanded(
                           flex: 1,
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             value: _tempUnit,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -152,7 +153,10 @@ class _MedicalBackgroundScreenState extends ConsumerState<MedicalBackgroundScree
                               fillColor: bgColor,
                             ),
                             items: ['C', 'F']
-                                .map((s) => DropdownMenuItem(value: s, child: Text('°$s')))
+                                .map((s) => DropdownMenuItem(
+                                  value: s, 
+                                  child: Text('°$s', overflow: TextOverflow.ellipsis),
+                                ))
                                 .toList(),
                             onChanged: (val) => setState(() => _tempUnit = val!),
                           ),

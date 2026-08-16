@@ -64,13 +64,17 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
               const Text('We could not get a high-accuracy GPS fix. Please select a reason for manual entry:'),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
+                isExpanded: true,
                 value: selectedReason,
                 items: [
                   'GPS Indoor Blindspot',
                   'Sensor Error',
                   'Battery Saver Mode',
                   'Other'
-                ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                ].map((s) => DropdownMenuItem(
+                  value: s, 
+                  child: Text(s, overflow: TextOverflow.ellipsis),
+                )).toList(),
                 onChanged: (val) {
                   if (val != null) selectedReason = val;
                 },
@@ -104,7 +108,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
   Widget _buildGpsStatusChip() {
     if (_isGettingLocation) {
       return Chip(
-        label: const Text('Acquiring GPS...'),
+        label: const Text('Acquiring GPS...', overflow: TextOverflow.ellipsis, maxLines: 1),
         avatar: const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
         backgroundColor: Colors.grey.shade200,
       );
@@ -112,7 +116,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
     
     if (_manualLocationReason != null) {
       return Chip(
-        label: const Text('Manual Location', style: TextStyle(color: Colors.white)),
+        label: const Text('Manual Location', style: TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1),
         backgroundColor: Colors.blueGrey,
         avatar: const Icon(Icons.edit_location_alt, color: Colors.white, size: 16),
       );
@@ -133,7 +137,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
         label = 'GPS Low Accuracy';
       }
       return Chip(
-        label: Text(label, style: const TextStyle(color: Colors.white)),
+        label: Text(label, style: const TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1),
         backgroundColor: color,
         avatar: const Icon(Icons.gps_fixed, color: Colors.white, size: 16),
       );
@@ -192,7 +196,13 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                       color: Color(0xFF1D2321),
                     ),
                   ),
-                  _buildGpsStatusChip(),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _buildGpsStatusChip(),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -241,6 +251,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             value: _sex,
                             decoration: InputDecoration(
                               labelText: 'Sex',
@@ -250,7 +261,10 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                               fillColor: bgColor,
                             ),
                             items: ['Male', 'Female', 'Other']
-                                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                .map((s) => DropdownMenuItem(
+                                  value: s, 
+                                  child: Text(s, overflow: TextOverflow.ellipsis),
+                                ))
                                 .toList(),
                             onChanged: (val) => setState(() => _sex = val!),
                           ),
@@ -259,6 +273,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
+                      isExpanded: true,
                       value: _village,
                       decoration: InputDecoration(
                         labelText: 'Village / PHC',
@@ -267,7 +282,10 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                         filled: true,
                         fillColor: bgColor,
                       ),
-                      items: villages.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                      items: villages.map((v) => DropdownMenuItem(
+                        value: v, 
+                        child: Text(v, overflow: TextOverflow.ellipsis),
+                      )).toList(),
                       onChanged: (val) => setState(() => _village = val),
                     ),
                     const SizedBox(height: 20),

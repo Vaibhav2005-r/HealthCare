@@ -188,6 +188,7 @@ class ProfileScreen extends ConsumerWidget {
                       child: Text(
                         'English',
                         style: TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     DropdownMenuItem(
@@ -195,6 +196,7 @@ class ProfileScreen extends ConsumerWidget {
                       child: Text(
                         'Hindi',
                         style: TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
