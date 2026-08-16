@@ -101,6 +101,49 @@ class ProfileScreen extends ConsumerWidget {
 
           const SizedBox(height: 32),
 
+          // REPORT HISTORY BLOCK
+          const Text(
+            'Report History',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            margin: EdgeInsets.zero,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.history, color: AppColors.primary),
+              ),
+              title: const Text(
+                'View Report History',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Archive of submitted patients',
+                style: TextStyle(fontSize: 12),
+              ),
+              trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              onTap: () {
+                context.push('/report-history');
+              },
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
           // SETTINGS BLOCK
           const Text(
             'Settings',

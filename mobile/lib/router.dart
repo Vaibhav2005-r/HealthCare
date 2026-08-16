@@ -9,6 +9,8 @@ import 'screens/auth/pin_setup_screen.dart';
 import 'screens/auth/unlock_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/home_screen.dart';
+import 'models/models.dart';
+import 'screens/saved_report_detail_screen.dart';
 import 'screens/report/patient_basics_screen.dart';
 import 'screens/report/medical_background_screen.dart';
 import 'screens/report/image_capture_screen.dart';
@@ -124,6 +126,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/triage-result',
         builder: (context, state) => const TriageResultScreen(),
+      ),
+      GoRoute(
+        path: '/saved-report-detail',
+        builder: (context, state) {
+          final report = state.extra as Report;
+          return SavedReportDetailScreen(report: report);
+        },
       ),
     ],
   );
