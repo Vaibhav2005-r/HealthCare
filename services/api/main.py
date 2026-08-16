@@ -4,6 +4,7 @@ import math
 import torch
 import pandas as pd
 from fastapi import FastAPI
+from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
 from typing import List, Optional
 from sklearn.preprocessing import MinMaxScaler
@@ -70,6 +71,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(gis.router)
+app.include_router(analytics.router)
+app.include_router(telemetry.router)
+app.include_router(resources.router)
+app.include_router(rag_admin.router)
+app.include_router(exports.router)
 
 class SymptomReportCreate(BaseModel):
     worker_id: str
