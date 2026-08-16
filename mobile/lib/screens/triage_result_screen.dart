@@ -144,7 +144,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
               ),
               const SizedBox(height: 24),
               Card(
-                color: AppColors.surface,
+                color: const Color(0xFFFFFDF8),
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 margin: EdgeInsets.zero,
@@ -158,7 +158,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                         style: TextStyle(
                           fontSize: 18, 
                           fontWeight: FontWeight.bold, 
-                          color: AppColors.textPrimary,
+                          color: const Color(0xFF1D2321),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -168,12 +168,12 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                         children: report.symptoms.map((s) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryLight.withOpacity(0.1),
+                            color: const Color(0xFF1A5F7A).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
                             s,
-                            style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w600, fontSize: 14),
+                            style: TextStyle(color: const Color(0xFF1A5F7A), fontWeight: FontWeight.w600, fontSize: 14),
                           ),
                         )).toList(),
                       ),
@@ -181,16 +181,16 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         decoration: BoxDecoration(
-                          color: AppColors.background,
+                          color: const Color(0xFFF5F0E8),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.timer_outlined, color: AppColors.textSecondary, size: 24),
+                            Icon(Icons.timer_outlined, color: const Color(0xFF5B6663), size: 24),
                             const SizedBox(width: 12),
                             Text(
                               'Duration: ${report.durationDays} days',
-                              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 15),
+                              style: TextStyle(color: const Color(0xFF1D2321), fontWeight: FontWeight.w600, fontSize: 15),
                             ),
                           ],
                         ),
@@ -207,15 +207,15 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                 child: Container(
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: const Color(0xFFFFFDF8),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.auto_awesome, color: AppColors.primary),
+                      Icon(Icons.auto_awesome, color: const Color(0xFF1A5F7A)),
                       const SizedBox(width: 8),
-                      Text('View Clinical Guidance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      Text('View Clinical Guidance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1D2321))),
                     ],
                   ),
                 ),

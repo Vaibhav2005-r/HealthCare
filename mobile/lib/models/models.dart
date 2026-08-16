@@ -14,6 +14,12 @@ class Report {
   final SyncStatus syncStatus;
   final DateTime createdAt;
 
+  final double? locationLat;
+  final double? locationLng;
+  final double? locationAccuracy;
+  final String? manualLocationReason;
+  final String? imagePath;
+
   Report({
     required this.id,
     required this.age,
@@ -24,6 +30,11 @@ class Report {
     required this.riskTier,
     required this.syncStatus,
     required this.createdAt,
+    this.locationLat,
+    this.locationLng,
+    this.locationAccuracy,
+    this.manualLocationReason,
+    this.imagePath,
   });
 
   Report copyWith({
@@ -36,6 +47,11 @@ class Report {
     RiskTier? riskTier,
     SyncStatus? syncStatus,
     DateTime? createdAt,
+    double? locationLat,
+    double? locationLng,
+    double? locationAccuracy,
+    String? manualLocationReason,
+    String? imagePath,
   }) {
     return Report(
       id: id ?? this.id,
@@ -47,6 +63,11 @@ class Report {
       riskTier: riskTier ?? this.riskTier,
       syncStatus: syncStatus ?? this.syncStatus,
       createdAt: createdAt ?? this.createdAt,
+      locationLat: locationLat ?? this.locationLat,
+      locationLng: locationLng ?? this.locationLng,
+      locationAccuracy: locationAccuracy ?? this.locationAccuracy,
+      manualLocationReason: manualLocationReason ?? this.manualLocationReason,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 
@@ -61,6 +82,11 @@ class Report {
       'riskTier': riskTier.name,
       'syncStatus': syncStatus.name,
       'createdAt': createdAt.toIso8601String(),
+      'locationLat': locationLat,
+      'locationLng': locationLng,
+      'locationAccuracy': locationAccuracy,
+      'manualLocationReason': manualLocationReason,
+      'imagePath': imagePath,
     };
   }
 
@@ -75,6 +101,11 @@ class Report {
       riskTier: RiskTier.values.firstWhere((e) => e.name == map['riskTier']),
       syncStatus: SyncStatus.values.firstWhere((e) => e.name == map['syncStatus']),
       createdAt: DateTime.parse(map['createdAt']),
+      locationLat: map['locationLat'],
+      locationLng: map['locationLng'],
+      locationAccuracy: map['locationAccuracy'],
+      manualLocationReason: map['manualLocationReason'],
+      imagePath: map['imagePath'],
     );
   }
 }

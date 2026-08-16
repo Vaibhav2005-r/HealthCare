@@ -12,15 +12,16 @@ void main() {
   );
 }
 
-class SmartHealthApp extends StatelessWidget {
+class SmartHealthApp extends ConsumerWidget {
   const SmartHealthApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'Smart Health',
       theme: appTheme,
-      routerConfig: appRouter,
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         if (kIsWeb) {

@@ -13,9 +13,17 @@ class ProfileScreen extends ConsumerWidget {
     final mockData = ref.watch(mockDataProvider);
     final profile = mockData.getWorkerProfile();
 
+    const bgColor = Color(0xFFF5F0E8);
+    const accentColor = Color(0xFF1A5F7A);
+    const surfaceColor = Color(0xFFFFFDF8);
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321))),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
@@ -26,13 +34,13 @@ class ProfileScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: bgColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 3),
+                    border: Border.all(color: accentColor.withOpacity(0.2), width: 3),
                   ),
                   child: const CircleAvatar(
                     radius: 48,
-                    backgroundColor: AppColors.primaryLight,
+                    backgroundColor: accentColor,
                     child: Icon(Icons.person, size: 48, color: Colors.white),
                   ),
                 ),
@@ -40,19 +48,19 @@ class ProfileScreen extends ConsumerWidget {
                 Text(
                   profile['name'],
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1D2321)),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.bolt, size: 16, color: AppColors.riskAmber),
+                    Icon(Icons.bolt, size: 16, color: Colors.orange),
                     const SizedBox(width: 4),
-                    const Text('88% Efficiency', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text('88% Efficiency', style: TextStyle(color: Color(0xFF5B6663), fontWeight: FontWeight.w600)),
                     const SizedBox(width: 8),
-                    Container(width: 1, height: 12, color: AppColors.border),
+                    Container(width: 1, height: 12, color: Colors.black12),
                     const SizedBox(width: 8),
-                    const Text('Pro Member', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                    const Text('Pro Member', style: TextStyle(color: Color(0xFF5B6663), fontWeight: FontWeight.w600)),
                   ],
                 ),
               ],
@@ -64,16 +72,16 @@ class ProfileScreen extends ConsumerWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Color(0xFF1D2321),
             ),
           ),
           const SizedBox(height: 12),
           Card(
             margin: EdgeInsets.zero,
             elevation: 0,
+            color: surfaceColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: AppColors.border.withOpacity(0.5)),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -82,33 +90,33 @@ class ProfileScreen extends ConsumerWidget {
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.badge_outlined, color: AppColors.primary),
+                      decoration: BoxDecoration(color: accentColor.withOpacity(0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.badge_outlined, color: accentColor),
                     ),
                     title: const Text('Worker ID', style: TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(profile['id']),
                   ),
-                  const Divider(color: AppColors.border, indent: 64),
+                  const Divider(color: Colors.black12, indent: 64),
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.location_on_outlined, color: AppColors.primary),
+                      decoration: BoxDecoration(color: accentColor.withOpacity(0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.location_on_outlined, color: accentColor),
                     ),
                     title: const Text('Primary Health Center', style: TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text('${profile['phc']}, ${profile['district']}'),
                   ),
-                  const Divider(color: AppColors.border, indent: 64),
+                  const Divider(color: Colors.black12, indent: 64),
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
-                      child: const Icon(Icons.bar_chart_outlined, color: AppColors.primary),
+                      decoration: BoxDecoration(color: accentColor.withOpacity(0.1), shape: BoxShape.circle),
+                      child: const Icon(Icons.bar_chart_outlined, color: accentColor),
                     ),
                     title: const Text('Reports This Week', style: TextStyle(fontWeight: FontWeight.bold)),
                     trailing: Text(
                       '${profile['reportsThisWeek']}',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: accentColor),
                     ),
                   ),
                 ],
@@ -119,23 +127,23 @@ class ProfileScreen extends ConsumerWidget {
           Card(
             margin: EdgeInsets.zero,
             elevation: 0,
+            color: surfaceColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: AppColors.border.withOpacity(0.5)),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(color: AppColors.primaryLight.withOpacity(0.1), shape: BoxShape.circle),
-                  child: const Icon(Icons.language, color: AppColors.primary),
+                  decoration: BoxDecoration(color: accentColor.withOpacity(0.1), shape: BoxShape.circle),
+                  child: const Icon(Icons.language, color: accentColor),
                 ),
                 title: const Text('Language', style: TextStyle(fontWeight: FontWeight.bold)),
                 trailing: DropdownButton<String>(
                   value: 'English',
                   underline: const SizedBox(),
-                  icon: const Icon(Icons.expand_more, color: AppColors.textSecondary),
+                  icon: const Icon(Icons.expand_more, color: Color(0xFF5B6663)),
                   items: const [
                     DropdownMenuItem(value: 'English', child: Text('English', style: TextStyle(fontWeight: FontWeight.w600))),
                     DropdownMenuItem(value: 'Hindi', child: Text('Hindi', style: TextStyle(fontWeight: FontWeight.w600))),
@@ -153,16 +161,16 @@ class ProfileScreen extends ConsumerWidget {
             child: Container(
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: surfaceColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.textSecondary.withOpacity(0.3), width: 1.5),
+                border: Border.all(color: const Color(0xFF5B6663).withOpacity(0.3), width: 1.5),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.logout, color: AppColors.textSecondary),
+                  Icon(Icons.logout, color: Color(0xFF5B6663)),
                   const SizedBox(width: 8),
-                  Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                  Text('Logout', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF5B6663))),
                 ],
               ),
             ),

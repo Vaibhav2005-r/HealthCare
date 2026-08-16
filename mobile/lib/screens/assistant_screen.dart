@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../theme/app_colors.dart';
+import '../services/voice_service.dart';
 
 class AssistantScreen extends ConsumerStatefulWidget {
   const AssistantScreen({super.key});
@@ -161,12 +162,29 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              msg.text,
-              style: TextStyle(
-                color: isUser ? Colors.white : AppColors.textPrimary,
-                fontSize: 16,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    msg.text,
+                    style: TextStyle(
+                      color: isUser ? Colors.white : AppColors.textPrimary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                if (!isUser)
+                  IconButton(
+                    icon: const Icon(Icons.volume_up_outlined, size: 20, color: AppColors.primary),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      ref.read(voiceServiceProvider).speak(msg.text);
+                    },
+                  ),
+              ],
             ),
             if (msg.citation != null) ...[
               const SizedBox(height: 12),

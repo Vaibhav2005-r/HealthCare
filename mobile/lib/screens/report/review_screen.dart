@@ -15,26 +15,34 @@ class ReviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final draft = ref.watch(reportDraftProvider);
 
+    const bgColor = Color(0xFFF5F0E8);
+    const accentColor = Color(0xFF1A5F7A);
+    const surfaceColor = Color(0xFFFFFDF8);
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Review Report', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Step 5 of 5: Review Report', style: TextStyle(fontSize: 16, color: Color(0xFF5B6663))),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Progress Bar (Step 4 of 4)
+              // Progress Bar
               Row(
-                children: List.generate(4, (index) {
+                children: List.generate(5, (index) {
                   return Expanded(
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      height: 6,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(3),
+                        color: index <= 4 ? accentColor : Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   );
@@ -44,6 +52,9 @@ class ReviewScreen extends ConsumerWidget {
 
               Card(
                 margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: surfaceColor,
+                elevation: 0,
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
@@ -54,10 +65,10 @@ class ReviewScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight.withOpacity(0.1),
+                              color: accentColor.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.person_outline, color: AppColors.primary),
+                            child: const Icon(Icons.person_outline, color: accentColor),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -66,12 +77,12 @@ class ReviewScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   '${draft.age ?? '-'} yrs, ${draft.sex ?? '-'}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.textPrimary),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1D2321)),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   'Village: ${draft.village ?? '-'}',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                  style: const TextStyle(color: Color(0xFF5B6663), fontSize: 14),
                                 ),
                               ],
                             ),
@@ -80,9 +91,9 @@ class ReviewScreen extends ConsumerWidget {
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 24.0),
-                        child: Divider(color: AppColors.border),
+                        child: Divider(color: Colors.black12),
                       ),
-                      const Text('Symptoms', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16)),
+                      const Text('Symptoms', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
                       const SizedBox(height: 12),
                       Wrap(
                         spacing: 8,
@@ -90,14 +101,14 @@ class ReviewScreen extends ConsumerWidget {
                         children: draft.symptoms.map((s) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: AppColors.pillLow.withOpacity(0.15),
+                            color: accentColor.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.pillLow.withOpacity(0.3)),
+                            border: Border.all(color: accentColor.withOpacity(0.3)),
                           ),
                           child: Text(
                             s,
                             style: const TextStyle(
-                              color: AppColors.pillLow,
+                              color: accentColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -106,15 +117,15 @@ class ReviewScreen extends ConsumerWidget {
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 24.0),
-                        child: Divider(color: AppColors.border),
+                        child: Divider(color: Colors.black12),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Duration', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16)),
+                          const Text('Duration', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
                           Text(
                             '${draft.durationDays ?? '-'} day${(draft.durationDays ?? 1) == 1 ? '' : 's'}',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 16),
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: accentColor, fontSize: 16),
                           ),
                         ],
                       ),
@@ -138,6 +149,11 @@ class ReviewScreen extends ConsumerWidget {
                     riskTier: riskTier,
                     syncStatus: SyncStatus.draft,
                     createdAt: DateTime.now(),
+                    locationLat: draft.locationLat,
+                    locationLng: draft.locationLng,
+                    locationAccuracy: draft.locationAccuracy,
+                    manualLocationReason: draft.manualLocationReason,
+                    imagePath: draft.imagePath,
                   );
 
                   // Pass the report to the triage result screen
@@ -146,15 +162,8 @@ class ReviewScreen extends ConsumerWidget {
                 child: Container(
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: accentColor,
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
                   ),
                   child: const Center(
                     child: Text('Submit & Triage', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),

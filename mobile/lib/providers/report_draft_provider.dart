@@ -6,6 +6,11 @@ class ReportDraft {
   final String? village;
   final List<String> symptoms;
   final int? durationDays;
+  final double? locationLat;
+  final double? locationLng;
+  final double? locationAccuracy;
+  final String? manualLocationReason;
+  final String? imagePath;
 
   ReportDraft({
     this.age,
@@ -13,6 +18,11 @@ class ReportDraft {
     this.village,
     this.symptoms = const [],
     this.durationDays,
+    this.locationLat,
+    this.locationLng,
+    this.locationAccuracy,
+    this.manualLocationReason,
+    this.imagePath,
   });
 
   ReportDraft copyWith({
@@ -21,6 +31,11 @@ class ReportDraft {
     String? village,
     List<String>? symptoms,
     int? durationDays,
+    double? locationLat,
+    double? locationLng,
+    double? locationAccuracy,
+    String? manualLocationReason,
+    String? imagePath,
   }) {
     return ReportDraft(
       age: age ?? this.age,
@@ -28,6 +43,11 @@ class ReportDraft {
       village: village ?? this.village,
       symptoms: symptoms ?? this.symptoms,
       durationDays: durationDays ?? this.durationDays,
+      locationLat: locationLat ?? this.locationLat,
+      locationLng: locationLng ?? this.locationLng,
+      locationAccuracy: locationAccuracy ?? this.locationAccuracy,
+      manualLocationReason: manualLocationReason ?? this.manualLocationReason,
+      imagePath: imagePath ?? this.imagePath,
     );
   }
 }
@@ -37,6 +57,19 @@ class ReportDraftNotifier extends StateNotifier<ReportDraft> {
 
   void updateBasics({required int age, required String sex, required String village}) {
     state = state.copyWith(age: age, sex: sex, village: village);
+  }
+
+  void updateLocation({double? lat, double? lng, double? accuracy, String? reason}) {
+    state = state.copyWith(
+      locationLat: lat,
+      locationLng: lng,
+      locationAccuracy: accuracy,
+      manualLocationReason: reason,
+    );
+  }
+
+  void updateImage(String? path) {
+    state = state.copyWith(imagePath: path);
   }
 
   void toggleSymptom(String symptom) {
