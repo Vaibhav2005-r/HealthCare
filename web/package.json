@@ -4,15 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node -e \"const fs=require('fs'); ['react','react-dom'].forEach(p=>{const dir='./node_modules/'+p; if(fs.existsSync(dir)) fs.rmSync(dir, {recursive:true,force:true});})\"",
+    "prebuild": "echo 'Preparing build...'",
     "build": "npm run prebuild && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@smarthealth/design-tokens": "*",
-    "@smarthealth/types": "*",
     "@types/leaflet": "^1.9.22",
     "@types/leaflet.heat": "^0.2.5",
     "class-variance-authority": "^0.7.0",

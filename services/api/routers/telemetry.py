@@ -1,5 +1,10 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import List, Dict, Any
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database.db import fetch_case_reports_from_db
 
 router = APIRouter(prefix="/api/v1/telemetry", tags=["Field Telemetry Stream"])
 
@@ -13,11 +18,15 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
-            await connection.send_text(message)
+            try:
+                await connection.send_text(message)
+            except Exception:
+                pass
 
 manager = ConnectionManager()
 
@@ -31,27 +40,21 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_text()
-            # In production, the client mostly listens, but could send pings
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
 @router.get("/logs")
-def get_telemetry_logs(district: str = None, status: str = None, page: int = 1) -> Dict[str, Any]:
+async def get_telemetry_logs(district: str = None, status: str = None, page: int = 1) -> Dict[str, Any]:
     """
-    Module 3: Real-Time Log Stream.
-    Sortable, paginated table of incoming mobile logs with status tags.
+    Module 3: Real-Time Log Stream from Supabase.
+    Sortable, paginated table of incoming mobile case reports.
     """
+    reports = await fetch_case_reports_from_db(limit=50)
+    if district:
+        reports = [r for r in reports if r.get("district", "").lower() == district.lower()]
     return {
         "page": page,
-        "logs": [
-            {
-                "id": 101,
-                "worker_id": "ASHA-001",
-                "patient_age": 24,
-                "symptoms": ["Fever", "Vomiting"],
-                "status": "RED",
-                "sync_method": "ONLINE",
-                "reported_at": "2026-08-15T10:30:00Z"
-            }
-        ]
+        "count": len(reports),
+        "source": "Supabase PostgreSQL (Live)",
+        "logs": reports
     }

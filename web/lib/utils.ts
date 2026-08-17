@@ -1,6 +1,12 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { riskColors } from '@smarthealth/design-tokens';
+
+// Risk color constants (previously from @smarthealth/design-tokens)
+const riskColors = {
+  green: '#146356',
+  amber: '#E8901A',
+  red: '#C6362C',
+};
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

@@ -352,3 +352,123 @@ export async function triggerSOS(alert: { worker_id: string; district: string; c
     return { status: 'alert_logged_offline', message: `SOS queued for ${alert.district}` };
   }
 }
+
+export interface IngestResponse {
+  status: 'success' | 'error';
+  doc_id?: string;
+  filename?: string;
+  pages_processed?: number;
+  chunks_processed: number;
+  time_seconds?: number;
+  uploaded_at?: string;
+  message: string;
+}
+
+export interface RagDocItem {
+  id: string;
+  name: string;
+  chunks_count: number;
+  pages_count: number;
+  uploaded_at: string;
+  status: 'SUCCESS' | 'INGESTING';
+  progress: number;
+}
+
+export interface AskRagResponse {
+  answer: string;
+  citations: string[];
+  retrieved_excerpts?: Array<{
+    source: string;
+    text: string;
+    score: number;
+  }>;
+  top_source?: string;
+  error?: string;
+}
+
+export async function ingestDocument(file: File): Promise<IngestResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/rag/ingest`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || `Server returned ${res.status}`);
+  }
+
+  return await res.json();
+}
+
+export async function fetchRagDocuments(): Promise<RagDocItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/rag/documents`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data.documents || [];
+  } catch (err) {
+    console.warn('Failed to fetch RAG documents from backend, using fallback:', err);
+    return [
+      { id: 'base-idsp-01', name: 'IDSP_National_Guidelines.pdf', chunks_count: 2, pages_count: 2, uploaded_at: 'Baseline Built-in', status: 'SUCCESS', progress: 100 },
+      { id: 'base-who-02', name: 'WHO_Cholera_Outbreak_Standard_Protocol.pdf', chunks_count: 1, pages_count: 1, uploaded_at: 'Baseline Built-in', status: 'SUCCESS', progress: 100 },
+      { id: 'base-nvbdcp-03', name: 'NVBDCP_Malaria_Containment_Directives.pdf', chunks_count: 1, pages_count: 1, uploaded_at: 'Baseline Built-in', status: 'SUCCESS', progress: 100 },
+    ];
+  }
+}
+
+export async function deleteRagDocument(docId: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/rag/documents/${encodeURIComponent(docId)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.detail || `Failed to delete document ${docId}`);
+  }
+  return await res.json();
+}
+
+export async function askRAG(query: string): Promise<AskRagResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/ask`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Error asking RAG assistant:', err);
+    throw err;
+  }
+}
+
+export async function fetchInventory(): Promise<any[]> {
+  try {
+    const res = await fetch(`${API_BASE}/resources/inventory`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data.supplies || [];
+  } catch (err) {
+    console.warn('Failed to fetch inventory from backend:', err);
+    return [];
+  }
+}
+
+export async function fetchTelemetryLogs(district?: string): Promise<any[]> {
+  try {
+    const url = district ? `${API_BASE}/telemetry/logs?district=${encodeURIComponent(district)}` : `${API_BASE}/telemetry/logs`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data.logs || [];
+  } catch (err) {
+    console.warn('Failed to fetch telemetry logs from backend:', err);
+    return [];
+  }
+}
+
+
+

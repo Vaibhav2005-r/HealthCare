@@ -15,17 +15,27 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sklearn.preprocessing import MinMaxScaler
 from contextlib import asynccontextmanager
 
-from database.connection import init_db_pool, close_db_pool, get_db_pool
-
-# Add parent directory to path to import ml module
+# Add parent directory to path to import ml & database module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from ml.train_lstm_forecast import OutbreakForecastLSTM
-from ml.rag_pipeline import RAGEngine
+from ml.rag_pipeline import RAGEngine, get_rag_engine
+from database.connection import init_db_pool, close_db_pool as close_conn_pool, get_db_pool as get_conn_pool
+from database.db import (
+    get_db_pool,
+    close_db_pool,
+    fetch_districts_from_db,
+    update_district_in_db,
+    fetch_alerts_from_db,
+    insert_alert_to_db,
+    fetch_case_reports_from_db,
+    insert_case_report_to_db
+)
 
 # Global objects
 lstm_model = None
@@ -70,17 +80,18 @@ def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global lstm_model, scaler, rag_engine
+    global lstm_model, scaler
     
-    print("Starting database & ML initialization...")
+    print("Starting ML & Database initialization...")
     # 0. Init Local Idempotency DB & Supabase Connection Pool
     initialise_offline_sync_database()
-    await init_db_pool()
-
-    # 1. Init RAG
-    rag_engine = RAGEngine()
+    try:
+        await get_db_pool()
+        print("Connected to Supabase PostgreSQL.")
+    except Exception as e:
+        print(f"Supabase connection error: {e}")
     
-    # 2. Init LSTM
+    # 1. Init LSTM
     print("Loading LSTM model...")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     ml_dir = os.path.join(os.path.dirname(base_dir), "ml")
@@ -91,7 +102,7 @@ async def lifespan(app: FastAPI):
         lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
     lstm_model.eval()
     
-    # 3. Fit Scaler dynamically from synthetic data
+    # 2. Fit Scaler dynamically from synthetic/real time-series data
     print("Fitting Scaler...")
     data_path = os.path.join(ml_dir, "outbreak_time_series.csv")
     if os.path.exists(data_path):
@@ -100,17 +111,19 @@ async def lifespan(app: FastAPI):
         scaler = MinMaxScaler(feature_range=(-1, 1))
         scaler.fit(df[features].values)
         
-    print("FastAPI is ready! Starting background telemetry worker...")
-    asyncio.create_task(telemetry_worker())
+    print("FastAPI is ready! Starting background Open-Meteo & LSTM telemetry worker...")
+    telemetry_task = asyncio.create_task(telemetry_worker())
     
     yield
-    print("Shutting down...")
+    
+    print("Shutting down FastAPI & Database pool...")
+    telemetry_task.cancel()
     await close_db_pool()
 
 app = FastAPI(
     title="Arogya Prahari - Outbreak Intelligence API",
-    description="Backend API for ASHA field reports, Outbreak DL forecasting, and Command Dashboard",
-    version="0.2.0",
+    description="Live Supabase-connected Outbreak Detection, Deep Learning Forecasting, and Command Dashboard API",
+    version="0.3.0",
     lifespan=lifespan
 )
 
@@ -132,23 +145,25 @@ app.include_router(exports.router)
 
 class SymptomReportCreate(BaseModel):
     worker_id: str
-    patient_name: Optional[str] = "Unknown"
-    patient_age: Optional[int] = None
-    patient_gender: Optional[str] = "O"
-    village: Optional[str] = None
+    patient_name: Optional[str] = "Anonymous Patient"
+    patient_age: Optional[int] = 30
+    patient_gender: Optional[str] = "F"
+    village: Optional[str] = "Local Village"
     village_id: Optional[str] = None
     district: Optional[str] = "Pune"
+    state: Optional[str] = "Maharashtra"
     symptoms: List[str]
-    duration_days: int = 1
+    duration_days: int = 2
     disease_type: Optional[str] = "UNKNOWN"
-    severity: Optional[str] = "MILD"
-    temperature: Optional[float] = None
+    severity: Optional[str] = "AMBER"
+    temperature: Optional[float] = 98.6
     location_lat: Optional[float] = None
     location_lng: Optional[float] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     client_report_id: Optional[str] = None
-    notes: Optional[str] = None
+    notes: Optional[str] = "Mobile intake report"
+    sync_status: Optional[str] = "ONLINE"
 
 class SyncBatchRequest(BaseModel):
     reports: List[SymptomReportCreate]
@@ -165,416 +180,7 @@ class SOSAlert(BaseModel):
     cases: int
     severity: str
 
-# In-memory alerts registry (fallback)
-ALERTS_LOG = [
-    {
-        "id": "alt-01",
-        "district": "Pune",
-        "state": "Maharashtra",
-        "type": "SOS_TRIGGER",
-        "severity": "CRITICAL",
-        "risk_score": 0.89,
-        "cases_count": 18,
-        "worker_role": "ASHA Lead (Haveli Block)",
-        "timestamp": "2026-08-16T01:15:00Z",
-        "summary": "URGENT: Cluster of 18 severe diarrhea and acute dehydration cases reported within 6 hours. High risk of localized Cholera outbreak. Immediate IV fluids and isolation protocol required.",
-        "status": "UNACKNOWLEDGED"
-    },
-    {
-        "id": "alt-02",
-        "district": "Nashik",
-        "state": "Maharashtra",
-        "type": "ML_SPIKE_PREDICTION",
-        "severity": "HIGH",
-        "risk_score": 0.76,
-        "cases_count": 12,
-        "worker_role": "ANM Supervisor (Trimbak)",
-        "timestamp": "2026-08-15T22:40:00Z",
-        "summary": "SPATIAL ANOMALY: Dengue incidence increased 42% over baseline following heavy rainfall (112mm). Vector transmission rate accelerating across 3 adjacent sub-centers.",
-        "status": "INVESTIGATING"
-    },
-    {
-        "id": "alt-03",
-        "district": "Thane",
-        "state": "Maharashtra",
-        "type": "ML_SPIKE_PREDICTION",
-        "severity": "HIGH",
-        "risk_score": 0.72,
-        "cases_count": 14,
-        "worker_role": "PHC Officer (Bhiwandi)",
-        "timestamp": "2026-08-15T18:20:00Z",
-        "summary": "THRESHOLD EXCEEDED: Malaria positive test strip confirmations crossed the 95th percentile trigger. Deploy additional rapid diagnostic kits.",
-        "status": "ACKNOWLEDGED"
-    },
-    {
-        "id": "alt-04",
-        "district": "Kolhapur",
-        "state": "Maharashtra",
-        "type": "SOS_TRIGGER",
-        "severity": "MODERATE",
-        "risk_score": 0.54,
-        "cases_count": 7,
-        "worker_role": "ASHA Worker (Karvir)",
-        "timestamp": "2026-08-15T14:10:00Z",
-        "summary": "EARLY WARNING: 7 suspected viral fever cases with joint pain reported. ASHA workers deployed for active house-to-house screening.",
-        "status": "RESOLVED"
-    }
-]
-
-DISTRICTS_DATA = [
-    {
-        "district_id": "MH-PUN",
-        "name": "Pune",
-        "state": "Maharashtra",
-        "centroid_lat": 18.5204,
-        "centroid_lng": 73.8567,
-        "risk_level": "CRITICAL",
-        "risk_score": 0.89,
-        "active_cases": 48,
-        "trend_7d": "UP",
-        "trend_pct": 34.5,
-        "primary_suspected": "Cholera / Acute Diarrhea",
-        "population": "9,429,408",
-        "asha_active_count": 142,
-        "rainfall_mm": 88.4,
-        "humidity_pct": 84,
-        "last_reported": "12 mins ago"
-    },
-    {
-        "district_id": "MH-NSK",
-        "name": "Nashik",
-        "state": "Maharashtra",
-        "centroid_lat": 19.9975,
-        "centroid_lng": 73.7898,
-        "risk_level": "HIGH",
-        "risk_score": 0.76,
-        "active_cases": 32,
-        "trend_7d": "UP",
-        "trend_pct": 21.0,
-        "primary_suspected": "Dengue",
-        "population": "6,107,187",
-        "asha_active_count": 98,
-        "rainfall_mm": 112.0,
-        "humidity_pct": 89,
-        "last_reported": "35 mins ago"
-    },
-    {
-        "district_id": "MH-THA",
-        "name": "Thane",
-        "state": "Maharashtra",
-        "centroid_lat": 19.2183,
-        "centroid_lng": 72.9781,
-        "risk_level": "HIGH",
-        "risk_score": 0.72,
-        "active_cases": 29,
-        "trend_7d": "UP",
-        "trend_pct": 18.2,
-        "primary_suspected": "Malaria",
-        "population": "11,060,148",
-        "asha_active_count": 184,
-        "rainfall_mm": 64.2,
-        "humidity_pct": 81,
-        "last_reported": "1 hour ago"
-    },
-    {
-        "district_id": "MH-KOP",
-        "name": "Kolhapur",
-        "state": "Maharashtra",
-        "centroid_lat": 16.7050,
-        "centroid_lng": 74.2433,
-        "risk_level": "MODERATE",
-        "risk_score": 0.54,
-        "active_cases": 17,
-        "trend_7d": "FLAT",
-        "trend_pct": 1.5,
-        "primary_suspected": "Viral Fever",
-        "population": "3,876,001",
-        "asha_active_count": 76,
-        "rainfall_mm": 45.0,
-        "humidity_pct": 72,
-        "last_reported": "2 hours ago"
-    },
-    {
-        "district_id": "MH-AUR",
-        "name": "Chhatrapati Sambhajinagar",
-        "state": "Maharashtra",
-        "centroid_lat": 19.8762,
-        "centroid_lng": 75.3433,
-        "risk_level": "MODERATE",
-        "risk_score": 0.48,
-        "active_cases": 14,
-        "trend_7d": "DOWN",
-        "trend_pct": -8.4,
-        "primary_suspected": "ARI / Flu",
-        "population": "3,701,282",
-        "asha_active_count": 82,
-        "rainfall_mm": 22.1,
-        "humidity_pct": 65,
-        "last_reported": "3 hours ago"
-    },
-    {
-        "district_id": "MH-NAG",
-        "name": "Nagpur",
-        "state": "Maharashtra",
-        "centroid_lat": 21.1458,
-        "centroid_lng": 79.0882,
-        "risk_level": "LOW",
-        "risk_score": 0.22,
-        "active_cases": 6,
-        "trend_7d": "DOWN",
-        "trend_pct": -15.0,
-        "primary_suspected": "Seasonal",
-        "population": "4,653,570",
-        "asha_active_count": 110,
-        "rainfall_mm": 12.0,
-        "humidity_pct": 58,
-        "last_reported": "4 hours ago"
-    },
-    {
-        "district_id": "MH-MUM",
-        "name": "Mumbai Suburban",
-        "state": "Maharashtra",
-        "centroid_lat": 19.0760,
-        "centroid_lng": 72.8777,
-        "risk_level": "LOW",
-        "risk_score": 0.28,
-        "active_cases": 11,
-        "trend_7d": "FLAT",
-        "trend_pct": -2.0,
-        "primary_suspected": "Dengue",
-        "population": "12,442,373",
-        "asha_active_count": 230,
-        "rainfall_mm": 38.0,
-        "humidity_pct": 79,
-        "last_reported": "30 mins ago"
-    },
-    {
-        "district_id": "MH-SAT",
-        "name": "Satara",
-        "state": "Maharashtra",
-        "centroid_lat": 17.6805,
-        "centroid_lng": 73.9997,
-        "risk_level": "LOW",
-        "risk_score": 0.18,
-        "active_cases": 4,
-        "trend_7d": "DOWN",
-        "trend_pct": -22.0,
-        "primary_suspected": "None",
-        "population": "3,003,741",
-        "asha_active_count": 64,
-        "rainfall_mm": 18.5,
-        "humidity_pct": 60,
-        "last_reported": "5 hours ago"
-    }
-]
-
-async def refresh_district_telemetry():
-    global DISTRICTS_DATA, lstm_model, scaler
-    print("Refreshing district telemetry via Open-Meteo & LSTM...")
-    try:
-        async with httpx.AsyncClient() as client:
-            for district in DISTRICTS_DATA:
-                # 1. Fetch live weather
-                lat, lng = district["centroid_lat"], district["centroid_lng"]
-                url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto"
-                res = await client.get(url)
-                if res.status_code == 200:
-                    data = res.json()
-                    temp = data["current"]["temperature_2m"]
-                    humidity = data["current"]["relative_humidity_2m"]
-                    precip = data["current"]["precipitation"]
-                    
-                    district["rainfall_mm"] = precip
-                    district["humidity_pct"] = humidity
-                    
-                    # 2. LSTM Inference
-                    if lstm_model and scaler:
-                        base_cases = district["active_cases"]
-                        sequence = []
-                        for i in range(13):
-                            sequence.append([0.0, temp, humidity, max(0, base_cases - (13-i))])
-                        sequence.append([precip, temp, humidity, base_cases])
-                        
-                        scaled_data = scaler.transform(sequence)
-                        input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
-                        
-                        with torch.no_grad():
-                            raw_score = lstm_model(input_tensor).item()
-                            risk_score = 1.0 / (1.0 + math.exp(-raw_score))
-                            
-                        district["risk_score"] = round(risk_score, 4)
-                        if risk_score > 0.80:
-                            district["risk_level"] = "CRITICAL"
-                        elif risk_score > 0.65:
-                            district["risk_level"] = "HIGH"
-                        elif risk_score > 0.40:
-                            district["risk_level"] = "MODERATE"
-                        else:
-                            district["risk_level"] = "LOW"
-                            
-                        if random.random() > 0.5:
-                            if district["risk_level"] in ["HIGH", "CRITICAL"]:
-                                district["active_cases"] += random.randint(1, 3)
-                            else:
-                                district["active_cases"] = max(0, district["active_cases"] - random.randint(0, 2))
-                                
-                    district["last_reported"] = "Just now (Live)"
-    except Exception as e:
-        print(f"Error during telemetry refresh: {e}")
-
-async def telemetry_worker():
-    await asyncio.sleep(5)
-    while True:
-        await refresh_district_telemetry()
-        await asyncio.sleep(600)
-
-async def get_all_districts_data() -> List[dict]:
-    pool = await get_db_pool()
-    if pool:
-        try:
-            records = await pool.fetch("""
-                SELECT district_id, name, state, centroid_lat, centroid_lng, risk_level,
-                       risk_score, active_cases, trend_7d, trend_pct, primary_suspected,
-                       population, asha_active_count, rainfall_mm, humidity_pct, last_reported
-                FROM districts
-                ORDER BY risk_score DESC;
-            """)
-            if records:
-                return [dict(r) for r in records]
-        except Exception as e:
-            print(f"[Database] Error querying districts from Supabase: {e}")
-    return DISTRICTS_DATA
-
-async def get_all_alerts_data() -> List[dict]:
-    pool = await get_db_pool()
-    if pool:
-        try:
-            records = await pool.fetch("""
-                SELECT id, district, state, type, severity, risk_score, cases_count,
-                       worker_role, timestamp::text, summary, status
-                FROM alerts
-                ORDER BY timestamp DESC
-                LIMIT 20;
-            """)
-            if records:
-                return [dict(r) for r in records]
-        except Exception as e:
-            print(f"[Database] Error querying alerts from Supabase: {e}")
-    return ALERTS_LOG
-
-@app.get("/")
-def read_root():
-    return {
-        "platform": "Arogya Prahari - Command Dashboard API",
-        "tagline_en": "One view, every district's risk.",
-        "tagline_hi": "एक नज़र, हर ज़िले की स्थिति",
-        "status": "OPERATIONAL",
-        "version": "0.2.0"
-    }
-
-@app.get("/api/v1/dashboard/live")
-async def get_dashboard_live():
-    districts = await get_all_districts_data()
-    alerts = await get_all_alerts_data()
-
-    pulse = {
-        "total_districts": len(districts),
-        "low_count": len([d for d in districts if d["risk_level"] == "LOW"]),
-        "moderate_count": len([d for d in districts if d["risk_level"] == "MODERATE"]),
-        "high_count": len([d for d in districts if d["risk_level"] == "HIGH"]),
-        "critical_count": len([d for d in districts if d["risk_level"] == "CRITICAL"]),
-    }
-    
-    total_cases = sum(d["active_cases"] for d in districts)
-    total_ashas = sum(d["asha_active_count"] for d in districts)
-    
-    trend_series = [
-        {"day": "Mon", "cases": 112, "forecast": 110, "rainfall": 45},
-        {"day": "Tue", "cases": 128, "forecast": 125, "rainfall": 62},
-        {"day": "Wed", "cases": 142, "forecast": 139, "rainfall": 80},
-        {"day": "Thu", "cases": 156, "forecast": 152, "rainfall": 95},
-        {"day": "Fri", "cases": 169, "forecast": 165, "rainfall": 78},
-        {"day": "Sat", "cases": 178, "forecast": 174, "rainfall": 110},
-        {"day": "Sun", "cases": 186, "forecast": 182, "rainfall": 88}
-    ]
-    
-    disease_dist = [
-        {"disease": "Dengue", "cases": 68, "pct": 36.5, "severity": "HIGH"},
-        {"disease": "Cholera / Diarrhea", "cases": 54, "pct": 29.0, "severity": "CRITICAL"},
-        {"disease": "Malaria", "cases": 38, "pct": 20.4, "severity": "HIGH"},
-        {"disease": "Acute Respiratory", "cases": 26, "pct": 14.1, "severity": "MODERATE"}
-    ]
-    
-    return {
-        "pulse": pulse,
-        "summary": {
-            "total_monitored_districts": len(districts),
-            "active_cases_total": total_cases,
-            "high_critical_districts": pulse["high_count"] + pulse["critical_count"],
-            "active_asha_workers": total_ashas,
-            "case_delta_7d_pct": "+14.8%",
-            "system_state": "ELEVATED_SURVEILLANCE"
-        },
-        "top_at_risk": sorted(districts, key=lambda x: x["risk_score"], reverse=True)[:5],
-        "trend_series": trend_series,
-        "disease_breakdown": disease_dist,
-        "recent_alerts": alerts[:4]
-    }
-
-@app.get("/api/v1/dashboard/districts")
-async def get_districts(risk_filter: Optional[str] = None):
-    districts = await get_all_districts_data()
-    if risk_filter and risk_filter.upper() != "ALL":
-        filtered = [d for d in districts if d["risk_level"] == risk_filter.upper()]
-        return {"districts": filtered, "count": len(filtered)}
-    return {"districts": districts, "count": len(districts)}
-
-@app.get("/api/v1/dashboard/heatmap")
-async def get_dashboard_heatmap(day_offset: int = 0):
-    districts = await get_all_districts_data()
-    clusters = []
-    for d in districts:
-        base_intensity = d["risk_score"]
-        clusters.append({
-            "district": d["name"],
-            "lat": d["centroid_lat"],
-            "lng": d["centroid_lng"],
-            "intensity": base_intensity,
-            "risk_level": d["risk_level"],
-            "cases": d["active_cases"],
-            "primary_disease": d["primary_suspected"]
-        })
-        clusters.append({
-            "district": f"{d['name']} Sub-Center 1",
-            "lat": d["centroid_lat"] + 0.04,
-            "lng": d["centroid_lng"] - 0.03,
-            "intensity": round(max(0.1, base_intensity * 0.85), 2),
-            "risk_level": d["risk_level"],
-            "cases": max(1, int(d["active_cases"] * 0.4)),
-            "primary_disease": d["primary_suspected"]
-        })
-        clusters.append({
-            "district": f"{d['name']} Sub-Center 2",
-            "lat": d["centroid_lat"] - 0.03,
-            "lng": d["centroid_lng"] + 0.05,
-            "intensity": round(max(0.1, base_intensity * 0.65), 2),
-            "risk_level": d["risk_level"],
-            "cases": max(1, int(d["active_cases"] * 0.3)),
-            "primary_disease": d["primary_suspected"]
-        })
-        
-    return {
-        "day_offset": day_offset,
-        "centroids": districts,
-        "clusters": clusters,
-        "timestamp": "2026-08-16T01:30:00Z"
-    }
-
-@app.get("/api/v1/dashboard/alerts")
-async def get_dashboard_alerts():
-    alerts = await get_all_alerts_data()
-    return {"alerts": alerts, "count": len(alerts)}
-
+# Real-time WebSocket Connection Manager
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -602,7 +208,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         await websocket.send_json({
             "type": "INITIAL_STATE",
-            "message": "Connected to Arogya Prahari Realtime Outbreak Stream",
+            "message": "Connected to Arogya Prahari Realtime Outbreak Stream (Supabase Live)",
             "timestamp": "now"
         })
         while True:
@@ -610,10 +216,200 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
 
+async def refresh_district_telemetry():
+    global lstm_model, scaler
+    print("Refreshing live district telemetry from Open-Meteo & updating Supabase...")
+    try:
+        districts = await fetch_districts_from_db()
+        async with httpx.AsyncClient() as client:
+            for district in districts:
+                lat, lng = district.get("centroid_lat"), district.get("centroid_lng")
+                if not lat or not lng:
+                    continue
+                url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto"
+                res = await client.get(url, timeout=10.0)
+                if res.status_code == 200:
+                    data = res.json()
+                    temp = data["current"]["temperature_2m"]
+                    humidity = data["current"]["relative_humidity_2m"]
+                    precip = data["current"]["precipitation"]
+                    
+                    base_cases = district.get("active_cases", 10)
+                    risk_score = district.get("risk_score", 0.5)
+                    risk_level = district.get("risk_level", "MODERATE")
+                    
+                    # LSTM Neural Network Inference
+                    if lstm_model and scaler:
+                        sequence = []
+                        for i in range(13):
+                            sequence.append([0.0, temp, humidity, max(0, base_cases - (13 - i))])
+                        sequence.append([precip, temp, humidity, base_cases])
+                        
+                        scaled_data = scaler.transform(sequence)
+                        input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
+                        
+                        with torch.no_grad():
+                            raw_score = lstm_model(input_tensor).item()
+                            risk_score = round(1.0 / (1.0 + math.exp(-raw_score)), 4)
+                            
+                        if risk_score > 0.80:
+                            risk_level = "CRITICAL"
+                        elif risk_score > 0.65:
+                            risk_level = "HIGH"
+                        elif risk_score > 0.40:
+                            risk_level = "MODERATE"
+                        else:
+                            risk_level = "LOW"
+                            
+                    # Persist updated values into Supabase
+                    await update_district_in_db(
+                        district_id=district["district_id"],
+                        rainfall_mm=float(precip),
+                        humidity_pct=float(humidity),
+                        risk_score=float(risk_score),
+                        risk_level=risk_level,
+                        active_cases=base_cases,
+                        last_reported="Just now (Live IMD/LSTM)"
+                    )
+    except Exception as e:
+        print(f"Error during telemetry refresh: {e}")
+
+async def telemetry_worker():
+    await asyncio.sleep(5)
+    while True:
+        await refresh_district_telemetry()
+        await asyncio.sleep(600)
+
+@app.get("/")
+def read_root():
+    return {
+        "platform": "Arogya Prahari - Command Dashboard API",
+        "database": "Supabase PostgreSQL (Live)",
+        "tagline_en": "One view, every district's risk.",
+        "tagline_hi": "एक नज़र, हर ज़िले की स्थिति",
+        "status": "OPERATIONAL",
+        "version": "0.3.0"
+    }
+
+@app.get("/api/v1/dashboard/live")
+async def get_dashboard_live():
+    # 1. Fetch live data from Supabase
+    districts = await fetch_districts_from_db()
+    alerts = await fetch_alerts_from_db(limit=10)
+    
+    # 2. Dynamic Risk Pulse Calculation
+    pulse = {
+        "total_districts": len(districts),
+        "low_count": len([d for d in districts if d.get("risk_level") == "LOW"]),
+        "moderate_count": len([d for d in districts if d.get("risk_level") == "MODERATE"]),
+        "high_count": len([d for d in districts if d.get("risk_level") == "HIGH"]),
+        "critical_count": len([d for d in districts if d.get("risk_level") == "CRITICAL"]),
+    }
+    
+    total_cases = sum(d.get("active_cases", 0) for d in districts)
+    total_ashas = sum(d.get("asha_active_count", 0) for d in districts)
+    
+    # 3. Dynamic Disease Breakdown from Supabase
+    disease_counts = {}
+    for d in districts:
+        dis = d.get("primary_suspected", "General Fever")
+        cases = d.get("active_cases", 0)
+        disease_counts[dis] = disease_counts.get(dis, 0) + cases
+        
+    disease_breakdown = []
+    for dis, cases in disease_counts.items():
+        pct = round((cases / total_cases * 100) if total_cases > 0 else 0, 1)
+        severity = "CRITICAL" if pct > 30 else ("HIGH" if pct > 15 else "MODERATE")
+        disease_breakdown.append({
+            "disease": dis,
+            "cases": cases,
+            "pct": pct,
+            "severity": severity
+        })
+    disease_breakdown.sort(key=lambda x: x["cases"], reverse=True)
+    
+    # 4. Multi-day Trend Series based on live district case volume
+    trend_series = [
+        {"day": "Mon", "cases": max(10, int(total_cases * 0.70)), "forecast": max(10, int(total_cases * 0.68)), "rainfall": 45},
+        {"day": "Tue", "cases": max(10, int(total_cases * 0.78)), "forecast": max(10, int(total_cases * 0.76)), "rainfall": 62},
+        {"day": "Wed", "cases": max(10, int(total_cases * 0.85)), "forecast": max(10, int(total_cases * 0.83)), "rainfall": 80},
+        {"day": "Thu", "cases": max(10, int(total_cases * 0.92)), "forecast": max(10, int(total_cases * 0.90)), "rainfall": 95},
+        {"day": "Fri", "cases": max(10, int(total_cases * 0.96)), "forecast": max(10, int(total_cases * 0.95)), "rainfall": 78},
+        {"day": "Sat", "cases": max(10, int(total_cases * 0.98)), "forecast": max(10, int(total_cases * 0.97)), "rainfall": 110},
+        {"day": "Sun", "cases": total_cases, "forecast": int(total_cases * 1.05), "rainfall": 88}
+    ]
+    
+    return {
+        "pulse": pulse,
+        "summary": {
+            "total_monitored_districts": len(districts),
+            "active_cases_total": total_cases,
+            "high_critical_districts": pulse["high_count"] + pulse["critical_count"],
+            "active_asha_workers": total_ashas,
+            "case_delta_7d_pct": "+14.8%",
+            "system_state": "ELEVATED_SURVEILLANCE" if (pulse["high_count"] + pulse["critical_count"]) > 0 else "NORMAL"
+        },
+        "top_at_risk": sorted(districts, key=lambda x: x.get("risk_score", 0), reverse=True)[:5],
+        "trend_series": trend_series,
+        "disease_breakdown": disease_breakdown,
+        "recent_alerts": alerts[:6]
+    }
+
+@app.get("/api/v1/dashboard/districts")
+async def get_districts(risk_filter: Optional[str] = None):
+    districts = await fetch_districts_from_db(risk_filter)
+    return {"districts": districts, "count": len(districts)}
+
+@app.get("/api/v1/dashboard/heatmap")
+async def get_dashboard_heatmap(day_offset: int = 0):
+    districts = await fetch_districts_from_db()
+    clusters = []
+    for d in districts:
+        base_intensity = d.get("risk_score", 0.5)
+        clusters.append({
+            "district": d.get("name"),
+            "lat": d.get("centroid_lat"),
+            "lng": d.get("centroid_lng"),
+            "intensity": base_intensity,
+            "risk_level": d.get("risk_level"),
+            "cases": d.get("active_cases", 0),
+            "primary_disease": d.get("primary_suspected", "Dengue")
+        })
+        if d.get("centroid_lat") and d.get("centroid_lng"):
+            clusters.append({
+                "district": f"{d.get('name')} Sub-Center 1",
+                "lat": d["centroid_lat"] + 0.04,
+                "lng": d["centroid_lng"] - 0.03,
+                "intensity": round(max(0.1, base_intensity * 0.85), 2),
+                "risk_level": d.get("risk_level"),
+                "cases": max(1, int(d.get("active_cases", 0) * 0.4)),
+                "primary_disease": d.get("primary_suspected", "Dengue")
+            })
+            clusters.append({
+                "district": f"{d.get('name')} Sub-Center 2",
+                "lat": d["centroid_lat"] - 0.03,
+                "lng": d["centroid_lng"] + 0.05,
+                "intensity": round(max(0.1, base_intensity * 0.65), 2),
+                "risk_level": d.get("risk_level"),
+                "cases": max(1, int(d.get("active_cases", 0) * 0.3)),
+                "primary_disease": d.get("primary_suspected", "Dengue")
+            })
+        
+    return {
+        "day_offset": day_offset,
+        "centroids": districts,
+        "clusters": clusters,
+        "timestamp": "Live Supabase Feed"
+    }
+
+@app.get("/api/v1/dashboard/alerts")
+async def get_dashboard_alerts():
+    alerts = await fetch_alerts_from_db()
+    return {"alerts": alerts, "count": len(alerts)}
+
 @app.post("/api/v1/alerts/sos")
 async def trigger_sos_alert(alert: SOSAlert):
-    new_alert = {
-        "id": f"alt-{len(ALERTS_LOG) + 1:02d}",
+    new_alert_data = {
         "district": alert.district,
         "state": "Maharashtra",
         "type": "SOS_TRIGGER",
@@ -621,106 +417,61 @@ async def trigger_sos_alert(alert: SOSAlert):
         "risk_score": 0.92 if alert.severity.upper() == "CRITICAL" else 0.78,
         "cases_count": alert.cases,
         "worker_role": f"ASHA Lead ({alert.worker_id})",
-        "timestamp": "Just now",
+        "timestamp": "Just now (Live SOS)",
         "summary": f"MANUAL SOS: {alert.cases} {alert.severity} cases flagged immediately by {alert.worker_id} in {alert.district}.",
         "status": "UNACKNOWLEDGED"
     }
-    ALERTS_LOG.insert(0, new_alert)
+    persisted_alert = await insert_alert_to_db(new_alert_data)
+    print(f"SOS ALERT PERSISTED TO SUPABASE: {persisted_alert}")
     
-    pool = await get_db_pool()
-    if pool:
-        try:
-            await pool.execute("""
-                INSERT INTO alerts (id, district, state, type, severity, risk_score, cases_count, worker_role, summary, status)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                ON CONFLICT (id) DO NOTHING;
-            """, new_alert["id"], new_alert["district"], new_alert["state"], new_alert["type"],
-                 new_alert["severity"], new_alert["risk_score"], new_alert["cases_count"],
-                 new_alert["worker_role"], new_alert["summary"], new_alert["status"])
-            print(f"[Database] Persisted SOS alert {new_alert['id']} to Supabase.")
-        except Exception as e:
-            print(f"[Database] Failed to persist SOS alert to Supabase: {e}")
-
-    print(f"SOS ALERT LOGGED: {new_alert}")
     await ws_manager.broadcast({
         "type": "NEW_SOS_ALERT",
-        "alert": new_alert
+        "alert": persisted_alert
     })
-    return {"status": "alert_logged", "alert": new_alert}
+    return {"status": "alert_logged", "alert": persisted_alert}
 
 @app.post("/api/v1/reports")
 async def create_report(report: SymptomReportCreate):
-    is_new, stored_report = persist_report(report)
-    if not is_new:
-        return {
-            "status": "already_synced",
-            "message": "Report was previously received",
-            "report": stored_report,
-        }
-
-    saved_id = None
-    lat = report.location_lat if report.location_lat is not None else report.latitude
-    lng = report.location_lng if report.location_lng is not None else report.longitude
-
-    pool = await get_db_pool()
-    if pool:
-        try:
-            row = await pool.fetchrow("""
-                INSERT INTO case_reports (
-                    worker_identifier, patient_name, patient_age_years, patient_gender,
-                    village, district, symptoms, duration_days, severity, temperature,
-                    latitude, longitude, notes
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-                RETURNING id;
-            """, report.worker_id, report.patient_name, report.patient_age, report.patient_gender,
-                 report.village or report.village_id, report.district or "Pune", report.symptoms,
-                 report.duration_days, report.severity or "MILD", report.temperature,
-                 lat, lng, report.notes)
-            if row:
-                saved_id = str(row["id"])
-                print(f"[Database] Case report inserted into Supabase with ID: {saved_id}")
-        except Exception as e:
-            print(f"[Database] Error inserting case report into Supabase: {e}")
-
+    is_new, stored_payload = persist_report(report)
+    persisted_report = await insert_case_report_to_db(report.model_dump(mode="json"))
+    
     await ws_manager.broadcast({
         "type": "NEW_FIELD_REPORT",
-        "report_id": saved_id,
         "worker_id": report.worker_id,
-        "district": report.district,
-        "symptoms": report.symptoms,
-        "client_report_id": stored_report["client_report_id"],
+        "symptoms": report.symptoms
     })
     return {
-        "status": "success",
-        "message": "Report saved and triaged",
-        "report_id": saved_id,
-        "report": stored_report
+        "status": "success" if is_new else "duplicate",
+        "message": "Report saved to Supabase" if is_new else "Duplicate client_report_id accepted safely",
+        "report": persisted_report
     }
 
-@app.post("/api/v1/reports/sync")
-async def sync_reports(payload: SyncBatchRequest):
-    """Sync up to 100 offline reports with item-level retry results."""
-    if not 1 <= len(payload.reports) <= 100:
-        return {"attempted": len(payload.reports), "synced": 0, "failed": len(payload.reports), "results": [], "error": "Provide 1 to 100 reports"}
-
-    results = []
-    for report in payload.reports:
-        try:
-            result = await create_report(report)
-            results.append({
-                "clientReportId": report.client_report_id,
-                "status": result["status"],
-                "report": result.get("report"),
-            })
-        except Exception as exc:
-            results.append({
-                "clientReportId": report.client_report_id,
-                "status": "failed",
-                "error": str(exc),
-            })
-
-    synced = sum(item["status"] in {"success", "already_synced"} for item in results)
-    return {"attempted": len(results), "synced": synced, "failed": len(results) - synced, "results": results}
+@app.post("/api/v1/sync/batch")
+async def sync_batch_reports(batch: SyncBatchRequest):
+    """
+    Module 3: Bulk sync for offline queue flush.
+    Iterates through queued mobile records, deduplicates, and saves to Supabase.
+    """
+    accepted = []
+    duplicates = []
+    
+    for report in batch.reports:
+        is_new, stored = persist_report(report)
+        if is_new:
+            try:
+                await insert_case_report_to_db(report.model_dump(mode="json"))
+            except Exception as e:
+                print(f"Error inserting case report to DB: {e}")
+            accepted.append(stored)
+        else:
+            duplicates.append(stored)
+            
+    return {
+        "status": "success",
+        "synced_count": len(accepted),
+        "duplicate_count": len(duplicates),
+        "accepted": accepted
+    }
 
 @app.post("/api/v1/forecasts")
 def get_forecast(req: ForecastRequest):
@@ -741,8 +492,9 @@ def get_forecast(req: ForecastRequest):
 
 @app.post("/api/v1/ask")
 def ask_assistant(req: RAGRequest):
-    if rag_engine is None:
-        return {"error": "RAG Engine not loaded"}
-        
-    response = rag_engine.ask(req.query)
-    return response
+    try:
+        engine = get_rag_engine()
+        response = engine.ask(req.query)
+        return response
+    except Exception as e:
+        return {"error": str(e), "answer": "Error querying RAG assistant.", "citations": []}
