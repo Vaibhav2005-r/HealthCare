@@ -14,7 +14,7 @@ class HomeShell extends ConsumerWidget {
     final String location = GoRouterState.of(context).uri.toString();
     if (location == '/' || location.isEmpty) return 0;
     if (location.startsWith('/report')) return 1;
-    if (location.startsWith('/sync')) return 2;
+    if (location.startsWith('/logs')) return 2;
     if (location.startsWith('/assistant')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
@@ -29,7 +29,7 @@ class HomeShell extends ConsumerWidget {
         context.go('/report');
         break;
       case 2:
-        context.go('/sync');
+        context.go('/logs');
         break;
       case 3:
         context.go('/assistant');
