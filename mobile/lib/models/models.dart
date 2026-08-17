@@ -11,6 +11,7 @@ class Report {
   final String? contactNumber;
   final String village;
   final List<String> symptoms;
+  final List<String> customSymptoms;
   final int durationDays;
   final double? temperature;
   final String? temperatureUnit;
@@ -34,6 +35,7 @@ class Report {
     this.contactNumber,
     required this.village,
     required this.symptoms,
+    this.customSymptoms = const [],
     required this.durationDays,
     this.temperature,
     this.temperatureUnit,
@@ -57,6 +59,7 @@ class Report {
     String? contactNumber,
     String? village,
     List<String>? symptoms,
+    List<String>? customSymptoms,
     int? durationDays,
     double? temperature,
     String? temperatureUnit,
@@ -79,6 +82,7 @@ class Report {
       contactNumber: contactNumber ?? this.contactNumber,
       village: village ?? this.village,
       symptoms: symptoms ?? this.symptoms,
+      customSymptoms: customSymptoms ?? this.customSymptoms,
       durationDays: durationDays ?? this.durationDays,
       temperature: temperature ?? this.temperature,
       temperatureUnit: temperatureUnit ?? this.temperatureUnit,
@@ -104,6 +108,7 @@ class Report {
       'contactNumber': contactNumber,
       'village': village,
       'symptoms': jsonEncode(symptoms),
+      'customSymptoms': jsonEncode(customSymptoms),
       'durationDays': durationDays,
       'temperature': temperature,
       'temperatureUnit': temperatureUnit,
@@ -129,6 +134,7 @@ class Report {
       contactNumber: map['contactNumber'],
       village: map['village'],
       symptoms: List<String>.from(jsonDecode(map['symptoms'] ?? '[]')),
+      customSymptoms: List<String>.from(jsonDecode(map['customSymptoms'] ?? '[]')),
       durationDays: map['durationDays'],
       temperature: map['temperature']?.toDouble(),
       temperatureUnit: map['temperatureUnit'],
