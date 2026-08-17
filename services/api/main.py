@@ -7,15 +7,19 @@ import httpx
 import asyncio
 import random
 import sqlite3
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
 from typing import List, Optional
 from sklearn.preprocessing import MinMaxScaler
 from contextlib import asynccontextmanager
+
+from database.connection import init_db_pool, close_db_pool, get_db_pool
 
 # Add parent directory to path to import ml module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,10 +31,10 @@ from ml.rag_pipeline import RAGEngine
 lstm_model = None
 scaler = None
 rag_engine = None
+
 OFFLINE_SYNC_DATABASE_PATH = Path(
     os.getenv("OFFLINE_SYNC_DATABASE_PATH", os.path.join(os.path.dirname(__file__), "offline_sync.db"))
 )
-
 
 def initialise_offline_sync_database():
     """Create durable idempotency storage for reports retried by mobile workers."""
@@ -42,7 +46,6 @@ def initialise_offline_sync_database():
                 received_at TEXT NOT NULL
             )
         """)
-
 
 def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
     """Store a report once; return the original result on a safe retry."""
@@ -69,8 +72,11 @@ def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
 async def lifespan(app: FastAPI):
     global lstm_model, scaler, rag_engine
     
+    print("Starting database & ML initialization...")
+    # 0. Init Local Idempotency DB & Supabase Connection Pool
     initialise_offline_sync_database()
-    print("Starting ML initialization...")
+    await init_db_pool()
+
     # 1. Init RAG
     rag_engine = RAGEngine()
     
@@ -99,9 +105,7 @@ async def lifespan(app: FastAPI):
     
     yield
     print("Shutting down...")
-
-from fastapi.middleware.cors import CORSMiddleware
-import json
+    await close_db_pool()
 
 app = FastAPI(
     title="Arogya Prahari - Outbreak Intelligence API",
@@ -128,16 +132,23 @@ app.include_router(exports.router)
 
 class SymptomReportCreate(BaseModel):
     worker_id: str
+    patient_name: Optional[str] = "Unknown"
     patient_age: Optional[int] = None
-    symptoms: List[str]
-    duration_days: int
+    patient_gender: Optional[str] = "O"
+    village: Optional[str] = None
     village_id: Optional[str] = None
-    patient_gender: Optional[str] = None
+    district: Optional[str] = "Pune"
+    symptoms: List[str]
+    duration_days: int = 1
     disease_type: Optional[str] = "UNKNOWN"
-    notes: Optional[str] = None
+    severity: Optional[str] = "MILD"
+    temperature: Optional[float] = None
+    location_lat: Optional[float] = None
+    location_lng: Optional[float] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     client_report_id: Optional[str] = None
+    notes: Optional[str] = None
 
 class SyncBatchRequest(BaseModel):
     reports: List[SymptomReportCreate]
@@ -154,7 +165,7 @@ class SOSAlert(BaseModel):
     cases: int
     severity: str
 
-# In-memory alerts registry
+# In-memory alerts registry (fallback)
 ALERTS_LOG = [
     {
         "id": "alt-01",
@@ -373,13 +384,11 @@ async def refresh_district_telemetry():
                     humidity = data["current"]["relative_humidity_2m"]
                     precip = data["current"]["precipitation"]
                     
-                    # Update district weather data
                     district["rainfall_mm"] = precip
                     district["humidity_pct"] = humidity
                     
                     # 2. LSTM Inference
                     if lstm_model and scaler:
-                        # Construct a mock 14-day sequence, where the last day is the live weather
                         base_cases = district["active_cases"]
                         sequence = []
                         for i in range(13):
@@ -393,7 +402,6 @@ async def refresh_district_telemetry():
                             raw_score = lstm_model(input_tensor).item()
                             risk_score = 1.0 / (1.0 + math.exp(-raw_score))
                             
-                        # Re-assign risk
                         district["risk_score"] = round(risk_score, 4)
                         if risk_score > 0.80:
                             district["risk_level"] = "CRITICAL"
@@ -404,7 +412,6 @@ async def refresh_district_telemetry():
                         else:
                             district["risk_level"] = "LOW"
                             
-                        # Simulate case fluctuation based on live risk
                         if random.random() > 0.5:
                             if district["risk_level"] in ["HIGH", "CRITICAL"]:
                                 district["active_cases"] += random.randint(1, 3)
@@ -416,12 +423,44 @@ async def refresh_district_telemetry():
         print(f"Error during telemetry refresh: {e}")
 
 async def telemetry_worker():
-    # Initial pause to let server start
     await asyncio.sleep(5)
     while True:
         await refresh_district_telemetry()
-        # Wait 10 minutes before refreshing again
         await asyncio.sleep(600)
+
+async def get_all_districts_data() -> List[dict]:
+    pool = await get_db_pool()
+    if pool:
+        try:
+            records = await pool.fetch("""
+                SELECT district_id, name, state, centroid_lat, centroid_lng, risk_level,
+                       risk_score, active_cases, trend_7d, trend_pct, primary_suspected,
+                       population, asha_active_count, rainfall_mm, humidity_pct, last_reported
+                FROM districts
+                ORDER BY risk_score DESC;
+            """)
+            if records:
+                return [dict(r) for r in records]
+        except Exception as e:
+            print(f"[Database] Error querying districts from Supabase: {e}")
+    return DISTRICTS_DATA
+
+async def get_all_alerts_data() -> List[dict]:
+    pool = await get_db_pool()
+    if pool:
+        try:
+            records = await pool.fetch("""
+                SELECT id, district, state, type, severity, risk_score, cases_count,
+                       worker_role, timestamp::text, summary, status
+                FROM alerts
+                ORDER BY timestamp DESC
+                LIMIT 20;
+            """)
+            if records:
+                return [dict(r) for r in records]
+        except Exception as e:
+            print(f"[Database] Error querying alerts from Supabase: {e}")
+    return ALERTS_LOG
 
 @app.get("/")
 def read_root():
@@ -435,19 +474,20 @@ def read_root():
 
 @app.get("/api/v1/dashboard/live")
 async def get_dashboard_live():
-    # Calculate live pulse counts
+    districts = await get_all_districts_data()
+    alerts = await get_all_alerts_data()
+
     pulse = {
-        "total_districts": len(DISTRICTS_DATA),
-        "low_count": len([d for d in DISTRICTS_DATA if d["risk_level"] == "LOW"]),
-        "moderate_count": len([d for d in DISTRICTS_DATA if d["risk_level"] == "MODERATE"]),
-        "high_count": len([d for d in DISTRICTS_DATA if d["risk_level"] == "HIGH"]),
-        "critical_count": len([d for d in DISTRICTS_DATA if d["risk_level"] == "CRITICAL"]),
+        "total_districts": len(districts),
+        "low_count": len([d for d in districts if d["risk_level"] == "LOW"]),
+        "moderate_count": len([d for d in districts if d["risk_level"] == "MODERATE"]),
+        "high_count": len([d for d in districts if d["risk_level"] == "HIGH"]),
+        "critical_count": len([d for d in districts if d["risk_level"] == "CRITICAL"]),
     }
     
-    total_cases = sum(d["active_cases"] for d in DISTRICTS_DATA)
-    total_ashas = sum(d["asha_active_count"] for d in DISTRICTS_DATA)
+    total_cases = sum(d["active_cases"] for d in districts)
+    total_ashas = sum(d["asha_active_count"] for d in districts)
     
-    # 7-day trend series
     trend_series = [
         {"day": "Mon", "cases": 112, "forecast": 110, "rainfall": 45},
         {"day": "Tue", "cases": 128, "forecast": 125, "rainfall": 62},
@@ -458,7 +498,6 @@ async def get_dashboard_live():
         {"day": "Sun", "cases": 186, "forecast": 182, "rainfall": 88}
     ]
     
-    # Disease breakdown
     disease_dist = [
         {"disease": "Dengue", "cases": 68, "pct": 36.5, "severity": "HIGH"},
         {"disease": "Cholera / Diarrhea", "cases": 54, "pct": 29.0, "severity": "CRITICAL"},
@@ -469,32 +508,32 @@ async def get_dashboard_live():
     return {
         "pulse": pulse,
         "summary": {
-            "total_monitored_districts": len(DISTRICTS_DATA),
+            "total_monitored_districts": len(districts),
             "active_cases_total": total_cases,
             "high_critical_districts": pulse["high_count"] + pulse["critical_count"],
             "active_asha_workers": total_ashas,
             "case_delta_7d_pct": "+14.8%",
             "system_state": "ELEVATED_SURVEILLANCE"
         },
-        "top_at_risk": sorted(DISTRICTS_DATA, key=lambda x: x["risk_score"], reverse=True)[:5],
+        "top_at_risk": sorted(districts, key=lambda x: x["risk_score"], reverse=True)[:5],
         "trend_series": trend_series,
         "disease_breakdown": disease_dist,
-        "recent_alerts": ALERTS_LOG[:4]
+        "recent_alerts": alerts[:4]
     }
 
 @app.get("/api/v1/dashboard/districts")
 async def get_districts(risk_filter: Optional[str] = None):
+    districts = await get_all_districts_data()
     if risk_filter and risk_filter.upper() != "ALL":
-        filtered = [d for d in DISTRICTS_DATA if d["risk_level"] == risk_filter.upper()]
+        filtered = [d for d in districts if d["risk_level"] == risk_filter.upper()]
         return {"districts": filtered, "count": len(filtered)}
-    return {"districts": DISTRICTS_DATA, "count": len(DISTRICTS_DATA)}
+    return {"districts": districts, "count": len(districts)}
 
 @app.get("/api/v1/dashboard/heatmap")
 async def get_dashboard_heatmap(day_offset: int = 0):
-    # Cluster points for heatmap overlay
+    districts = await get_all_districts_data()
     clusters = []
-    for d in DISTRICTS_DATA:
-        # Generate representative cluster points around district centroids
+    for d in districts:
         base_intensity = d["risk_score"]
         clusters.append({
             "district": d["name"],
@@ -505,7 +544,6 @@ async def get_dashboard_heatmap(day_offset: int = 0):
             "cases": d["active_cases"],
             "primary_disease": d["primary_suspected"]
         })
-        # Add sub-center points
         clusters.append({
             "district": f"{d['name']} Sub-Center 1",
             "lat": d["centroid_lat"] + 0.04,
@@ -527,18 +565,16 @@ async def get_dashboard_heatmap(day_offset: int = 0):
         
     return {
         "day_offset": day_offset,
-        "centroids": DISTRICTS_DATA,
+        "centroids": districts,
         "clusters": clusters,
         "timestamp": "2026-08-16T01:30:00Z"
     }
 
 @app.get("/api/v1/dashboard/alerts")
 async def get_dashboard_alerts():
-    return {"alerts": ALERTS_LOG, "count": len(ALERTS_LOG)}
+    alerts = await get_all_alerts_data()
+    return {"alerts": alerts, "count": len(alerts)}
 
-from fastapi import WebSocket, WebSocketDisconnect
-
-# Real-time WebSocket Connection Manager
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
@@ -564,14 +600,12 @@ ws_manager = ConnectionManager()
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
-        # Send initial status
         await websocket.send_json({
             "type": "INITIAL_STATE",
             "message": "Connected to Arogya Prahari Realtime Outbreak Stream",
             "timestamp": "now"
         })
         while True:
-            # Keep connection open
             data = await websocket.receive_text()
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
@@ -592,8 +626,22 @@ async def trigger_sos_alert(alert: SOSAlert):
         "status": "UNACKNOWLEDGED"
     }
     ALERTS_LOG.insert(0, new_alert)
+    
+    pool = await get_db_pool()
+    if pool:
+        try:
+            await pool.execute("""
+                INSERT INTO alerts (id, district, state, type, severity, risk_score, cases_count, worker_role, summary, status)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                ON CONFLICT (id) DO NOTHING;
+            """, new_alert["id"], new_alert["district"], new_alert["state"], new_alert["type"],
+                 new_alert["severity"], new_alert["risk_score"], new_alert["cases_count"],
+                 new_alert["worker_role"], new_alert["summary"], new_alert["status"])
+            print(f"[Database] Persisted SOS alert {new_alert['id']} to Supabase.")
+        except Exception as e:
+            print(f"[Database] Failed to persist SOS alert to Supabase: {e}")
+
     print(f"SOS ALERT LOGGED: {new_alert}")
-    # Realtime broadcast to all connected dashboards
     await ws_manager.broadcast({
         "type": "NEW_SOS_ALERT",
         "alert": new_alert
@@ -610,23 +658,48 @@ async def create_report(report: SymptomReportCreate):
             "report": stored_report,
         }
 
-    # Realtime broadcast only once, so an offline retry cannot create duplicate events.
+    saved_id = None
+    lat = report.location_lat if report.location_lat is not None else report.latitude
+    lng = report.location_lng if report.location_lng is not None else report.longitude
+
+    pool = await get_db_pool()
+    if pool:
+        try:
+            row = await pool.fetchrow("""
+                INSERT INTO case_reports (
+                    worker_identifier, patient_name, patient_age_years, patient_gender,
+                    village, district, symptoms, duration_days, severity, temperature,
+                    latitude, longitude, notes
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                RETURNING id;
+            """, report.worker_id, report.patient_name, report.patient_age, report.patient_gender,
+                 report.village or report.village_id, report.district or "Pune", report.symptoms,
+                 report.duration_days, report.severity or "MILD", report.temperature,
+                 lat, lng, report.notes)
+            if row:
+                saved_id = str(row["id"])
+                print(f"[Database] Case report inserted into Supabase with ID: {saved_id}")
+        except Exception as e:
+            print(f"[Database] Error inserting case report into Supabase: {e}")
+
     await ws_manager.broadcast({
         "type": "NEW_FIELD_REPORT",
+        "report_id": saved_id,
         "worker_id": report.worker_id,
+        "district": report.district,
         "symptoms": report.symptoms,
         "client_report_id": stored_report["client_report_id"],
     })
-    return {"status": "success", "message": "Report saved and triaged", "report": stored_report}
-
+    return {
+        "status": "success",
+        "message": "Report saved and triaged",
+        "report_id": saved_id,
+        "report": stored_report
+    }
 
 @app.post("/api/v1/reports/sync")
 async def sync_reports(payload: SyncBatchRequest):
-    """Sync up to 100 offline reports with item-level retry results.
-
-    Keep ``client_report_id`` stable across WorkManager retries. The durable
-    local store returns ``already_synced`` for an item received previously.
-    """
+    """Sync up to 100 offline reports with item-level retry results."""
     if not 1 <= len(payload.reports) <= 100:
         return {"attempted": len(payload.reports), "synced": 0, "failed": len(payload.reports), "results": [], "error": "Provide 1 to 100 reports"}
 
@@ -637,7 +710,7 @@ async def sync_reports(payload: SyncBatchRequest):
             results.append({
                 "clientReportId": report.client_report_id,
                 "status": result["status"],
-                "report": result["report"],
+                "report": result.get("report"),
             })
         except Exception as exc:
             results.append({
@@ -648,7 +721,6 @@ async def sync_reports(payload: SyncBatchRequest):
 
     synced = sum(item["status"] in {"success", "already_synced"} for item in results)
     return {"attempted": len(results), "synced": synced, "failed": len(results) - synced, "results": results}
-
 
 @app.post("/api/v1/forecasts")
 def get_forecast(req: ForecastRequest):
@@ -674,4 +746,3 @@ def ask_assistant(req: RAGRequest):
         
     response = rag_engine.ask(req.query)
     return response
-

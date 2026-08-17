@@ -33,6 +33,8 @@ __pycache__/
 services/venv/
 venv/
 .pytest_cache/
+*.db
+*.sqlite
 
 # Environment / Secrets
 .env
