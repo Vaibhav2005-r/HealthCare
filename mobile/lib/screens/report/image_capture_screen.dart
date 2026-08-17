@@ -61,7 +61,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                       decoration: BoxDecoration(
                         color: index <= 2
                             ? AppColors.primary
-                            : Colors.grey.withValues(alpha: 0.3),
+                            : Colors.grey.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -92,7 +92,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: Colors.black.withOpacity(0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -110,7 +110,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                             Icon(
                               Icons.camera_alt,
                               size: 64,
-                              color: Colors.grey.withValues(alpha: 0.5),
+                              color: Colors.grey.withOpacity(0.5),
                             ),
                             const SizedBox(height: 16),
                             const Text(

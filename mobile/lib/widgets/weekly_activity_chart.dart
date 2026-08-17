@@ -93,7 +93,7 @@ class WeeklyActivityChart extends StatelessWidget {
                     horizontalInterval: 2,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
-                        color: AppColors.border.withValues(alpha: 0.5),
+                        color: AppColors.border.withOpacity(0.5),
                         strokeWidth: 1,
                       );
                     },

@@ -105,7 +105,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                     const SizedBox(height: 8),
                     // Main Risk Card
               Card(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: Colors.white.withOpacity(0.15),
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
                 margin: EdgeInsets.zero,
@@ -116,7 +116,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
+                          color: Colors.white.withOpacity(0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -136,7 +136,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'Based on reported indicators',
-                        style: TextStyle(fontSize: 15, color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w500),
+                        style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
@@ -168,7 +168,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                         children: report.symptoms.map((s) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1A5F7A).withValues(alpha: 0.1),
+                            color: const Color(0xFF1A5F7A).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(

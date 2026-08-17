@@ -41,7 +41,7 @@ class ReviewScreen extends ConsumerWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index <= 5 ? accentColor : Colors.grey.withValues(alpha: 0.3),
+                        color: index <= 5 ? accentColor : Colors.grey.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -131,7 +131,7 @@ class ReviewScreen extends ConsumerWidget {
                             children: draft.symptoms.map((s) => Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: accentColor.withValues(alpha: 0.1),
+                                color: accentColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(s, style: const TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 13)),

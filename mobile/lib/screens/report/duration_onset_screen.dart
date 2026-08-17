@@ -52,7 +52,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                       decoration: BoxDecoration(
                         color: index <= 4
                             ? AppColors.primary
-                            : Colors.grey.withValues(alpha: 0.3),
+                            : Colors.grey.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -77,7 +77,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: Colors.black.withOpacity(0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -89,7 +89,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
+                        color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -150,7 +150,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.1),
+                          color: AppColors.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Row(

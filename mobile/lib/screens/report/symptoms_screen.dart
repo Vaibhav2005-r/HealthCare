@@ -48,7 +48,7 @@ class SymptomsScreen extends ConsumerWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index <= 3 ? accentColor : Colors.grey.withValues(alpha: 0.3),
+                        color: index <= 3 ? accentColor : Colors.grey.withOpacity(0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -124,7 +124,7 @@ class SymptomsScreen extends ConsumerWidget {
                           boxShadow: [
                             if (!isSelected)
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.02),
+                                color: Colors.black.withOpacity(0.02),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -137,7 +137,7 @@ class SymptomsScreen extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.white.withValues(alpha: 0.2) : bgColor,
+                                color: isSelected ? Colors.white.withOpacity(0.2) : bgColor,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(

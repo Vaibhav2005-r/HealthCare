@@ -137,7 +137,7 @@ class HomeScreen extends ConsumerWidget {
                     Icon(
                       Icons.monitor_heart,
                       size: 64,
-                      color: AppColors.primary.withValues(alpha: 0.15),
+                      color: AppColors.primary.withOpacity(0.15),
                     ),
                   ],
                 ),
@@ -183,7 +183,7 @@ class HomeScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
+                          color: AppColors.primary.withOpacity(0.3),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
@@ -194,7 +194,7 @@ class HomeScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -257,7 +257,7 @@ class HomeScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.red.withValues(alpha: 0.3),
+                            color: Colors.red.withOpacity(0.3),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -341,7 +341,7 @@ class HomeScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

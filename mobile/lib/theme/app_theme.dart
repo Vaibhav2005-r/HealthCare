@@ -26,10 +26,10 @@ final ThemeData appTheme = ThemeData(
       elevation: 0,
     ),
   ),
-  cardTheme: CardThemeData(
+  cardTheme: CardTheme(
     color: AppColors.surface,
     elevation: 2,
-    shadowColor: Colors.black.withValues(alpha: 0.03),
+    shadowColor: Colors.black.withOpacity(0.03),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   ),
