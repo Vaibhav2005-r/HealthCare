@@ -6,6 +6,10 @@ import pandas as pd
 import httpx
 import asyncio
 import random
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+from uuid import uuid4
 from fastapi import FastAPI
 from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
@@ -23,11 +27,49 @@ from ml.rag_pipeline import RAGEngine
 lstm_model = None
 scaler = None
 rag_engine = None
+OFFLINE_SYNC_DATABASE_PATH = Path(
+    os.getenv("OFFLINE_SYNC_DATABASE_PATH", os.path.join(os.path.dirname(__file__), "offline_sync.db"))
+)
+
+
+def initialise_offline_sync_database():
+    """Create durable idempotency storage for reports retried by mobile workers."""
+    with sqlite3.connect(OFFLINE_SYNC_DATABASE_PATH) as connection:
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS synced_reports (
+                client_report_id TEXT PRIMARY KEY,
+                report_json TEXT NOT NULL,
+                received_at TEXT NOT NULL
+            )
+        """)
+
+
+def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
+    """Store a report once; return the original result on a safe retry."""
+    client_report_id = report.client_report_id or str(uuid4())
+    received_at = datetime.now(timezone.utc).isoformat()
+    stored_report = report.model_dump(mode="json")
+    stored_report["client_report_id"] = client_report_id
+    stored_report["received_at"] = received_at
+
+    with sqlite3.connect(OFFLINE_SYNC_DATABASE_PATH) as connection:
+        try:
+            connection.execute(
+                "INSERT INTO synced_reports (client_report_id, report_json, received_at) VALUES (?, ?, ?)",
+                (client_report_id, json.dumps(stored_report), received_at),
+            )
+            return True, stored_report
+        except sqlite3.IntegrityError:
+            row = connection.execute(
+                "SELECT report_json FROM synced_reports WHERE client_report_id = ?", (client_report_id,)
+            ).fetchone()
+            return False, json.loads(row[0])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global lstm_model, scaler, rag_engine
     
+    initialise_offline_sync_database()
     print("Starting ML initialization...")
     # 1. Init RAG
     rag_engine = RAGEngine()
@@ -89,6 +131,16 @@ class SymptomReportCreate(BaseModel):
     patient_age: Optional[int] = None
     symptoms: List[str]
     duration_days: int
+    village_id: Optional[str] = None
+    patient_gender: Optional[str] = None
+    disease_type: Optional[str] = "UNKNOWN"
+    notes: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    client_report_id: Optional[str] = None
+
+class SyncBatchRequest(BaseModel):
+    reports: List[SymptomReportCreate]
 
 class ForecastRequest(BaseModel):
     sequence: List[List[float]] # 14 days of [rainfall, temp, humidity, cases]
@@ -550,13 +602,52 @@ async def trigger_sos_alert(alert: SOSAlert):
 
 @app.post("/api/v1/reports")
 async def create_report(report: SymptomReportCreate):
-    # Realtime broadcast of case intake
+    is_new, stored_report = persist_report(report)
+    if not is_new:
+        return {
+            "status": "already_synced",
+            "message": "Report was previously received",
+            "report": stored_report,
+        }
+
+    # Realtime broadcast only once, so an offline retry cannot create duplicate events.
     await ws_manager.broadcast({
         "type": "NEW_FIELD_REPORT",
         "worker_id": report.worker_id,
-        "symptoms": report.symptoms
+        "symptoms": report.symptoms,
+        "client_report_id": stored_report["client_report_id"],
     })
-    return {"status": "success", "message": "Report saved and triaged", "report": report}
+    return {"status": "success", "message": "Report saved and triaged", "report": stored_report}
+
+
+@app.post("/api/v1/reports/sync")
+async def sync_reports(payload: SyncBatchRequest):
+    """Sync up to 100 offline reports with item-level retry results.
+
+    Keep ``client_report_id`` stable across WorkManager retries. The durable
+    local store returns ``already_synced`` for an item received previously.
+    """
+    if not 1 <= len(payload.reports) <= 100:
+        return {"attempted": len(payload.reports), "synced": 0, "failed": len(payload.reports), "results": [], "error": "Provide 1 to 100 reports"}
+
+    results = []
+    for report in payload.reports:
+        try:
+            result = await create_report(report)
+            results.append({
+                "clientReportId": report.client_report_id,
+                "status": result["status"],
+                "report": result["report"],
+            })
+        except Exception as exc:
+            results.append({
+                "clientReportId": report.client_report_id,
+                "status": "failed",
+                "error": str(exc),
+            })
+
+    synced = sum(item["status"] in {"success", "already_synced"} for item in results)
+    return {"attempted": len(results), "synced": synced, "failed": len(results) - synced, "results": results}
 
 
 @app.post("/api/v1/forecasts")
