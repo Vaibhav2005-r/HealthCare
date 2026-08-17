@@ -1,0 +1,442 @@
+{
+  "alerts": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "district": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "state": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'Maharashtra'::text"
+      },
+      "type": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "severity": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "risk_score": {
+        "type": "double precision",
+        "nullable": "NO",
+        "default": null
+      },
+      "cases_count": {
+        "type": "integer",
+        "nullable": "NO",
+        "default": null
+      },
+      "worker_role": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "timestamp": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      },
+      "summary": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "status": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'UNACKNOWLEDGED'::text"
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      }
+    }
+  },
+  "asha_workers": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "uuid",
+        "nullable": "NO",
+        "default": "gen_random_uuid()"
+      },
+      "phone_number": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "full_name": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "role": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "block": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "district": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "state": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      }
+    }
+  },
+  "case_reports": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "uuid",
+        "nullable": "NO",
+        "default": "gen_random_uuid()"
+      },
+      "asha_worker_id": {
+        "type": "uuid",
+        "nullable": "YES",
+        "default": null
+      },
+      "patient_age_years": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": null
+      },
+      "patient_gender": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "village": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "block": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "district": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "state": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'Maharashtra'::text"
+      },
+      "latitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "longitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "altitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "accuracy_meters": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "location_source": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'gps_auto'::text"
+      },
+      "manual_reason_code": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "symptoms": {
+        "type": "ARRAY",
+        "nullable": "YES",
+        "default": null
+      },
+      "suspected_disease": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "severity": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "onset_date": {
+        "type": "date",
+        "nullable": "YES",
+        "default": null
+      },
+      "reported_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      },
+      "notes": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "notes_language": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "image_urls": {
+        "type": "ARRAY",
+        "nullable": "YES",
+        "default": null
+      },
+      "status": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "verified_by": {
+        "type": "uuid",
+        "nullable": "YES",
+        "default": null
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      },
+      "worker_identifier": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "patient_name": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "duration_days": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "1"
+      },
+      "temperature": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "temperature_unit": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'C'::text"
+      },
+      "comorbidities": {
+        "type": "ARRAY",
+        "nullable": "YES",
+        "default": null
+      },
+      "medication_taken": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "sync_status": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'ONLINE'::text"
+      }
+    }
+  },
+  "districts": {
+    "primary_keys": [
+      "district_id"
+    ],
+    "columns": {
+      "district_id": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "name": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "state": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "centroid_lat": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "centroid_lng": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "neighbor_district_ids": {
+        "type": "ARRAY",
+        "nullable": "YES",
+        "default": null
+      },
+      "risk_level": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'LOW'::text"
+      },
+      "risk_score": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": "0.2"
+      },
+      "active_cases": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "0"
+      },
+      "trend_7d": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'FLAT'::text"
+      },
+      "trend_pct": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": "0.0"
+      },
+      "primary_suspected": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'None'::text"
+      },
+      "population": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'1,000,000'::text"
+      },
+      "asha_active_count": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "50"
+      },
+      "rainfall_mm": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": "0.0"
+      },
+      "humidity_pct": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": "60.0"
+      },
+      "last_reported": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'Recently'::text"
+      }
+    }
+  },
+  "health_center_inventory": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "integer",
+        "nullable": "NO",
+        "default": "nextval('health_center_inventory_id_seq'::regclass)"
+      },
+      "center_name": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "district": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "item": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "stock": {
+        "type": "integer",
+        "nullable": "NO",
+        "default": "0"
+      },
+      "status": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "bed_capacity": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "0"
+      },
+      "on_duty_doctors": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "0"
+      },
+      "latitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "longitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "updated_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      }
+    }
+  }
+}
