@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, Float, Foreig
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 import enum
+from geoalchemy2 import Geometry
 
 Base = declarative_base()
 
@@ -28,8 +29,16 @@ class HealthCenter(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     district = Column(String, nullable=False)
-    latitude = Column(Float, nullable=True)
-    longitude = Column(Float, nullable=True)
+    
+    # Inventory for Resource Management Dashboard
+    bed_capacity = Column(Integer, default=0)
+    ors_stock = Column(Integer, default=0)
+    iv_lactate_stock = Column(Integer, default=0)
+    paracetamol_stock = Column(Integer, default=0)
+    on_duty_doctors = Column(Integer, default=0)
+    
+    # Geospatial data for Heatmap (Module 1)
+    location = Column(Geometry(geometry_type='POINT', srid=4326), nullable=True)
     
     workers = relationship("Worker", back_populates="health_center")
 
@@ -39,8 +48,17 @@ class SymptomReport(Base):
     id = Column(Integer, primary_key=True, index=True)
     worker_id = Column(Integer, ForeignKey("workers.id"), nullable=False)
     patient_age = Column(Integer, nullable=True)
-    symptoms = Column(String, nullable=False) # JSON or comma-separated
+    
+    # Comma-separated or JSON list of symptoms
+    symptoms = Column(String, nullable=False)
     duration_days = Column(Integer, nullable=False)
+    
+    # Geo-tagging for the GIS Heatmap
+    location = Column(Geometry(geometry_type='POINT', srid=4326), nullable=True)
+    
+    # Sync status for Module 3 Audit
+    sync_status = Column(String, default="ONLINE")
+    
     reported_at = Column(DateTime, default=datetime.utcnow)
     
     triage_result = relationship("TriageResult", back_populates="report", uselist=False)
@@ -56,3 +74,11 @@ class TriageResult(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     report = relationship("SymptomReport", back_populates="triage_result")
+
+class MedicalDocument(Base):
+    __tablename__ = "medical_documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    source_url = Column(String, nullable=True)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)

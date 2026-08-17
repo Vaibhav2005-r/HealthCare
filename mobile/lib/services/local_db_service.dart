@@ -1,5 +1,3 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
 import '../models/models.dart';
 
 class LocalDbService {
@@ -7,65 +5,42 @@ class LocalDbService {
   factory LocalDbService() => _instance;
   LocalDbService._internal();
 
-  Database? _db;
+  final List<Report> _reports = [];
 
-  Future<Database> get db async {
-    if (_db != null) return _db!;
-    _db = await _initDb();
-    return _db!;
-  }
-
-  Future<Database> _initDb() async {
-    String path = join(await getDatabasesPath(), 'smart_health.db');
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE reports(
-            id TEXT PRIMARY KEY,
-            age INTEGER,
-            sex TEXT,
-            village TEXT,
-            symptoms TEXT,
-            durationDays INTEGER,
-            riskTier TEXT,
-            syncStatus TEXT,
-            createdAt TEXT
-          )
-        ''');
-      },
-    );
+  Future<void> seedDatabaseIfNeeded(List<Report> mockReports) async {
+    final count = await getReportCount();
+    if (count == 0) {
+      _reports.addAll(mockReports);
+    }
   }
 
   Future<void> insertReport(Report report) async {
-    final database = await db;
-    await database.insert('reports', report.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    _reports.removeWhere((r) => r.id == report.id);
+    _reports.add(report);
   }
 
   Future<void> updateReportSyncStatus(String id, SyncStatus status) async {
-    final database = await db;
-    await database.update(
-      'reports',
-      {'syncStatus': status.name},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final index = _reports.indexWhere((r) => r.id == id);
+    if (index != -1) {
+      _reports[index] = _reports[index].copyWith(syncStatus: status);
+    }
   }
 
   Future<List<Report>> getReports() async {
-    final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query('reports', orderBy: 'createdAt DESC');
-    return maps.map((map) => Report.fromMap(map)).toList();
+    final sorted = List<Report>.from(_reports);
+    sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return sorted;
+  }
+
+  Future<int> getReportCount() async {
+    return _reports.length;
   }
 
   Future<List<Report>> getPendingReports() async {
-    final database = await db;
-    final List<Map<String, dynamic>> maps = await database.query(
-      'reports',
-      where: 'syncStatus IN (?, ?)',
-      whereArgs: [SyncStatus.draft.name, SyncStatus.queued.name, SyncStatus.syncFailed.name],
-    );
-    return maps.map((map) => Report.fromMap(map)).toList();
+    return _reports.where((r) => 
+      r.syncStatus == SyncStatus.draft || 
+      r.syncStatus == SyncStatus.queued || 
+      r.syncStatus == SyncStatus.syncFailed
+    ).toList();
   }
 }

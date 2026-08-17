@@ -1,12 +1,13 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
+import 'api_service.dart';
 import 'local_db_service.dart';
 
 class SyncService extends StateNotifier<bool> {
   final LocalDbService dbService;
+  final ApiService apiService;
 
-  SyncService(this.dbService) : super(true); // default true (online)
+  SyncService(this.dbService, this.apiService) : super(true); // Demo connectivity toggle
 
   void toggleOnline() {
     state = !state;
@@ -17,12 +18,14 @@ class SyncService extends StateNotifier<bool> {
     for (var report in pending) {
       await dbService.updateReportSyncStatus(report.id, SyncStatus.syncing);
       
-      // Simulate network delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (state) { // online
+      if (!state) {
+        await dbService.updateReportSyncStatus(report.id, SyncStatus.syncFailed);
+        continue;
+      }
+      try {
+        await apiService.syncReport(report);
         await dbService.updateReportSyncStatus(report.id, SyncStatus.synced);
-      } else { // offline / failure
+      } catch (_) {
         await dbService.updateReportSyncStatus(report.id, SyncStatus.syncFailed);
       }
     }
@@ -30,5 +33,5 @@ class SyncService extends StateNotifier<bool> {
 }
 
 final syncServiceProvider = StateNotifierProvider<SyncService, bool>((ref) {
-  return SyncService(LocalDbService());
+  return SyncService(LocalDbService(), ApiService());
 });

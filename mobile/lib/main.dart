@@ -4,7 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'router.dart';
 
-void main() {
+import 'services/local_db_service.dart';
+import 'services/mock_data.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Seed database
+  final dbService = LocalDbService();
+  final mockDataService = MockDataService();
+  await dbService.seedDatabaseIfNeeded(mockDataService.generateHistoricalReports());
+
   runApp(
     const ProviderScope(
       child: SmartHealthApp(),
@@ -12,15 +22,16 @@ void main() {
   );
 }
 
-class SmartHealthApp extends StatelessWidget {
+class SmartHealthApp extends ConsumerWidget {
   const SmartHealthApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'Smart Health',
       theme: appTheme,
-      routerConfig: appRouter,
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         if (kIsWeb) {

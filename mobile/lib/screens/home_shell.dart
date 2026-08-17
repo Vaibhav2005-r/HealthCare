@@ -12,25 +12,29 @@ class HomeShell extends ConsumerWidget {
 
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
-    if (location.startsWith('/report')) return 0;
-    if (location.startsWith('/assistant')) return 1;
+    if (location == '/' || location.isEmpty) return 0;
+    if (location.startsWith('/report')) return 1;
     if (location.startsWith('/sync')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/assistant')) return 3;
+    if (location.startsWith('/profile')) return 4;
     return 0;
   }
 
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
-        context.go('/report');
+        context.go('/');
         break;
       case 1:
-        context.go('/assistant');
+        context.go('/report');
         break;
       case 2:
         context.go('/sync');
         break;
       case 3:
+        context.go('/assistant');
+        break;
+      case 4:
         context.go('/profile');
         break;
     }
@@ -52,29 +56,36 @@ class HomeShell extends ConsumerWidget {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textDisabled,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
         items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
             activeIcon: Icon(Icons.add_circle),
-            label: 'Report',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.auto_awesome_outlined),
-            activeIcon: Icon(Icons.auto_awesome),
-            label: 'Assistant',
+            label: 'New Report',
           ),
           BottomNavigationBarItem(
             icon: Badge(
               isLabelVisible: pendingCount > 0,
               label: Text(pendingCount.toString()),
-              child: const Icon(Icons.sync_outlined),
+              child: const Icon(Icons.history_outlined),
             ),
             activeIcon: Badge(
               isLabelVisible: pendingCount > 0,
               label: Text(pendingCount.toString()),
-              child: const Icon(Icons.sync),
+              child: const Icon(Icons.history),
             ),
-            label: 'Sync',
+            label: 'Log History',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book_outlined),
+            activeIcon: Icon(Icons.menu_book),
+            label: 'Guide',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

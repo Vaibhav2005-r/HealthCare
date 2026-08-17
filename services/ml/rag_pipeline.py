@@ -63,14 +63,24 @@ class RAGEngine:
 
     def ask(self, query: str):
         query_vector = self.model.encode(query).tolist()
-        search_result = self.client.search(
-            collection_name=self.collection_name,
-            query_vector=query_vector,
-            limit=1
-        )
+        if hasattr(self.client, 'query_points'):
+            search_result = self.client.query_points(
+                collection_name=self.collection_name,
+                query=query_vector,
+                limit=1
+            ).points
+        elif hasattr(self.client, 'search'):
+            search_result = self.client.search(
+                collection_name=self.collection_name,
+                query_vector=query_vector,
+                limit=1
+            )
+        else:
+            search_result = []
         
         if not search_result:
             return {"answer": "No relevant guidelines found.", "source": None}
+
             
         top_match = search_result[0]
         context = top_match.payload['text']

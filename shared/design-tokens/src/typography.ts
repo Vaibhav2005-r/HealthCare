@@ -1,8 +1,8 @@
 export const typography = {
   fontFamilies: {
-    sans: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    heading: 'Outfit, Inter, system-ui, sans-serif',
-    mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    sans: '"Noto Sans", "Noto Sans Devanagari", system-ui, -apple-system, sans-serif',
+    heading: '"Noto Sans", "Noto Sans Devanagari", system-ui, sans-serif',
+    mono: '"IBM Plex Mono", "SFMono-Regular", Consolas, Menlo, monospace',
   },
   fontSizes: {
     xs: { fontSize: '0.75rem', lineHeight: '1rem' },
@@ -21,3 +21,4 @@ export const typography = {
     bold: '700',
   },
 } as const;
+
