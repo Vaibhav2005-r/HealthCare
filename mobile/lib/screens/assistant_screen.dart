@@ -5,6 +5,7 @@ import '../models/models.dart';
 import '../providers/providers.dart';
 import '../theme/app_colors.dart';
 import '../services/voice_service.dart';
+import '../services/api_service.dart';
 import '../widgets/coach_mark.dart';
 
 class AssistantScreen extends ConsumerStatefulWidget {
@@ -17,6 +18,7 @@ class AssistantScreen extends ConsumerStatefulWidget {
 class _AssistantScreenState extends ConsumerState<AssistantScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<AssistantMessage> _messages = [];
+  final ApiService _apiService = ApiService();
   bool _isLoading = false;
 
   @override
@@ -25,7 +27,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
     _messages.add(
       AssistantMessage(
         id: 'initial',
-        text: 'Hello! I am your clinical assistant. How can I help you today?',
+        text: 'Hello! I am your clinical assistant connected to National Health Guidelines. How can I help you today?',
         isUser: false,
       ),
     );
@@ -47,17 +49,35 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> {
       _isLoading = true;
     });
 
-    final mockData = ref.read(mockDataProvider);
-    final responses = await mockData.getAssistantResponses(query);
-
-    setState(() {
-      _isLoading = false;
-      for (var msg in responses) {
-        if (!msg.isUser) {
-          _messages.add(msg);
-        }
+    try {
+      final answer = await _apiService.askAssistant(query);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _messages.add(
+            AssistantMessage(
+              id: 'res_${DateTime.now().millisecondsSinceEpoch}',
+              text: answer,
+              isUser: false,
+            ),
+          );
+        });
       }
-    });
+    } catch (_) {
+      // Offline fallback
+      final mockData = ref.read(mockDataProvider);
+      final responses = await mockData.getAssistantResponses(query);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          for (var msg in responses) {
+            if (!msg.isUser) {
+              _messages.add(msg);
+            }
+          }
+        });
+      }
+    }
   }
 
   @override

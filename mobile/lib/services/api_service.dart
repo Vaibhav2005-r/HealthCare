@@ -43,6 +43,39 @@ class ApiService {
     return data['report_id'] as String?;
   }
 
+  Future<int> syncReportsBatch(List<Report> reports) async {
+    if (reports.isEmpty) return 0;
+    
+    final payload = reports.map((r) => {
+      'worker_id': _demoWorkerId,
+      'patient_name': r.patientName,
+      'patient_age': r.age,
+      'patient_gender': _genderCode(r.sex),
+      'village': r.village,
+      'symptoms': r.symptoms,
+      'duration_days': r.durationDays,
+      'temperature': r.temperature,
+      'severity': r.riskTier.name.toUpperCase(),
+      'disease_type': 'UNKNOWN',
+      'location_lat': r.locationLat,
+      'location_lng': r.locationLng,
+      'client_report_id': r.id,
+    }).toList();
+
+    final response = await _client.post(
+      Uri.parse('$_baseUrl/api/v1/reports/sync'),
+      headers: const {'Content-Type': 'application/json'},
+      body: jsonEncode({'reports': payload}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['synced'] as int? ?? 0;
+    } else {
+      throw ApiException(response.statusCode, response.body);
+    }
+  }
+
   Future<String> askAssistant(String query) async {
     try {
       final response = await _client.post(

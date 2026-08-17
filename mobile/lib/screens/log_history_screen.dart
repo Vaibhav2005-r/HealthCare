@@ -28,7 +28,8 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
     final pendingAsync = ref.watch(
       reportsProvider,
     ); // Let's watch all reports to filter locally
-    final isOnline = ref.watch(syncServiceProvider);
+    final syncState = ref.watch(syncServiceProvider);
+    final isOnline = syncState.isOnline;
 
     return Scaffold(
       appBar: AppBar(
