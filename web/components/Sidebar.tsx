@@ -14,11 +14,13 @@ import {
   ChevronRight,
   Database,
   Cpu,
-  UserCheck
+  UserCheck,
+  Sparkles,
+  Package
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n';
 
-export type NavTab = 'overview' | 'heatmap' | 'districts' | 'alerts' | 'reports';
+export type NavTab = 'overview' | 'heatmap' | 'districts' | 'rag' | 'resources' | 'alerts' | 'reports';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -50,6 +52,20 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
       labelHi: '',
       icon: Building2,
       desc: t('nav.districts.desc')
+    },
+    {
+      id: 'rag' as NavTab,
+      label: t('nav.rag'),
+      labelHi: '',
+      icon: Sparkles,
+      desc: t('nav.rag.desc')
+    },
+    {
+      id: 'resources' as NavTab,
+      label: t('nav.resources'),
+      labelHi: '',
+      icon: Package,
+      desc: t('nav.resources.desc')
     },
     {
       id: 'alerts' as NavTab,

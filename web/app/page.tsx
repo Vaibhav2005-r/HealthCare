@@ -124,7 +124,6 @@ export default function ArogyaPrahariDashboard() {
   const [districts, setDistricts] = useState<DistrictData[]>(FALLBACK_DISTRICTS);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
-  const [activeUtilityModal, setActiveUtilityModal] = useState<'NONE' | 'RAG' | 'RESOURCES'>('NONE');
   const { t, language, setLanguage } = useLanguage();
 
   // Load live telemetry from FastAPI backend
@@ -244,6 +243,8 @@ export default function ArogyaPrahariDashboard() {
                   {activeTab === 'overview' && t('header.executive_overview')}
                   {activeTab === 'heatmap' && t('header.gis_heatmap')}
                   {activeTab === 'districts' && t('header.district_matrix')}
+                  {activeTab === 'rag' && t('header.rag_protocols')}
+                  {activeTab === 'resources' && t('header.phc_buffer')}
                   {activeTab === 'alerts' && t('header.incident_feed')}
                   {activeTab === 'reports' && t('header.gov_bulletin')}
                 </span>
@@ -274,12 +275,12 @@ export default function ArogyaPrahariDashboard() {
               >HI</button>
             </div>
             
-            {/* RAG Query Helper */}
+            {/* RAG Query Shortcut */}
             <button
-              onClick={() => setActiveUtilityModal(activeUtilityModal === 'RAG' ? 'NONE' : 'RAG')}
+              onClick={() => setActiveTab('rag')}
               className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                activeUtilityModal === 'RAG' 
-                  ? 'bg-[#C2255C] text-white border-[#C2255C]' 
+                activeTab === 'rag' 
+                  ? 'bg-[#C2255C] text-white border-[#C2255C] shadow-xs' 
                   : 'bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border-[#E2E8F0]'
               }`}
             >
@@ -287,12 +288,12 @@ export default function ArogyaPrahariDashboard() {
               <span>{t('header.rag')}</span>
             </button>
 
-            {/* PHC Resource Management */}
+            {/* PHC Resource Management Shortcut */}
             <button
-              onClick={() => setActiveUtilityModal(activeUtilityModal === 'RESOURCES' ? 'NONE' : 'RESOURCES')}
+              onClick={() => setActiveTab('resources')}
               className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                activeUtilityModal === 'RESOURCES' 
-                  ? 'bg-[#146356] text-white border-[#146356]' 
+                activeTab === 'resources' 
+                  ? 'bg-[#146356] text-white border-[#146356] shadow-xs' 
                   : 'bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border-[#E2E8F0]'
               }`}
             >
@@ -321,28 +322,6 @@ export default function ArogyaPrahariDashboard() {
             </div>
           </div>
         </header>
-
-        {/* Utility Modal: RAG or Resource Management Drawer */}
-        {activeUtilityModal !== 'NONE' && (
-          <div className="bg-white border-b border-[#E2E8F0] p-6 shadow-md animate-in slide-in-from-top-4 duration-200">
-            <div className="flex justify-between items-center mb-4 pb-2 border-b border-[#E2E8F0]">
-              <h3 className="font-bold text-sm text-[#1D2321] uppercase tracking-wider">
-                {activeUtilityModal === 'RAG' && 'National IDSP Medical Guidelines RAG Engine (Qdrant & NVIDIA Llama 3.1)'}
-                {activeUtilityModal === 'RESOURCES' && 'Primary Health Centre (PHC) Medical Supplies Buffer'}
-              </h3>
-              <button 
-                onClick={() => setActiveUtilityModal('NONE')}
-                className="text-xs font-bold text-[#5B6663] hover:text-[#1D2321] px-2 py-1 bg-[#F6F5F2] rounded"
-              >
-                Close Panel
-              </button>
-            </div>
-            <div className="max-h-[60vh] overflow-y-auto">
-              {activeUtilityModal === 'RAG' && <RagAdminSection />}
-              {activeUtilityModal === 'RESOURCES' && <ResourceManagementSection />}
-            </div>
-          </div>
-        )}
 
         {/* Main Work Area */}
         <main className="flex-1 p-4 md:p-6 space-y-6 max-w-7xl w-full mx-auto">
@@ -396,6 +375,14 @@ export default function ArogyaPrahariDashboard() {
                   selectedDistrict={selectedDistrict}
                   onSelectDistrict={handleSelectDistrict}
                 />
+              )}
+
+              {activeTab === 'rag' && (
+                <RagAdminSection />
+              )}
+
+              {activeTab === 'resources' && (
+                <ResourceManagementSection />
               )}
 
               {activeTab === 'alerts' && (
