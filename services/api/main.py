@@ -154,15 +154,23 @@ class SymptomReportCreate(BaseModel):
     village_id: Optional[str] = None
     district: Optional[str] = "Pune"
     state: Optional[str] = "Maharashtra"
-    symptoms: List[str]
+    symptoms: List[str] = []
     duration_days: int = 2
     disease_type: Optional[str] = "UNKNOWN"
     severity: Optional[str] = "AMBER"
     temperature: Optional[float] = 98.6
+    temperature_unit: Optional[str] = "F"
     location_lat: Optional[float] = None
     location_lng: Optional[float] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    location_accuracy: Optional[float] = None
+    accuracy_meters: Optional[float] = None
+    manual_location_reason: Optional[str] = None
+    manual_reason_code: Optional[str] = None
+    comorbidities: List[str] = []
+    medication_taken: Optional[str] = None
+    medicationTaken: Optional[str] = None
     client_report_id: Optional[str] = None
     notes: Optional[str] = "Mobile intake report"
     sync_status: Optional[str] = "ONLINE"
@@ -489,13 +497,15 @@ async def create_report(report: SymptomReportCreate):
     return {
         "status": "success" if is_new else "duplicate",
         "message": "Report saved to Supabase" if is_new else "Duplicate client_report_id accepted safely",
+        "report_id": str(persisted_report.get("id")),
         "report": persisted_report
     }
 
+@app.post("/api/v1/reports/sync")
 @app.post("/api/v1/sync/batch")
 async def sync_batch_reports(batch: SyncBatchRequest):
     """
-    Module 3: Bulk sync for offline queue flush.
+    Module 3: Bulk sync for offline queue flush from Mobile App.
     Iterates through queued mobile records, deduplicates, and saves to Supabase.
     """
     accepted = []
@@ -514,6 +524,7 @@ async def sync_batch_reports(batch: SyncBatchRequest):
             
     return {
         "status": "success",
+        "synced": len(accepted),
         "synced_count": len(accepted),
         "duplicate_count": len(duplicates),
         "accepted": accepted

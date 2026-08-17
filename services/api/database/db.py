@@ -225,6 +225,14 @@ async def insert_case_report_to_db(report: Dict[str, Any]) -> Dict[str, Any]:
     async with pool.acquire() as conn:
         dt_val = parse_datetime(report.get("reported_at"))
         
+        lat = report.get("latitude") or report.get("location_lat")
+        lng = report.get("longitude") or report.get("location_lng")
+        accuracy = report.get("accuracy_meters") or report.get("location_accuracy")
+        comorbidities = list(report.get("comorbidities", []))
+        medication = report.get("medication_taken") or report.get("medicationTaken")
+        suspected = report.get("disease_type") or report.get("suspected_disease", "UNKNOWN")
+        manual_reason = report.get("manual_location_reason") or report.get("manual_reason_code")
+
         row = await conn.fetchrow("""
             INSERT INTO public.case_reports (
                 worker_identifier,
@@ -235,7 +243,14 @@ async def insert_case_report_to_db(report: Dict[str, Any]) -> Dict[str, Any]:
                 block,
                 district,
                 state,
+                latitude,
+                longitude,
+                accuracy_meters,
+                manual_reason_code,
                 symptoms,
+                suspected_disease,
+                comorbidities,
+                medication_taken,
                 severity,
                 temperature,
                 temperature_unit,
@@ -244,7 +259,7 @@ async def insert_case_report_to_db(report: Dict[str, Any]) -> Dict[str, Any]:
                 notes,
                 sync_status,
                 reported_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             RETURNING id, reported_at
         """,
             report.get("worker_id") or report.get("worker_identifier", "ASHA-MOBILE"),
@@ -255,7 +270,14 @@ async def insert_case_report_to_db(report: Dict[str, Any]) -> Dict[str, Any]:
             report.get("block"),
             report.get("district", "Pune"),
             report.get("state", "Maharashtra"),
+            float(lat) if lat is not None else None,
+            float(lng) if lng is not None else None,
+            float(accuracy) if accuracy is not None else None,
+            manual_reason,
             list(report.get("symptoms", [])),
+            suspected,
+            comorbidities,
+            medication,
             report.get("severity", "AMBER"),
             float(report.get("temperature", 98.6)) if report.get("temperature") is not None else None,
             report.get("temperature_unit", "F"),
