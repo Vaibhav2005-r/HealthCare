@@ -1,0 +1,41 @@
+# General
+node_modules/
+.DS_Store
+*.log
+.vscode/
+
+# Web (Next.js)
+web/node_modules/
+web/dist/
+web/.env*
+web/.next/
+web/out/
+web/build/
+
+# Mobile (Flutter)
+mobile/build/
+mobile/.dart_tool/
+mobile/android/.gradle/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+*.g.dart
+*.freezed.dart
+mobile/.idea/
+
+# Python / Backend
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+services/venv/
+venv/
+.pytest_cache/
+
+# Environment / Secrets
+.env
+.env.*
+services/api/.env
+*.env
