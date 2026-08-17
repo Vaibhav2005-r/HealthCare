@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/auth_service.dart';
-import '../../theme/app_theme.dart';
 import '../../widgets/animated_scale_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -14,7 +14,8 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _phoneController = TextEditingController();
-  String _selectedRole = 'ASHA Worker';
+  String? _selectedRole;
+  String? _phoneError;
   bool _isLoading = false;
 
   final List<String> _roles = [
@@ -32,9 +33,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) return;
+    if (phone.length < 10) {
+      setState(() => _phoneError = 'Enter a valid 10-digit phone number');
+      return;
+    }
+    setState(() => _phoneError = null);
 
     setState(() => _isLoading = true);
-    await ref.read(authProvider.notifier).sendOtp(phone, _selectedRole);
+    await ref.read(authProvider.notifier).sendOtp(phone, _selectedRole ?? 'ASHA Worker');
     setState(() => _isLoading = false);
 
     if (mounted) {
@@ -110,11 +116,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 child: TextField(
                   controller: _phoneController,
-                  keyboardType: TextInputType.phone,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  onChanged: (val) {
+                    if (_phoneError != null) setState(() => _phoneError = null);
+                  },
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
                     labelStyle: TextStyle(color: const Color(0xFF1D2321).withOpacity(0.5)),
+                    errorText: _phoneError,
                     prefixIcon: Icon(Icons.phone, color: accentColor),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -144,6 +158,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedRole,
+                    hint: Text(
+                      'Select Your Role',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: const Color(0xFF1D2321).withOpacity(0.5),
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
                     isExpanded: true,
                     icon: const Icon(Icons.arrow_drop_down, color: accentColor),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1D2321)),
@@ -152,17 +174,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         value: role,
                         child: Row(
                           children: [
-                            Icon(Icons.badge, color: accentColor, size: 20),
+                            const Icon(Icons.badge, color: accentColor, size: 20),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(role, overflow: TextOverflow.ellipsis),
+                              child: Text(
+                                role,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ),
                           ],
                         ),
                       );
                     }).toList(),
                     onChanged: (val) {
-                      if (val != null) setState(() => _selectedRole = val);
+                      if (val != null) {
+                        setState(() => _selectedRole = val);
+                      }
                     },
                   ),
                 ),

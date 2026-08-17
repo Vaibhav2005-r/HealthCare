@@ -205,7 +205,7 @@ class SavedReportDetailScreen extends ConsumerWidget {
                             _buildSectionHeader(Icons.badge, 'Patient Info'),
                             const SizedBox(height: 12),
                             Text('Name: ${report.patientName}', style: const TextStyle(fontSize: 15)),
-                            Text('Age: ${report.age} yrs, Sex: ${report.sex}', style: const TextStyle(fontSize: 15)),
+                            Text('Age: ${report.age} yrs, Gender: ${report.sex}', style: const TextStyle(fontSize: 15)),
                             if (report.contactNumber != null && report.contactNumber!.isNotEmpty)
                               Text('Contact: ${report.contactNumber}', style: const TextStyle(fontSize: 15)),
                             const _Divider(),
@@ -232,14 +232,25 @@ class SavedReportDetailScreen extends ConsumerWidget {
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: report.symptoms.map((s) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(s, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
-                              )).toList(),
+                              children: [
+                                ...report.symptoms.map((s) => Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(s, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                                )),
+                                ...report.customSymptoms.map((s) => Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Text(s, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                                )),
+                              ],
                             ),
                             const SizedBox(height: 12),
                             Text('Duration: ${report.durationDays} day${report.durationDays == 1 ? '' : 's'}', style: const TextStyle(fontSize: 15)),

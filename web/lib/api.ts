@@ -339,44 +339,6 @@ export async function fetchAlerts(): Promise<AlertItem[]> {
   }
 }
 
-export async function fetchTelemetryLogs(district?: string): Promise<any[]> {
-  try {
-    const url = district ? `${API_BASE}/telemetry/logs?district=${encodeURIComponent(district)}` : `${API_BASE}/telemetry/logs`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    const data = await res.json();
-    return data.logs || [];
-  } catch (err) {
-    console.warn('API /telemetry/logs unreachable', err);
-    return [];
-  }
-}
-
-export async function fetchInventory(district?: string): Promise<any[]> {
-  try {
-    const url = district ? `${API_BASE}/resources/inventory?district=${encodeURIComponent(district)}` : `${API_BASE}/resources/inventory`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    const data = await res.json();
-    return data.supplies || [];
-  } catch (err) {
-    console.warn('API /resources/inventory unreachable', err);
-    return [];
-  }
-}
-
-export async function fetchAnalyticsTrends(district?: string): Promise<any> {
-  try {
-    const url = district ? `${API_BASE}/analytics/trends?district=${encodeURIComponent(district)}` : `${API_BASE}/analytics/trends`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.warn('API /analytics/trends unreachable', err);
-    return { data: [] };
-  }
-}
-
 export async function triggerSOS(alert: { worker_id: string; district: string; cases: number; severity: string }): Promise<any> {
   try {
     const res = await fetch(`${API_BASE}/alerts/sos`, {
