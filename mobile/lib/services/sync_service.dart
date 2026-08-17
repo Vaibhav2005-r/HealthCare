@@ -3,35 +3,120 @@ import '../models/models.dart';
 import 'api_service.dart';
 import 'local_db_service.dart';
 
-class SyncService extends StateNotifier<bool> {
-  final LocalDbService dbService;
-  final ApiService apiService;
+class SyncState {
+  final bool isOnline;
+  final bool isSyncing;
+  final int pendingCount;
+  final String? lastSyncTime;
+  final String? errorMessage;
 
-  SyncService(this.dbService, this.apiService) : super(true); // Demo connectivity toggle
+  SyncState({
+    this.isOnline = true,
+    this.isSyncing = false,
+    this.pendingCount = 0,
+    this.lastSyncTime,
+    this.errorMessage,
+  });
 
-  void toggleOnline() {
-    state = !state;
-  }
-
-  Future<void> syncReports() async {
-    final pending = await dbService.getPendingReports();
-    for (var report in pending) {
-      await dbService.updateReportSyncStatus(report.id, SyncStatus.syncing);
-      
-      if (!state) {
-        await dbService.updateReportSyncStatus(report.id, SyncStatus.syncFailed);
-        continue;
-      }
-      try {
-        await apiService.syncReport(report);
-        await dbService.updateReportSyncStatus(report.id, SyncStatus.synced);
-      } catch (_) {
-        await dbService.updateReportSyncStatus(report.id, SyncStatus.syncFailed);
-      }
-    }
+  SyncState copyWith({
+    bool? isOnline,
+    bool? isSyncing,
+    int? pendingCount,
+    String? lastSyncTime,
+    String? errorMessage,
+  }) {
+    return SyncState(
+      isOnline: isOnline ?? this.isOnline,
+      isSyncing: isSyncing ?? this.isSyncing,
+      pendingCount: pendingCount ?? this.pendingCount,
+      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      errorMessage: errorMessage,
+    );
   }
 }
 
-final syncServiceProvider = StateNotifierProvider<SyncService, bool>((ref) {
+class SyncService extends StateNotifier<SyncState> {
+  final LocalDbService dbService;
+  final ApiService apiService;
+
+  SyncService(this.dbService, this.apiService) : super(SyncState()) {
+    refreshPendingCount();
+  }
+
+  void toggleOnline() {
+    state = state.copyWith(isOnline: !state.isOnline);
+    if (state.isOnline) {
+      syncReports();
+    }
+  }
+
+  Future<void> refreshPendingCount() async {
+    final pending = await dbService.getPendingReports();
+    state = state.copyWith(pendingCount: pending.length);
+  }
+
+  Future<int> syncReports() async {
+    final pending = await dbService.getPendingReports();
+    if (pending.isEmpty) {
+      state = state.copyWith(pendingCount: 0);
+      return 0;
+    }
+
+    if (!state.isOnline) {
+      state = state.copyWith(
+        errorMessage: 'Device is offline. Reports queued in SQLite.',
+      );
+      return 0;
+    }
+
+    state = state.copyWith(isSyncing: true, errorMessage: null);
+
+    int syncedCount = 0;
+    try {
+      // Mark all as syncing
+      for (final report in pending) {
+        await dbService.updateReportSyncStatus(report.id, SyncStatus.syncing);
+      }
+
+      // Try batch sync via FastAPI endpoint
+      try {
+        syncedCount = await apiService.syncReportsBatch(pending);
+        for (final report in pending) {
+          await dbService.updateReportSyncStatus(report.id, SyncStatus.synced);
+        }
+      } catch (batchErr) {
+        // Fallback to sequential sync
+        for (final report in pending) {
+          try {
+            await apiService.syncReport(report);
+            await dbService.updateReportSyncStatus(report.id, SyncStatus.synced);
+            syncedCount++;
+          } catch (_) {
+            await dbService.updateReportSyncStatus(report.id, SyncStatus.syncFailed);
+          }
+        }
+      }
+
+      final now = DateTime.now();
+      final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      final remaining = await dbService.getPendingReports();
+
+      state = state.copyWith(
+        isSyncing: false,
+        pendingCount: remaining.length,
+        lastSyncTime: timeStr,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isSyncing: false,
+        errorMessage: 'Sync error: $e',
+      );
+    }
+
+    return syncedCount;
+  }
+}
+
+final syncServiceProvider = StateNotifierProvider<SyncService, SyncState>((ref) {
   return SyncService(LocalDbService(), ApiService());
 });
