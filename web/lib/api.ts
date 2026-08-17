@@ -17,6 +17,17 @@ export interface DistrictData {
   last_reported: string;
 }
 
+export interface AlertAuditLogItem {
+  id: string;
+  alert_id: string;
+  previous_status: string;
+  new_status: string;
+  action_by: string;
+  action_role: string;
+  action_notes?: string;
+  created_at: string;
+}
+
 export interface AlertItem {
   id: string;
   district: string;
@@ -29,6 +40,13 @@ export interface AlertItem {
   timestamp: string;
   summary: string;
   status: 'UNACKNOWLEDGED' | 'INVESTIGATING' | 'ACKNOWLEDGED' | 'RESOLVED';
+  resolved_at?: string | null;
+  resolved_by?: string | null;
+  resolved_by_role?: string | null;
+  resolution_notes?: string | null;
+  acknowledged_at?: string | null;
+  acknowledged_by?: string | null;
+  created_at?: string;
 }
 
 export interface LiveDashboardData {
@@ -469,6 +487,46 @@ export async function fetchTelemetryLogs(district?: string): Promise<any[]> {
     return [];
   }
 }
+
+export async function updateAlertStatus(
+  alertId: string, 
+  status: 'ACKNOWLEDGED' | 'INVESTIGATING' | 'RESOLVED' | 'UNACKNOWLEDGED',
+  actionBy: string = "Dr. S. Kulkarni (CMO)",
+  actionRole: string = "Chief Medical Officer / DHO",
+  actionNotes?: string
+): Promise<{ status: string; alert?: AlertItem; audit_trail?: AlertAuditLogItem[]; message?: string }> {
+  try {
+    const res = await fetch(`${API_BASE}/alerts/${encodeURIComponent(alertId)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status,
+        action_by: actionBy,
+        action_role: actionRole,
+        action_notes: actionNotes
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to update alert status in Supabase', err);
+    throw err;
+  }
+}
+
+export async function fetchAlertAuditLogs(alertId?: string): Promise<AlertAuditLogItem[]> {
+  try {
+    const url = alertId ? `${API_BASE}/alerts/${encodeURIComponent(alertId)}/audit` : `${API_BASE}/alerts/audit/all`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const data = await res.json();
+    return data.audit_trail || [];
+  } catch (err) {
+    console.warn('Failed to fetch alert audit logs', err);
+    return [];
+  }
+}
+
 
 
 

@@ -86,8 +86,84 @@ async def fetch_alerts_from_db(limit: int = 50) -> List[Dict[str, Any]]:
                 d['timestamp'] = d['timestamp'].isoformat()
             if hasattr(d.get('created_at'), 'isoformat'):
                 d['created_at'] = d['created_at'].isoformat()
+            if hasattr(d.get('resolved_at'), 'isoformat'):
+                d['resolved_at'] = d['resolved_at'].isoformat()
+            if hasattr(d.get('acknowledged_at'), 'isoformat'):
+                d['acknowledged_at'] = d['acknowledged_at'].isoformat()
             alerts.append(d)
         return alerts
+
+async def fetch_alert_audit_logs_from_db(alert_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        if alert_id:
+            rows = await conn.fetch(
+                "SELECT * FROM public.alert_audit_logs WHERE alert_id = $1 ORDER BY created_at DESC",
+                alert_id
+            )
+        else:
+            rows = await conn.fetch("SELECT * FROM public.alert_audit_logs ORDER BY created_at DESC LIMIT 100")
+            
+        logs = []
+        for r in rows:
+            d = dict(r)
+            if hasattr(d.get('created_at'), 'isoformat'):
+                d['created_at'] = d['created_at'].isoformat()
+            if hasattr(d.get('id'), '__str__'):
+                d['id'] = str(d['id'])
+            logs.append(d)
+        return logs
+
+async def update_alert_status_in_db(
+    alert_id: str,
+    new_status: str,
+    action_by: str = "Dr. S. Kulkarni (CMO)",
+    action_role: str = "Chief Medical Officer / DHO",
+    action_notes: Optional[str] = None
+) -> Dict[str, Any]:
+    pool = await get_db_pool()
+    now_utc = datetime.now(timezone.utc)
+    async with pool.acquire() as conn:
+        # Get previous status
+        prev_row = await conn.fetchrow("SELECT * FROM public.alerts WHERE id = $1", alert_id)
+        if not prev_row:
+            raise ValueError(f"Alert with ID {alert_id} not found.")
+        prev_status = prev_row["status"]
+        
+        # Prepare timestamp and officer fields
+        resolved_at = now_utc if new_status == "RESOLVED" else prev_row["resolved_at"]
+        resolved_by = action_by if new_status == "RESOLVED" else prev_row["resolved_by"]
+        resolved_by_role = action_role if new_status == "RESOLVED" else prev_row["resolved_by_role"]
+        resolution_notes = action_notes if new_status == "RESOLVED" else prev_row["resolution_notes"]
+        
+        acknowledged_at = now_utc if new_status in ["ACKNOWLEDGED", "INVESTIGATING"] and not prev_row["acknowledged_at"] else prev_row["acknowledged_at"]
+        acknowledged_by = action_by if new_status in ["ACKNOWLEDGED", "INVESTIGATING"] and not prev_row["acknowledged_by"] else prev_row["acknowledged_by"]
+
+        # 1. Update alert
+        updated_row = await conn.fetchrow("""
+            UPDATE public.alerts
+            SET status = $1,
+                resolved_at = $2,
+                resolved_by = $3,
+                resolved_by_role = $4,
+                resolution_notes = $5,
+                acknowledged_at = $6,
+                acknowledged_by = $7
+            WHERE id = $8
+            RETURNING *
+        """, new_status, resolved_at, resolved_by, resolved_by_role, resolution_notes, acknowledged_at, acknowledged_by, alert_id)
+        
+        # 2. Insert immutable audit log entry
+        await conn.execute("""
+            INSERT INTO public.alert_audit_logs (alert_id, previous_status, new_status, action_by, action_role, action_notes, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+        """, alert_id, prev_status, new_status, action_by, action_role, action_notes, now_utc)
+        
+        res = dict(updated_row)
+        for k, v in res.items():
+            if hasattr(v, 'isoformat'):
+                res[k] = v.isoformat()
+        return res
 
 async def insert_alert_to_db(alert: Dict[str, Any]) -> Dict[str, Any]:
     pool = await get_db_pool()

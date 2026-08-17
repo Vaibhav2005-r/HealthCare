@@ -33,6 +33,8 @@ from database.db import (
     update_district_in_db,
     fetch_alerts_from_db,
     insert_alert_to_db,
+    update_alert_status_in_db,
+    fetch_alert_audit_logs_from_db,
     fetch_case_reports_from_db,
     insert_case_report_to_db
 )
@@ -407,6 +409,50 @@ async def get_dashboard_alerts():
     alerts = await fetch_alerts_from_db()
     return {"alerts": alerts, "count": len(alerts)}
 
+class AlertStatusUpdateRequest(BaseModel):
+    status: str 
+    action_by: Optional[str] = "Dr. S. Kulkarni (CMO)"
+    action_role: Optional[str] = "Chief Medical Officer / DHO"
+    action_notes: Optional[str] = None
+
+@app.patch("/api/v1/alerts/{alert_id}/status")
+async def update_alert_status(alert_id: str, req: AlertStatusUpdateRequest):
+    try:
+        updated = await update_alert_status_in_db(
+            alert_id=alert_id,
+            new_status=req.status.upper(),
+            action_by=req.action_by or "Dr. S. Kulkarni (CMO)",
+            action_role=req.action_role or "Chief Medical Officer / DHO",
+            action_notes=req.action_notes
+        )
+        audit_logs = await fetch_alert_audit_logs_from_db(alert_id)
+        
+        # Realtime broadcast to all connected dashboards
+        await ws_manager.broadcast({
+            "type": "ALERT_STATUS_UPDATED",
+            "alert_id": alert_id,
+            "status": req.status.upper(),
+            "alert": updated,
+            "audit_trail": audit_logs
+        })
+        return {
+            "status": "success",
+            "alert": updated,
+            "audit_trail": audit_logs
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.get("/api/v1/alerts/{alert_id}/audit")
+async def get_alert_audit_trail(alert_id: str):
+    logs = await fetch_alert_audit_logs_from_db(alert_id)
+    return {"alert_id": alert_id, "audit_trail": logs, "count": len(logs)}
+
+@app.get("/api/v1/alerts/audit/all")
+async def get_all_audit_trails():
+    logs = await fetch_alert_audit_logs_from_db()
+    return {"audit_trail": logs, "count": len(logs)}
+
 @app.post("/api/v1/alerts/sos")
 async def trigger_sos_alert(alert: SOSAlert):
     new_alert_data = {
@@ -417,7 +463,7 @@ async def trigger_sos_alert(alert: SOSAlert):
         "risk_score": 0.92 if alert.severity.upper() == "CRITICAL" else 0.78,
         "cases_count": alert.cases,
         "worker_role": f"ASHA Lead ({alert.worker_id})",
-        "timestamp": "Just now (Live SOS)",
+        "timestamp": datetime.now(timezone.utc),
         "summary": f"MANUAL SOS: {alert.cases} {alert.severity} cases flagged immediately by {alert.worker_id} in {alert.district}.",
         "status": "UNACKNOWLEDGED"
     }
