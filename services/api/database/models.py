@@ -106,3 +106,19 @@ class AshaWorker(Base):
     district = Column(String, nullable=True)
     state = Column(String, nullable=True, default="Maharashtra")
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+
+class PhcWorker(Base):
+    __tablename__ = "phc_workers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    employee_code = Column(String, nullable=False, unique=True, index=True)
+    phone_number = Column(String, nullable=False, unique=True)
+    full_name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    phc_name = Column(String, nullable=False, index=True)
+    block = Column(String, nullable=True)
+    district = Column(String, nullable=False, index=True)
+    state = Column(String, nullable=False, default="Maharashtra")
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))

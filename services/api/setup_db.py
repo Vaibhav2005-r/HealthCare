@@ -1,9 +1,10 @@
 import asyncio
 import asyncpg
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 DATABASE_URL = os.getenv("SUPABASE_DB_URL")
 
@@ -61,6 +62,24 @@ async def setup_database():
         centroid_lng double precision,
         neighbor_district_ids text[]
     );
+
+    create table if not exists phc_workers (
+        id uuid primary key default gen_random_uuid(),
+        employee_code text unique not null,
+        phone_number text unique not null,
+        full_name text not null,
+        role text not null check (role in ('medical_officer', 'staff_nurse', 'pharmacist', 'lab_technician', 'health_assistant')),
+        phc_name text not null,
+        block text,
+        district text not null,
+        state text not null default 'Maharashtra',
+        is_active boolean not null default true,
+        created_at timestamptz not null default now(),
+        updated_at timestamptz not null default now()
+    );
+
+    create index if not exists idx_phc_workers_district on phc_workers (district);
+    create index if not exists idx_phc_workers_phc_name on phc_workers (phc_name);
     """
     
     print("Executing schema creation...")

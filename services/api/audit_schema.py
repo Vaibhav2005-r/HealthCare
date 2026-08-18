@@ -4,7 +4,8 @@ import json
 import asyncpg
 from dotenv import load_dotenv
 
-load_dotenv("/Users/vaibhav/SIH/services/api/.env")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 db_url = os.getenv("SUPABASE_DB_URL")
 
 async def audit():
@@ -42,7 +43,7 @@ async def audit():
             'columns': {c['column_name']: {'type': c['data_type'], 'nullable': c['is_nullable'], 'default': c['column_default']} for c in cols}
         }
     
-    with open("/Users/vaibhav/SIH/services/api/supabase_schema_dump.json", "w") as f:
+    with open(os.path.join(BASE_DIR, "supabase_schema_dump.json"), "w", encoding="utf-8") as f:
         json.dump(schema_dump, f, indent=2)
         
     print(f"Successfully dumped schema for {len(tables)} tables to supabase_schema_dump.json")

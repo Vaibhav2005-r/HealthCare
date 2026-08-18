@@ -1,12 +1,14 @@
 import asyncio
 import asyncpg
 import os
+import argparse
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parent / ".env")
 DATABASE_URL = os.getenv("SUPABASE_DB_URL")
 
-async def test_database():
+async def test_database(exercise_write: bool = False):
     print("=" * 60)
     print(" AROGYA PRAHARI - SUPABASE DATABASE INTEGRATION TEST")
     print("=" * 60)
@@ -46,8 +48,13 @@ async def test_database():
             print(f"    - {inv['center_name']} ({inv['district']}): {inv['item']} = {inv['stock']} [{inv['status']}]")
         print()
 
-        # 4. Test Inserting a Live Case Report
-        print("[4] Testing Case Report Insertion...")
+        # 4. Optionally exercise insertion inside a transaction that is always rolled back.
+        # This protects production data and avoids introducing test patient records.
+        if not exercise_write:
+            print("[4] Write test skipped (pass --exercise-write to test a rolled-back transaction).")
+            return
+
+        print("[4] Testing Case Report Insertion in a rolled-back transaction...")
         insert_query = """
             INSERT INTO case_reports (
                 worker_identifier, patient_name, patient_age_years, patient_gender,
@@ -55,30 +62,24 @@ async def test_database():
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING id, reported_at;
         """
-        sample_report = await conn.fetchrow(
-            insert_query,
-            "ASHA-TEST-999", "Rahul Sharma", 29, "M",
-            "Kalyanpur", "Pune", ["High Fever", "Joint Pain", "Chills"],
-            3, "RED", 102.5, "Live database automated test insertion."
-        )
-        report_id = sample_report["id"]
-        reported_at = sample_report["reported_at"]
-        print(f"[SUCCESS] Inserted test report:")
-        print(f"    - ID: {report_id}")
-        print(f"    - Reported At: {reported_at}\n")
+        transaction = conn.transaction()
+        await transaction.start()
+        try:
+            sample_report = await conn.fetchrow(
+                insert_query,
+                "ASHA-TEST-999", "Database Test Patient", 29, "M",
+                "Test Village", "Pune", ["High Fever", "Joint Pain", "Chills"],
+                3, "RED", 102.5, "Temporary automated database test insertion."
+            )
+            fetched = await conn.fetchrow("SELECT id FROM case_reports WHERE id = $1;", sample_report["id"])
+            if not fetched:
+                raise RuntimeError("Transactional insert could not be read back")
+            print("[SUCCESS] Transactional insert/read verification passed; transaction will roll back.")
+        finally:
+            await transaction.rollback()
 
-        # 5. Query the inserted report back
-        fetched = await conn.fetchrow("SELECT * FROM case_reports WHERE id = $1;", report_id)
-        if fetched:
-            print("[5] Query Verification: Retrieved test report from Supabase:")
-            print(f"    - Patient: {fetched['patient_name']} (Age: {fetched['patient_age_years']})")
-            print(f"    - Symptoms: {fetched['symptoms']}")
-            print(f"    - Severity: {fetched['severity']}")
-            print(f"    - Notes: {fetched['notes']}\n")
-
-        # Total count
         total_reports = await conn.fetchval("SELECT count(*) FROM case_reports;")
-        print(f"[6] Total Case Reports in Supabase: {total_reports}")
+        print(f"[5] Total Case Reports in Supabase (unchanged): {total_reports}")
 
     finally:
         await conn.close()
@@ -87,4 +88,7 @@ async def test_database():
         print("=" * 60)
 
 if __name__ == "__main__":
-    asyncio.run(test_database())
+    parser = argparse.ArgumentParser(description="Run non-destructive Supabase integration checks.")
+    parser.add_argument("--exercise-write", action="store_true", help="Verify an insert inside a transaction that is rolled back.")
+    args = parser.parse_args()
+    asyncio.run(test_database(exercise_write=args.exercise_write))

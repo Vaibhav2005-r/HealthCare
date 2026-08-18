@@ -4,7 +4,7 @@ import json
 import asyncpg
 from dotenv import load_dotenv
 
-load_dotenv("/Users/vaibhav/SIH/services/api/.env")
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 db_url = os.getenv("SUPABASE_DB_URL")
 
 async def main():

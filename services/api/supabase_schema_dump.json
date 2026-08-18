@@ -1,4 +1,51 @@
 {
+  "alert_audit_logs": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "uuid",
+        "nullable": "NO",
+        "default": "gen_random_uuid()"
+      },
+      "alert_id": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "previous_status": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "new_status": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "action_by": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "action_role": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "action_notes": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      }
+    }
+  },
   "alerts": {
     "primary_keys": [
       "id"
@@ -63,6 +110,36 @@
         "type": "timestamp with time zone",
         "nullable": "NO",
         "default": "now()"
+      },
+      "resolved_at": {
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      "resolved_by": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "resolved_by_role": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "resolution_notes": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "acknowledged_at": {
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": null
+      },
+      "acknowledged_by": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
       }
     }
   },
@@ -285,6 +362,125 @@
       }
     }
   },
+  "clinical_guidance": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "uuid",
+        "nullable": "NO",
+        "default": "gen_random_uuid()"
+      },
+      "condition": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "category": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "severity_tier": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'MODERATE'::text"
+      },
+      "trigger_symptoms": {
+        "type": "ARRAY",
+        "nullable": "NO",
+        "default": null
+      },
+      "immediate_action": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "red_flags": {
+        "type": "ARRAY",
+        "nullable": "NO",
+        "default": null
+      },
+      "standard_dosage": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "isolation_protocol": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "source_document": {
+        "type": "text",
+        "nullable": "YES",
+        "default": "'IDSP National Guidelines'::text"
+      },
+      "page_number": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "1"
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "now()"
+      }
+    }
+  },
+  "district_case_history": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "integer",
+        "nullable": "NO",
+        "default": "nextval('district_case_history_id_seq'::regclass)"
+      },
+      "district_id": {
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      "district_name": {
+        "type": "character varying",
+        "nullable": "NO",
+        "default": null
+      },
+      "record_date": {
+        "type": "date",
+        "nullable": "NO",
+        "default": null
+      },
+      "cases_reported": {
+        "type": "integer",
+        "nullable": "NO",
+        "default": "0"
+      },
+      "rainfall_mm": {
+        "type": "double precision",
+        "nullable": "NO",
+        "default": "0.0"
+      },
+      "temp_c": {
+        "type": "double precision",
+        "nullable": "NO",
+        "default": "27.0"
+      },
+      "humidity_pct": {
+        "type": "double precision",
+        "nullable": "NO",
+        "default": "70.0"
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "YES",
+        "default": "timezone('utc'::text, now())"
+      }
+    }
+  },
   "districts": {
     "primary_keys": [
       "district_id"
@@ -435,6 +631,125 @@
       "updated_at": {
         "type": "timestamp with time zone",
         "nullable": "NO",
+        "default": "now()"
+      }
+    }
+  },
+  "phc_workers": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "uuid",
+        "nullable": "NO",
+        "default": "gen_random_uuid()"
+      },
+      "employee_code": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "phone_number": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "full_name": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "role": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "phc_name": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "block": {
+        "type": "text",
+        "nullable": "YES",
+        "default": null
+      },
+      "district": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "state": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'Maharashtra'::text"
+      },
+      "is_active": {
+        "type": "boolean",
+        "nullable": "NO",
+        "default": "true"
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      },
+      "updated_at": {
+        "type": "timestamp with time zone",
+        "nullable": "NO",
+        "default": "now()"
+      }
+    }
+  },
+  "villages": {
+    "primary_keys": [
+      "id"
+    ],
+    "columns": {
+      "id": {
+        "type": "uuid",
+        "nullable": "NO",
+        "default": "gen_random_uuid()"
+      },
+      "village_name": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "block": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "district": {
+        "type": "text",
+        "nullable": "NO",
+        "default": null
+      },
+      "state": {
+        "type": "text",
+        "nullable": "NO",
+        "default": "'Maharashtra'::text"
+      },
+      "population": {
+        "type": "integer",
+        "nullable": "YES",
+        "default": "1200"
+      },
+      "latitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "longitude": {
+        "type": "double precision",
+        "nullable": "YES",
+        "default": null
+      },
+      "created_at": {
+        "type": "timestamp with time zone",
+        "nullable": "YES",
         "default": "now()"
       }
     }
