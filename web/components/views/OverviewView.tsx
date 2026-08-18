@@ -54,6 +54,7 @@ const CompactMap = dynamic(() => import('@/components/Map'), {
 
 interface OverviewViewProps {
   data: LiveDashboardData;
+  districts?: DistrictData[];
   activeFilter: RiskFilterType;
   onNavigateTab: (tab: any) => void;
   onSelectDistrict: (district: DistrictData) => void;
@@ -76,11 +77,16 @@ const FALLBACK_TRAJECTORY: FourCastNetForecastItem[] = [
   { day: "Day +14", date: "2026-09-01", predicted_cases: 94.2, lower_bound_cases: 80.0, upper_bound_cases: 114.0, fourcastnet_rainfall_mm: 50.0, temp_c: 27.5, humidity_pct: 83.0, vector_breeding_risk: 0.72, risk_score: 0.8598, risk_level: "CRITICAL" }
 ];
 
-export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistrict }: OverviewViewProps) {
+export function OverviewView({ data, districts, activeFilter, onNavigateTab, onSelectDistrict }: OverviewViewProps) {
   const { t } = useLanguage();
   const [selectedForecastDistrict, setSelectedForecastDistrict] = useState<string>('MH-PLG');
   const [simultaneousForecast, setSimultaneousForecast] = useState<SimultaneousForecastResponse | null>(null);
   const [loadingForecast, setLoadingForecast] = useState<boolean>(false);
+
+  // Fallback / full 36-district catalog
+  const allDistrictsList: DistrictData[] = districts && districts.length > 0
+    ? [...districts].sort((a, b) => a.name.localeCompare(b.name))
+    : data.top_at_risk;
 
   useEffect(() => {
     let isMounted = true;
@@ -259,16 +265,13 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
               <select
                 value={selectedForecastDistrict}
                 onChange={(e) => setSelectedForecastDistrict(e.target.value)}
-                className="px-3 py-1.5 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold font-mono outline-none cursor-pointer transition-colors"
+                className="px-3 py-1.5 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold font-mono outline-none cursor-pointer transition-colors shadow-2xs max-w-[260px]"
               >
-                <option value="MH-PLG">Palghar (Surge Area)</option>
-                <option value="MH-GDC">Gadchiroli (Malaria Zone)</option>
-                <option value="MH-PUN">Pune (Urban Dengue)</option>
-                <option value="MH-NAS">Nashik (High Rain)</option>
-                <option value="MH-CHA">Chandrapur (Vector Wave)</option>
-                <option value="MH-NAN">Nanded (Flash Alert)</option>
-                <option value="MH-SAT">Satara (Moderate)</option>
-                <option value="MH-DHU">Dhule (Baseline)</option>
+                {allDistrictsList.map((d) => (
+                  <option key={d.district_id} value={d.district_id}>
+                    {d.name} ({d.risk_level} • {d.active_cases} cases)
+                  </option>
+                ))}
               </select>
             </div>
           </div>

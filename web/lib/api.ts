@@ -1245,6 +1245,71 @@ export async function fetchSimultaneousForecast(districtId: string = 'MH-PLG'): 
   }
 }
 
+export interface AnalyticsTrendItem {
+  date: string;
+  actual_cases: number | null;
+  predicted_cases: number | null;
+  lower_bound?: number;
+  upper_bound?: number;
+  precip_mm: number;
+  temp_c?: number;
+  humidity?: number;
+  vector_breeding_risk?: number;
+  risk_score?: number;
+  risk_level?: string;
+  is_forecast: boolean;
+}
 
+export interface AnalyticsTrendResponse {
+  district_id: string;
+  district_name: string;
+  source: string;
+  data: AnalyticsTrendItem[];
+  summary?: {
+    baseline_active_cases: number;
+    peak_predicted_cases: number;
+    max_rain_forecast: number;
+  };
+}
 
+export interface DemographicsResponse {
+  source: string;
+  total_intake_records: number;
+  age_brackets: Record<string, number>;
+  symptom_clusters: Record<string, number>;
+}
 
+export async function fetchAnalyticsTrends(districtId?: string): Promise<AnalyticsTrendResponse> {
+  try {
+    const url = districtId 
+      ? `${API_BASE}/analytics/trends?district_id=${encodeURIComponent(districtId)}` 
+      : `${API_BASE}/analytics/trends`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch analytics trends', err);
+    return {
+      district_id: districtId || 'MH-PLG',
+      district_name: 'Palghar',
+      source: 'Client Fallback',
+      data: []
+    };
+  }
+}
+
+export async function fetchAnalyticsDemographics(): Promise<DemographicsResponse> {
+  try {
+    const res = await fetch(`${API_BASE}/analytics/demographics`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error('Failed to fetch demographics', err);
+    return {
+      source: 'Client Fallback',
+      total_intake_records: 0,
+      age_brackets: { '<5 yrs': 25, '5-18': 40, '18-60': 120, '60+': 35 },
+      symptom_clusters: { 'Fever': 150, 'Dehydration': 80, 'Vomiting': 60 }
+    };
+  }
+}

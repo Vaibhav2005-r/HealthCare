@@ -31,6 +31,7 @@ import {
 import RagAdminSection from '@/components/features/RagAdminSection';
 import ResourceManagementSection from '@/components/features/ResourceManagementSection';
 import ImdFeedSection from '@/components/features/ImdFeedSection';
+import AnalyticsSection from '@/components/features/AnalyticsSection';
 import { GuidedTour } from '@/components/GuidedTour';
 import { toast } from 'sonner';
 import { useLanguage, Language } from '@/lib/i18n';
@@ -239,6 +240,7 @@ export default function ArogyaPrahariDashboard() {
                   {activeTab === 'overview' && t('header.executive_overview')}
                   {activeTab === 'heatmap' && t('header.gis_heatmap')}
                   {activeTab === 'districts' && t('header.district_matrix')}
+                  {activeTab === 'analytics' && 'Deep Epidemiological Analytics & ML Projections'}
                   {activeTab === 'imd' && 'IMD Meteorological Radar & Precipitation'}
                   {activeTab === 'rag' && t('header.rag_protocols')}
                   {activeTab === 'resources' && t('header.phc_buffer')}
@@ -365,6 +367,7 @@ export default function ArogyaPrahariDashboard() {
               {activeTab === 'overview' && dashboardData && (
                 <OverviewView 
                   data={dashboardData}
+                  districts={districts}
                   activeFilter={activeRiskFilter}
                   onNavigateTab={(tab) => setActiveTab(tab)}
                   onSelectDistrict={(dist) => {
@@ -390,6 +393,17 @@ export default function ArogyaPrahariDashboard() {
                   onFilterChange={(f) => setActiveRiskFilter(f)}
                   selectedDistrict={selectedDistrict}
                   onSelectDistrict={handleSelectDistrict}
+                />
+              )}
+
+              {activeTab === 'analytics' && (
+                <AnalyticsSection 
+                  districts={districts}
+                  selectedDistrictId={selectedDistrict?.district_id || 'MH-PLG'}
+                  onSelectDistrict={(dId) => {
+                    const matched = districts.find(d => d.district_id === dId);
+                    if (matched) setSelectedDistrict(matched);
+                  }}
                 />
               )}
 

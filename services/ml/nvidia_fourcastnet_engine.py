@@ -22,6 +22,7 @@ data_path = os.path.join(base_dir, "outbreak_time_series.csv")
 # Global instances
 _scaler: Optional[MinMaxScaler] = None
 _lstm_model = None
+_WEATHER_CACHE: Dict[str, Any] = {}
 
 def get_ml_assets():
     global _scaler, _lstm_model
@@ -48,7 +49,15 @@ async def get_fourcastnet_weather_trajectory(lat: float, lng: float, days: int =
     """
     Fetches forward atmospheric trajectory (Precipitation, 2m Temperature, Relative Humidity)
     using NVIDIA FourCastNet (AFNO) NWP model or High-Resolution Atmospheric Ensemble fallback.
+    Cached for 1 hour per coordinate grid.
     """
+    cache_key = f"{round(lat, 2)}_{round(lng, 2)}_{days}"
+    now_ts = datetime.now(timezone.utc).timestamp()
+    if cache_key in _WEATHER_CACHE:
+        cached_ts, cached_data = _WEATHER_CACHE[cache_key]
+        if now_ts - cached_ts < 3600:
+            return cached_data
+
     today = date.today()
     headers = {
         "Authorization": f"Bearer {NVIDIA_API_KEY}",
@@ -68,51 +77,56 @@ async def get_fourcastnet_weather_trajectory(lat: float, lng: float, days: int =
                         "horizon_days": days,
                         "variables": ["precipitation_surface", "temperature_2m", "relative_humidity_2m"]
                     },
-                    timeout=5.0
+                    timeout=3.0
                 )
                 if res.status_code == 200:
                     data = res.json()
-                    return data.get("forecast", [])
-        except Exception as e:
-            # Fallback to high-resolution physical NWP API
+                    res_f = data.get("forecast", [])
+                    if res_f:
+                        _WEATHER_CACHE[cache_key] = (now_ts, res_f)
+                        return res_f
+        except Exception:
             pass
 
     # 2. Physics-based High-Resolution 14-day NWP Ensemble (Open-Meteo High-Resolution Model)
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&daily=temperature_2m_mean,relative_humidity_2m_mean,precipitation_sum&forecast_days={days}&timezone=auto"
-    async with httpx.AsyncClient() as client:
-        res = await client.get(url, timeout=10.0)
-        if res.status_code == 200:
-            daily = res.json()["daily"]
-            forecast = []
-            for i in range(len(daily["time"])):
-                f_date_str = daily["time"][i]
-                rain = float(daily["precipitation_sum"][i] or 0.0)
-                temp = float(daily["temperature_2m_mean"][i] or 27.5)
-                rh = float(daily["relative_humidity_2m_mean"][i] or 75.0)
-                
-                # Vector Proliferation Index based on WHO/NVBDCP temperature/humidity suitability
-                temp_opt = max(0.0, 1.0 - abs(temp - 28.0) / 8.0)
-                rh_opt = max(0.0, (rh - 50.0) / 50.0)
-                rain_opt = min(1.0, rain / 80.0)
-                vector_idx = round(0.45 * rain_opt + 0.35 * rh_opt + 0.20 * temp_opt, 3)
-                
-                forecast.append({
-                    "day_offset": i + 1,
-                    "date": f_date_str,
-                    "rainfall_mm": round(rain, 1),
-                    "temp_c": round(temp, 1),
-                    "humidity_pct": round(rh, 1),
-                    "vector_breeding_risk": vector_idx,
-                    "model_source": "NVIDIA FourCastNet (0.25° AFNO Mesh)"
-                })
-            return forecast
+    try:
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&daily=temperature_2m_mean,relative_humidity_2m_mean,precipitation_sum&forecast_days={days}&timezone=auto"
+        async with httpx.AsyncClient() as client:
+            res = await client.get(url, timeout=5.0)
+            if res.status_code == 200:
+                daily = res.json()["daily"]
+                forecast = []
+                for i in range(len(daily["time"])):
+                    f_date_str = daily["time"][i]
+                    rain = float(daily["precipitation_sum"][i] or 0.0)
+                    temp = float(daily["temperature_2m_mean"][i] or 27.5)
+                    rh = float(daily["relative_humidity_2m_mean"][i] or 75.0)
+                    
+                    temp_opt = max(0.0, 1.0 - abs(temp - 28.0) / 8.0)
+                    rh_opt = max(0.0, (rh - 50.0) / 50.0)
+                    rain_opt = min(1.0, rain / 80.0)
+                    vector_idx = round(0.45 * rain_opt + 0.35 * rh_opt + 0.20 * temp_opt, 3)
+                    
+                    forecast.append({
+                        "day_offset": i + 1,
+                        "date": f_date_str,
+                        "rainfall_mm": round(rain, 1),
+                        "temp_c": round(temp, 1),
+                        "humidity_pct": round(rh, 1),
+                        "vector_breeding_risk": vector_idx,
+                        "model_source": "NVIDIA FourCastNet (0.25° AFNO Mesh)"
+                    })
+                _WEATHER_CACHE[cache_key] = (now_ts, forecast)
+                return forecast
+    except Exception as e:
+        print(f"Weather API fallback notice: {e}")
             
     # Default synthetic seasonal array if offline
-    return [
+    fallback_res = [
         {
             "day_offset": i + 1,
             "date": (today + timedelta(days=i+1)).strftime("%Y-%m-%d"),
-            "rainfall_mm": round(25.0 + math.sin(i * 0.5) * 20.0, 1),
+            "rainfall_mm": round(15.0 + math.sin(i * 0.5) * 12.0, 1),
             "temp_c": 27.5,
             "humidity_pct": 80.0,
             "vector_breeding_risk": 0.65,
@@ -120,6 +134,8 @@ async def get_fourcastnet_weather_trajectory(lat: float, lng: float, days: int =
         }
         for i in range(days)
     ]
+    _WEATHER_CACHE[cache_key] = (now_ts, fallback_res)
+    return fallback_res
 
 async def run_simultaneous_fourcastnet_lstm_forecast(
     district_id: str,

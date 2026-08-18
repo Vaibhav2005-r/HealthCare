@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n';
 
-export type NavTab = 'overview' | 'heatmap' | 'districts' | 'imd' | 'rag' | 'resources' | 'alerts' | 'reports';
+export type NavTab = 'overview' | 'heatmap' | 'districts' | 'analytics' | 'imd' | 'rag' | 'resources' | 'alerts' | 'reports';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -50,6 +50,12 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
       label: t('nav.districts'),
       icon: Building2,
       desc: t('nav.districts.desc')
+    },
+    {
+      id: 'analytics' as NavTab,
+      label: 'Deep Analytics & ML',
+      icon: Activity,
+      desc: 'District multi-axis telemetry & ML projections'
     },
     {
       id: 'imd' as NavTab,
