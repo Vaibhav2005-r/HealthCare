@@ -17,7 +17,10 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
-    afterEvaluate {
+}
+
+subprojects {
+    plugins.withId("com.android.library") {
         val androidExt = project.extensions.findByName("android")
         if (androidExt is com.android.build.gradle.BaseExtension) {
             androidExt.compileSdkVersion(35)
