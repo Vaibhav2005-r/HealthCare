@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/providers.dart';
+import '../providers/language_provider.dart';
 import '../models/models.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -17,7 +19,8 @@ import '../widgets/coach_mark.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  void _showSOSDialog(BuildContext context) {
+  void _showSOSDialog(BuildContext context, WidgetRef ref) {
+    final lang = ref.read(languageProvider.notifier);
     showDialog(
       context: context,
       builder: (context) {
@@ -28,27 +31,27 @@ class HomeScreen extends ConsumerWidget {
           ),
           title: Row(
             children: [
-              Icon(Icons.emergency, color: Colors.red, size: 32),
-              SizedBox(width: 8),
+              const Icon(Icons.emergency, color: Colors.red, size: 32),
+              const SizedBox(width: 8),
               Text(
-                'Emergency SOS',
-                style: TextStyle(
+                lang.translate('sos_banner_title'),
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.red,
                 ),
               ),
             ],
           ),
-          content: const Text(
-            'This will alert supervisors and nearby medical staff. Are you sure you want to trigger an SOS?',
-            style: TextStyle(color: Color(0xFF1D2321), fontSize: 16),
+          content: Text(
+            lang.translate('sos_banner_desc'),
+            style: const TextStyle(color: Color(0xFF1D2321), fontSize: 16),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                lang.translate('back_btn'),
+                style: const TextStyle(
                   color: Color(0xFF5B6663),
                   fontWeight: FontWeight.bold,
                 ),
@@ -61,19 +64,30 @@ class HomeScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
+                final authState = ref.read(authProvider);
+                final workerId = authState.workerProfile?['worker_id'] ?? 'ASHA-4029';
+                final district = authState.workerProfile?['district'] ?? 'Pune';
+                
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('SOS Alert Sent!'),
+                  SnackBar(
+                    content: Text(lang.translate('trigger_sos')),
                     backgroundColor: Colors.red,
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+                
+                await ApiService().triggerSOS(
+                  workerId: workerId,
+                  district: district,
+                  cases: 5,
+                  severity: 'CRITICAL',
+                );
               },
-              child: const Text(
-                'Trigger SOS',
-                style: TextStyle(
+              child: Text(
+                lang.translate('trigger_sos'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -88,6 +102,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final lang = ref.read(languageProvider.notifier);
     final profileAsync = ref.watch(workerProfileProvider);
     final profile = authState.workerProfile ?? profileAsync.valueOrNull ?? const <String, dynamic>{};
     final String rawName = (profile['full_name'] ?? profile['name'] ?? 'Healthcare Worker').toString();
@@ -102,7 +117,7 @@ class HomeScreen extends ConsumerWidget {
             Icon(Icons.health_and_safety, color: AppColors.primary),
             const SizedBox(width: 8),
             Text(
-              'Arogya Prahari',
+              lang.translate('app_title'),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: AppColors.primary,
@@ -112,12 +127,11 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications),
             onPressed: () {},
           ),
         ],
       ),
-      // Removed FAB to replace with a massive button in the body
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 24.0),
@@ -130,7 +144,7 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Good Morning,\n$firstName',
+                      '${lang.translate("greeting_morning")}\n$firstName',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.w900,
@@ -157,7 +171,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.cloud_upload,
                       label: pendingReports.maybeWhen(
                         data: (r) =>
-                            '${r.where((rep) => rep.syncStatus != SyncStatus.synced).length} Pending',
+                            '${r.where((rep) => rep.syncStatus != SyncStatus.synced).length} ${lang.translate("pending_sync")}',
                         orElse: () => 'Syncing...',
                       ),
                       color: AppColors.riskAmber,
@@ -165,7 +179,7 @@ class HomeScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     _buildStatusChip(
                       icon: Icons.location_on,
-                      label: 'GPS Active',
+                      label: lang.translate('gps_active'),
                       color: AppColors.riskGreen,
                     ),
                   ],
@@ -201,31 +215,31 @@ class HomeScreen extends ConsumerWidget {
                             color: Colors.white.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.assignment,
                             color: Colors.white,
                             size: 32,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'New Report',
-                                style: TextStyle(
+                                lang.translate('start_screening_title'),
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 22,
+                                  fontSize: 20,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                'Start a new patient triage',
-                                style: TextStyle(
+                                lang.translate('start_screening_desc'),
+                                style: const TextStyle(
                                   color: Colors.white70,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                               ),
                             ],
@@ -239,17 +253,15 @@ class HomeScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
-
               // Big SOS Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: import_scale_btn.AnimatedScaleButton(
-                  onPressed: () => _showSOSDialog(context),
+                  onPressed: () => _showSOSDialog(context, ref),
                   child: CoachMark(
                     id: 'home_sos_banner',
-                    title: 'Emergency SOS',
-                    message: 'Use this button to immediately alert supervisors in an emergency.',
+                    title: lang.translate('sos_banner_title'),
+                    message: lang.translate('sos_banner_desc'),
                     icon: Icons.emergency,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -268,21 +280,41 @@ class HomeScreen extends ConsumerWidget {
                         ],
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.emergency,
-                            color: Colors.white,
-                            size: 36,
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'EMERGENCY SOS',
-                            style: TextStyle(
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.emergency,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
-                              letterSpacing: 1.5,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  lang.translate('sos_banner_title'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  lang.translate('sos_banner_desc'),
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

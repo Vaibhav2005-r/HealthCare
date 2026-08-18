@@ -19,6 +19,7 @@ import 'screens/report/duration_onset_screen.dart';
 import 'screens/report/review_screen.dart';
 import 'screens/triage_result_screen.dart';
 import 'screens/log_history_screen.dart';
+import 'screens/report_history_screen.dart';
 import 'screens/assistant_screen.dart';
 import 'screens/profile_screen.dart';
 
@@ -133,6 +134,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           final report = state.extra as Report;
           return SavedReportDetailScreen(report: report);
         },
+      ),
+      GoRoute(
+        path: '/report-history',
+        builder: (context, state) => const ReportHistoryScreen(),
       ),
     ],
   );

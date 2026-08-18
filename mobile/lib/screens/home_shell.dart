@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/providers.dart';
+import '../providers/language_provider.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
 
@@ -43,6 +44,10 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pendingAsync = ref.watch(pendingReportsProvider);
+    final lang = ref.watch(languageProvider.notifier);
+    // Listen to state changes to trigger rebuild on language change
+    ref.watch(languageProvider);
+    
     final int pendingCount = pendingAsync.maybeWhen(
       data: (reports) => reports.where((r) => r.syncStatus != SyncStatus.synced).length,
       orElse: () => 0,
@@ -59,15 +64,15 @@ class HomeShell extends ConsumerWidget {
         selectedFontSize: 12,
         unselectedFontSize: 12,
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
+            label: lang.translate('nav_home'),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            activeIcon: Icon(Icons.add_circle),
-            label: 'New Report',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.add_circle_outline),
+            activeIcon: const Icon(Icons.add_circle),
+            label: lang.translate('nav_report'),
           ),
           BottomNavigationBarItem(
             icon: Badge(
@@ -80,17 +85,17 @@ class HomeShell extends ConsumerWidget {
               label: Text(pendingCount.toString()),
               child: const Icon(Icons.history),
             ),
-            label: 'Log History',
+            label: lang.translate('nav_history'),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.menu_book_outlined),
-            activeIcon: Icon(Icons.menu_book),
-            label: 'Guide',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.menu_book_outlined),
+            activeIcon: const Icon(Icons.menu_book),
+            label: lang.translate('nav_guide'),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: lang.translate('nav_profile'),
           ),
         ],
       ),

@@ -231,6 +231,27 @@ class ApiService {
     }
   }
 
+  Future<bool> triggerSOS({
+    required String workerId,
+    required String district,
+    int cases = 5,
+    String severity = 'CRITICAL',
+    String? summary,
+  }) async {
+    try {
+      final response = await _postWithFallback('/api/v1/alerts/sos', {
+        'worker_id': workerId,
+        'district': district,
+        'cases': cases,
+        'severity': severity,
+        'summary': summary ?? 'Manual Emergency SOS triggered by field healthcare worker in $district',
+      });
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> fetchTelemetryLogs({String? district}) async {
     try {
       final queryParams = district != null ? {'district': district} : null;

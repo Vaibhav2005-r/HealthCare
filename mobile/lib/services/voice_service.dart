@@ -41,7 +41,22 @@ class VoiceService {
     }
   }
 
-  Future<void> speak(String text) async {
+  Future<void> setLanguage(String langCode) async {
+    String ttsLocale = 'en-IN';
+    if (langCode == 'mr') {
+      ttsLocale = 'mr-IN';
+    } else if (langCode == 'hi') {
+      ttsLocale = 'hi-IN';
+    }
+    try {
+      await _tts.setLanguage(ttsLocale);
+    } catch (_) {}
+  }
+
+  Future<void> speak(String text, [String? langCode]) async {
+    if (langCode != null) {
+      await setLanguage(langCode);
+    }
     await _tts.speak(text);
   }
 

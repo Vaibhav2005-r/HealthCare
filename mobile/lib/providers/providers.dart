@@ -8,11 +8,18 @@ import '../services/sync_service.dart';
 import '../services/auth_service.dart';
 
 export '../services/auth_service.dart';
+export '../services/sync_service.dart';
 
 final localDbProvider = Provider((ref) => LocalDbService());
 final apiServiceProvider = Provider((ref) => ApiService());
 final mockDataProvider = Provider((ref) => MockDataService());
 final triageProvider = Provider((ref) => TriageService());
+
+final syncServiceProvider = StateNotifierProvider<SyncService, SyncState>((ref) {
+  final db = ref.watch(localDbProvider);
+  final api = ref.watch(apiServiceProvider);
+  return SyncService(db, api);
+});
 
 final reportsProvider = FutureProvider<List<Report>>((ref) async {
   final db = ref.watch(localDbProvider);

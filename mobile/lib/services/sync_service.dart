@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../models/models.dart';
 import 'api_service.dart';
 import 'local_db_service.dart';
@@ -38,9 +40,34 @@ class SyncState {
 class SyncService extends StateNotifier<SyncState> {
   final LocalDbService dbService;
   final ApiService apiService;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   SyncService(this.dbService, this.apiService) : super(SyncState()) {
     refreshPendingCount();
+    _initConnectivityListener();
+  }
+
+  void _initConnectivityListener() {
+    _connectivitySubscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
+      final isNowOnline = results.isNotEmpty &&
+          !results.contains(ConnectivityResult.none);
+      
+      if (isNowOnline != state.isOnline) {
+        state = state.copyWith(isOnline: isNowOnline);
+        if (isNowOnline) {
+          // Trigger immediate auto-sync when network reconnects
+          syncReports();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
   }
 
   void toggleOnline() {
@@ -99,24 +126,20 @@ class SyncService extends StateNotifier<SyncState> {
 
       final now = DateTime.now();
       final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-      final remaining = await dbService.getPendingReports();
 
+      await refreshPendingCount();
       state = state.copyWith(
         isSyncing: false,
-        pendingCount: remaining.length,
         lastSyncTime: timeStr,
+        errorMessage: null,
       );
     } catch (e) {
       state = state.copyWith(
         isSyncing: false,
-        errorMessage: 'Sync error: $e',
+        errorMessage: 'Sync failed: $e',
       );
     }
 
     return syncedCount;
   }
 }
-
-final syncServiceProvider = StateNotifierProvider<SyncService, SyncState>((ref) {
-  return SyncService(LocalDbService(), ApiService());
-});

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/report_draft_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animated_scale_button.dart' as import_scale_btn;
 
@@ -28,11 +29,14 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider.notifier);
+    ref.watch(languageProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Step 5 of 6: Onset Date',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+        title: Text(
+          lang.translate('step_3_title'),
+          style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
         centerTitle: true,
       ),
@@ -61,10 +65,10 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
               ),
               const SizedBox(height: 24),
 
-              const Text(
-                'When did symptoms begin?',
-                style: TextStyle(
-                  fontSize: 24,
+              Text(
+                lang.translate('duration_days'),
+                style: const TextStyle(
+                  fontSize: 22,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
@@ -100,7 +104,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      '${_days.toInt()} Day${_days.toInt() == 1 ? '' : 's'} Ago',
+                      '${_days.toInt()} ${lang.state.languageCode == "mr" ? "दिवस" : lang.state.languageCode == "hi" ? "दिन" : "Days"}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 32,
@@ -139,7 +143,6 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                         if (selected != null) {
                           final diff = now.difference(selected).inDays;
                           setState(() {
-                            // Ensure at least 1 day if it's today
                             _days = diff < 1 ? 1.0 : diff.toDouble();
                           });
                         }
@@ -163,7 +166,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Select Date',
+                              lang.state.languageCode == 'mr' ? 'तारीख निवडा' : lang.state.languageCode == 'hi' ? 'तारीख चुनें' : 'Select Date',
                               style: const TextStyle(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.bold,
@@ -190,10 +193,10 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Next: Review',
-                      style: TextStyle(
+                      lang.translate('next_btn'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,

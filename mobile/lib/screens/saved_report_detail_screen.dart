@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../models/models.dart';
 import '../providers/report_draft_provider.dart';
+import '../providers/language_provider.dart';
+import '../services/pdf_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_scale_button.dart' as scale_btn;
 
@@ -47,15 +49,18 @@ class SavedReportDetailScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _ShareOption(
+                    icon: Icons.picture_as_pdf,
+                    label: 'PDF Slip',
+                    color: Colors.red,
+                    onTap: () {
+                      Navigator.pop(context);
+                      PdfService.generateAndPrintReferralSlip(report);
+                    },
+                  ),
+                  _ShareOption(
                     icon: Icons.chat,
                     label: 'WhatsApp',
                     color: Colors.green,
-                    onTap: () => Navigator.pop(context),
-                  ),
-                  _ShareOption(
-                    icon: Icons.mail,
-                    label: 'Email',
-                    color: Colors.red,
                     onTap: () => Navigator.pop(context),
                   ),
                   _ShareOption(
@@ -85,19 +90,21 @@ class SavedReportDetailScreen extends ConsumerWidget {
     }
   }
 
-  String _getRiskText(RiskTier tier) {
+  String _getRiskText(RiskTier tier, LanguageNotifier lang) {
     switch (tier) {
       case RiskTier.red:
-        return 'CRITICAL RISK';
+        return lang.translate('risk_high');
       case RiskTier.amber:
-        return 'MODERATE RISK';
+        return lang.translate('risk_mod');
       case RiskTier.green:
-        return 'LOW RISK';
+        return lang.translate('risk_low');
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(languageProvider.notifier);
+    ref.watch(languageProvider);
     final riskColor = _getRiskColor(report.riskTier);
 
     return Scaffold(
@@ -109,11 +116,16 @@ class SavedReportDetailScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Saved Report',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        title: Text(
+          lang.translate('report_history'),
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.picture_as_pdf, color: AppColors.primary),
+            tooltip: 'Print Referral Slip',
+            onPressed: () => PdfService.generateAndPrintReferralSlip(report),
+          ),
           IconButton(
             icon: const Icon(Icons.share, color: AppColors.textPrimary),
             onPressed: () => _showShareSheet(context),
@@ -178,7 +190,7 @@ class SavedReportDetailScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            _getRiskText(report.riskTier),
+                            _getRiskText(report.riskTier, lang),
                             style: TextStyle(
                               color: riskColor,
                               fontWeight: FontWeight.bold,
@@ -268,43 +280,80 @@ class SavedReportDetailScreen extends ConsumerWidget {
               ),
             ),
 
-            // Bottom Action
+            // Bottom Action Buttons
             Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: scale_btn.AnimatedScaleButton(
-                onPressed: () {
-                  // Pre-fill a new report draft with this patient's info
-                  ref.read(reportDraftProvider.notifier).clear(); // Clear old draft
-                  
-                  final notifier = ref.read(reportDraftProvider.notifier);
-                  notifier.updateBasics(
-                    patientName: report.patientName,
-                    age: report.age,
-                    sex: report.sex,
-                    contactNumber: report.contactNumber,
-                    village: report.village,
-                  );
-
-                  // Navigate to basics
-                  context.go('/patient-basics');
-                },
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Re-Triage / Follow-up Visit',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              child: Column(
+                children: [
+                  scale_btn.AnimatedScaleButton(
+                    onPressed: () => PdfService.generateAndPrintReferralSlip(report),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        border: Border.all(color: AppColors.primary, width: 2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.picture_as_pdf, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Text(
+                            lang.state.languageCode == 'mr'
+                                ? 'रेफरल स्लिप प्रिंट / डाउनलोड करा (PDF)'
+                                : lang.state.languageCode == 'hi'
+                                    ? 'रेफरल पर्ची प्रिंट / डाउनलोड करें (PDF)'
+                                    : 'Print / Download Referral Slip (PDF)',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  scale_btn.AnimatedScaleButton(
+                    onPressed: () {
+                      ref.read(reportDraftProvider.notifier).clear();
+                      
+                      final notifier = ref.read(reportDraftProvider.notifier);
+                      notifier.updateBasics(
+                        patientName: report.patientName,
+                        age: report.age,
+                        sex: report.sex,
+                        contactNumber: report.contactNumber,
+                        village: report.village,
+                      );
+
+                      context.go('/report');
+                    },
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Text(
+                          lang.state.languageCode == 'mr'
+                              ? 'पुन्हा तपासणी / फॉलो-अप'
+                              : lang.state.languageCode == 'hi'
+                                  ? 'पुनः जांच / फॉलो-अप'
+                                  : 'Re-Triage / Follow-up Visit',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

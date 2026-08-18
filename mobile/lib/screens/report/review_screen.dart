@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../providers/report_draft_provider.dart';
 import '../../providers/providers.dart';
+import '../../providers/language_provider.dart';
 import '../../models/models.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animated_scale_button.dart' as import_scale_btn;
@@ -14,6 +15,8 @@ class ReviewScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final draft = ref.watch(reportDraftProvider);
+    final lang = ref.watch(languageProvider.notifier);
+    ref.watch(languageProvider);
 
     const bgColor = Color(0xFFF5F0E8);
     const accentColor = Color(0xFF1A5F7A);
@@ -22,7 +25,7 @@ class ReviewScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Step 6 of 6: Review Report', style: TextStyle(fontSize: 16, color: Color(0xFF5B6663))),
+        title: Text(lang.translate('step_6_title'), style: const TextStyle(fontSize: 16, color: Color(0xFF5B6663))),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -67,94 +70,53 @@ class ReviewScreen extends ConsumerWidget {
                             children: [
                               Icon(Icons.badge, color: accentColor, size: 20),
                               const SizedBox(width: 8),
-                              const Text('Patient Info', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
+                              Text(lang.translate('patient_name'), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text('Name: ${draft.patientName ?? '-'}', style: const TextStyle(fontSize: 15)),
-                          Text('Age: ${draft.age ?? '-'} yrs, Sex: ${draft.sex ?? '-'}', style: const TextStyle(fontSize: 15)),
-                          if (draft.contactNumber != null) Text('Contact: ${draft.contactNumber}', style: const TextStyle(fontSize: 15)),
+                          Text('${lang.translate("patient_name")}: ${draft.patientName ?? '-'}', style: const TextStyle(fontSize: 15)),
+                          Text('${lang.translate("age")}: ${draft.age ?? '-'}, ${lang.translate("gender")}: ${draft.sex ?? '-'}', style: const TextStyle(fontSize: 15)),
+                          if (draft.contactNumber != null) Text('${lang.translate("contact_number")}: ${draft.contactNumber}', style: const TextStyle(fontSize: 15)),
                           
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16.0),
                             child: Divider(color: Colors.black12),
                           ),
                           
-                          // 2. Location
+                          // 2. Symptoms
                           Row(
                             children: [
-                              Icon(Icons.location_on, color: accentColor, size: 20),
+                              Icon(Icons.sick, color: accentColor, size: 20),
                               const SizedBox(width: 8),
-                              const Text('Location', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text('Village / PHC: ${draft.village ?? '-'}', style: const TextStyle(fontSize: 15)),
-                          
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16.0),
-                            child: Divider(color: Colors.black12),
-                          ),
-
-                          // 3. Medical Background
-                          Row(
-                            children: [
-                              Icon(Icons.assignment, color: accentColor, size: 20),
-                              const SizedBox(width: 8),
-                              const Text('Medical Background', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          if (draft.temperature != null) Text('Temperature: ${draft.temperature}°${draft.temperatureUnit}', style: const TextStyle(fontSize: 15)),
-                          if (draft.comorbidities.isNotEmpty) Text('Conditions: ${draft.comorbidities.join(', ')}', style: const TextStyle(fontSize: 15)),
-                          if (draft.medicationTaken != null) Text('Medication: ${draft.medicationTaken}', style: const TextStyle(fontSize: 15)),
-                          if (draft.temperature == null && draft.comorbidities.isEmpty && draft.medicationTaken == null)
-                            const Text('No additional medical background provided', style: TextStyle(fontSize: 15, color: Colors.grey)),
-
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16.0),
-                            child: Divider(color: Colors.black12),
-                          ),
-
-                          // 4. Symptoms
-                          Row(
-                            children: [
-                              Icon(Icons.medical_services, color: accentColor, size: 20),
-                              const SizedBox(width: 8),
-                              const Text('Symptoms', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
+                              Text(lang.translate('step_2_title'), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
                             ],
                           ),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: draft.symptoms.map((s) => Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: accentColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(s, style: const TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                            children: draft.symptoms.map((s) => Chip(
+                              label: Text(s, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                              backgroundColor: accentColor,
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
                             )).toList(),
                           ),
-                          const SizedBox(height: 12),
-                          Text('Duration: ${draft.durationDays ?? '-'} day${(draft.durationDays ?? 1) == 1 ? '' : 's'}', style: const TextStyle(fontSize: 15)),
                           
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16.0),
                             child: Divider(color: Colors.black12),
                           ),
-                          
-                          // 5. Photo
+
+                          // 3. Duration & Vitals
                           Row(
                             children: [
-                              Icon(Icons.camera_alt, color: accentColor, size: 20),
+                              Icon(Icons.schedule, color: accentColor, size: 20),
                               const SizedBox(width: 8),
-                              const Text('Clinical Image', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
+                              Text(lang.translate('duration_days'), style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1D2321), fontSize: 16)),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          Text(draft.imagePath != null ? 'Image captured and attached' : 'No image attached', style: const TextStyle(fontSize: 15)),
+                          Text('${lang.translate("duration_days")}: ${draft.durationDays ?? 1} Days / दिवस', style: const TextStyle(fontSize: 15)),
                         ],
                       ),
                     ),
@@ -205,8 +167,8 @@ class ReviewScreen extends ConsumerWidget {
                     color: accentColor,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Center(
-                    child: Text('Submit & Triage', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: Center(
+                    child: Text(lang.translate('submit_triage_btn'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ),

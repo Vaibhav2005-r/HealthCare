@@ -5,6 +5,7 @@ import 'dart:async';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../providers/report_draft_provider.dart';
+import '../providers/language_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_scale_button.dart' as import_scale_btn;
 
@@ -17,23 +18,144 @@ class TriageResultScreen extends ConsumerStatefulWidget {
 
 class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
   bool _isAnalyzing = true;
+  bool _isSaved = false;
 
   @override
   void initState() {
     super.initState();
-    // Simulate reading in progress
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(milliseconds: 900), () async {
       if (mounted) {
         setState(() {
           _isAnalyzing = false;
         });
+        _autoSaveReport();
       }
     });
   }
 
+  Future<void> _autoSaveReport() async {
+    final report = GoRouterState.of(context).extra as Report?;
+    if (report != null && !_isSaved) {
+      try {
+        final db = ref.read(localDbProvider);
+        await db.insertReport(report);
+        _isSaved = true;
+        ref.invalidate(pendingReportsProvider);
+        ref.invalidate(reportsProvider);
+      } catch (_) {}
+    }
+  }
+
+  void _showClinicalGuidanceSheet(BuildContext context, Report report, LanguageNotifier lang) {
+    final isRed = report.riskTier == RiskTier.red;
+    final isAmber = report.riskTier == RiskTier.amber;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFDF8),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Icon(
+                    isRed ? Icons.warning_amber : Icons.verified,
+                    color: isRed ? Colors.red : (isAmber ? Colors.amber.shade800 : Colors.green),
+                    size: 28,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      isRed ? 'High Risk Directives (Red Tier)' : (isAmber ? 'Moderate Risk Management (Amber Tier)' : 'Low Risk Home Protocol (Green Tier)'),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1D2321)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.black12),
+              const SizedBox(height: 12),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isRed
+                            ? '1. IMMEDIATE REFERRAL: Alert Primary Health Centre (PHC) Medical Officer.\n\n2. HYDRATION: Administer continuous Oral Rehydration Solution (ORS) during transport.\n\n3. VITALS: Monitor pulse rate and skin turgor every 15 minutes.\n\n4. CONTACT TRACING: Inquire about other family or village members with identical symptoms within the last 48 hours.'
+                            : isAmber
+                                ? '1. PHC VISIT: Schedule patient examination at the sub-center within 24 hours.\n\n2. FLUID THERAPY: Instruct family to give 1 liter of boiled drinking water with ORS.\n\n3. TEMPERATURE: Maintain tepid sponging if temperature exceeds 101°F.\n\n4. DANGER SIGNS: Educate caregiver to return immediately if vomiting prevents oral fluid intake.'
+                                : '1. HOME CARE: Provide 2 ORS packets with proper mixing instructions (1 liter clean water).\n\n2. DIET: Continue light, easily digestible meals (khichdi, coconut water).\n\n3. HYGIENE: Advise handwashing with soap before meals and after sanitation.',
+                        style: const TextStyle(fontSize: 15, height: 1.6, color: Color(0xFF2C3E50)),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A5F7A).withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.support_agent, color: Color(0xFF1A5F7A)),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Need more clinical advice? You can also ask our AI Assistant anytime from the Guide tab.',
+                                style: TextStyle(fontSize: 13, color: Color(0xFF1A5F7A)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A5F7A),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Understood / समजले', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // The report was passed as extra to the router.
+    final lang = ref.watch(languageProvider.notifier);
+    ref.watch(languageProvider);
     final report = GoRouterState.of(context).extra as Report?;
 
     if (report == null) {
@@ -51,9 +173,9 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Analyzing Report',
-                style: TextStyle(
-                  fontSize: 24,
+                lang.translate('triage_result_title'),
+                style: const TextStyle(
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
@@ -77,8 +199,8 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                 ),
               ),
               const SizedBox(height: 48),
-              Text(
-                'Just a moment...',
+              const Text(
+                'Evaluating protocol / मूल्यांकन सुरू आहे...',
                 style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
             ],
@@ -88,122 +210,85 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
     }
 
     final Color bgColor = _getRiskColor(report.riskTier);
-    final String title = _getRiskTitle(report.riskTier);
+    final String title = _getRiskTitle(report.riskTier, lang);
 
     return Scaffold(
       backgroundColor: bgColor,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-          child: CustomScrollView(
-            slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 8),
-                    // Main Risk Card
-              Card(
-                color: Colors.white.withOpacity(0.15),
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(40.0),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          report.riskTier == RiskTier.green ? Icons.check_circle :
-                          report.riskTier == RiskTier.amber ? Icons.warning :
-                          Icons.error, 
-                          size: 80, 
-                          color: Colors.white
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Text(
-                        title,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -1),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Based on reported indicators',
-                        style: TextStyle(fontSize: 15, color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(
+                report.riskTier == RiskTier.red ? Icons.warning_amber : Icons.verified,
+                color: Colors.white,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
                 ),
               ),
+              const SizedBox(height: 8),
+              Text(
+                '${report.patientName} (${report.age} yrs, ${report.village})',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
               const SizedBox(height: 24),
-              Card(
-                color: const Color(0xFFFFFDF8),
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Detected Indicators', 
-                        style: TextStyle(
-                          fontSize: 18, 
-                          fontWeight: FontWeight.bold, 
-                          color: const Color(0xFF1D2321),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: report.symptoms.map((s) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1A5F7A).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            s,
-                            style: TextStyle(color: const Color(0xFF1A5F7A), fontWeight: FontWeight.w600, fontSize: 14),
-                          ),
-                        )).toList(),
-                      ),
-                      const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF5F0E8),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Row(
+              
+              // Clinical Actions Card
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Icon(Icons.history, color: const Color(0xFF5B6663), size: 24),
-                            const SizedBox(width: 12),
+                            Icon(Icons.medical_services, color: bgColor),
+                            const SizedBox(width: 8),
                             Text(
-                              'Duration: ${report.durationDays} days',
-                              style: TextStyle(color: const Color(0xFF1D2321), fontWeight: FontWeight.w600, fontSize: 15),
+                              lang.translate('view_guidance_btn'),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: bgColor,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        ...report.symptoms.map((s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle_outline, color: Colors.grey, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(s, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600))),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const Spacer(),
+              
+              const SizedBox(height: 20),
               import_scale_btn.AnimatedScaleButton(
-                onPressed: () {
-                  context.go('/assistant');
-                },
+                onPressed: () => _showClinicalGuidanceSheet(context, report, lang),
                 child: Container(
                   height: 56,
                   decoration: BoxDecoration(
@@ -213,29 +298,29 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.library_books, color: const Color(0xFF1A5F7A)),
+                      const Icon(Icons.library_books, color: Color(0xFF1A5F7A)),
                       const SizedBox(width: 8),
-                      Text('View Clinical Guidance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF1D2321))),
+                      Text(lang.translate('view_guidance_btn'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1D2321))),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               import_scale_btn.AnimatedScaleButton(
                 onPressed: () async {
-                  // Save report to local db
                   final db = ref.read(localDbProvider);
                   await db.insertReport(report);
                   
-                  // Clear draft
-                  ref.read(reportDraftProvider.notifier).clear();
+                  try {
+                    ref.read(syncServiceProvider.notifier).syncReports();
+                  } catch (_) {}
                   
-                  // Invalidate lists
+                  ref.read(reportDraftProvider.notifier).clear();
                   ref.invalidate(pendingReportsProvider);
                   ref.invalidate(reportsProvider);
 
                   if (context.mounted) {
-                    context.go('/report');
+                    context.go('/logs');
                   }
                 },
                 child: Container(
@@ -248,16 +333,12 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.save, color: Colors.white),
+                      const Icon(Icons.save, color: Colors.white),
                       const SizedBox(width: 8),
-                      const Text('Save Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text(lang.translate('save_report_btn'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
               ),
             ],
           ),
@@ -277,14 +358,14 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
     }
   }
 
-  String _getRiskTitle(RiskTier tier) {
+  String _getRiskTitle(RiskTier tier, LanguageNotifier lang) {
     switch (tier) {
       case RiskTier.green:
-        return 'Low Risk';
+        return lang.translate('risk_low');
       case RiskTier.amber:
-        return 'Moderate Risk';
+        return lang.translate('risk_mod');
       case RiskTier.red:
-        return 'High Risk';
+        return lang.translate('risk_high');
     }
   }
 }

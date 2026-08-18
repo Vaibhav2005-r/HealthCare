@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/providers.dart';
+import '../providers/language_provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_scale_button.dart' as import_scale_btn;
@@ -15,6 +16,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
+    final langState = ref.watch(languageProvider);
+    final lang = ref.read(languageProvider.notifier);
     final profileAsync = ref.watch(workerProfileProvider);
     final profile = authState.workerProfile ?? profileAsync.valueOrNull ?? {
       'full_name': 'Sunita Gaikwad',
@@ -33,9 +36,9 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Profile',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          lang.translate('profile'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -90,9 +93,9 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // ACHIEVEMENTS BLOCK
-          const Text(
-            'Achievements',
-            style: TextStyle(
+          Text(
+            lang.translate('achievements'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -116,9 +119,9 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // REPORT HISTORY BLOCK
-          const Text(
-            'Report History',
-            style: TextStyle(
+          Text(
+            lang.translate('report_history'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -141,13 +144,13 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 child: Icon(Icons.history, color: AppColors.primary),
               ),
-              title: const Text(
-                'View Report History',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Text(
+                lang.translate('view_report_history'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: const Text(
-                'Archive of submitted patients',
-                style: TextStyle(fontSize: 12),
+              subtitle: Text(
+                lang.translate('archive_desc'),
+                style: const TextStyle(fontSize: 12),
               ),
               trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
               onTap: () {
@@ -159,9 +162,9 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(height: 32),
 
           // SETTINGS BLOCK
-          const Text(
-            'Settings',
-            style: TextStyle(
+          Text(
+            lang.translate('settings'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -185,12 +188,12 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   child: Icon(Icons.language, color: AppColors.primary),
                 ),
-                title: const Text(
-                  'Language',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                title: Text(
+                  lang.translate('language'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 trailing: DropdownButton<String>(
-                  value: 'English',
+                  value: langState.languageCode,
                   underline: const SizedBox(),
                   icon: Icon(
                     Icons.expand_more,
@@ -198,7 +201,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   items: const [
                     DropdownMenuItem(
-                      value: 'English',
+                      value: 'en',
                       child: Text(
                         'English',
                         style: TextStyle(fontWeight: FontWeight.w600),
@@ -206,15 +209,41 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                     DropdownMenuItem(
-                      value: 'Hindi',
+                      value: 'mr',
                       child: Text(
-                        'Hindi',
+                        'मराठी (Marathi)',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'hi',
+                      child: Text(
+                        'हिंदी (Hindi)',
                         style: TextStyle(fontWeight: FontWeight.w600),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
-                  onChanged: (_) {},
+                  onChanged: (newCode) {
+                    if (newCode != null) {
+                      ref.read(languageProvider.notifier).setLanguage(newCode);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            newCode == 'mr'
+                                ? 'भाषा मराठी मध्ये बदलली'
+                                : newCode == 'hi'
+                                    ? 'भाषा बदलकर हिंदी कर दी गई'
+                                    : 'Language set to English',
+                          ),
+                          backgroundColor: AppColors.primary,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
                 ),
               ),
             ),
@@ -239,9 +268,9 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Icon(Icons.logout, color: AppColors.textSecondary),
                   const SizedBox(width: 8),
-                  const Text(
-                    'Logout',
-                    style: TextStyle(
+                  Text(
+                    lang.translate('logout'),
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textSecondary,

@@ -26,7 +26,7 @@ final ThemeData appTheme = ThemeData(
       elevation: 0,
     ),
   ),
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     color: AppColors.surface,
     elevation: 2,
     shadowColor: Colors.black.withOpacity(0.03),

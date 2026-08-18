@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../providers/report_draft_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../services/media_service.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/animated_scale_button.dart' as import_scale_btn;
@@ -37,11 +38,14 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = ref.watch(languageProvider.notifier);
+    ref.watch(languageProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Step 3 of 6: Clinical Image',
-          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+        title: Text(
+          lang.translate('step_5_title'),
+          style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
         centerTitle: true,
       ),
@@ -70,23 +74,27 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
               ),
               const SizedBox(height: 24),
 
-              const Text(
-                'Capture Image',
-                style: TextStyle(
-                  fontSize: 24,
+              Text(
+                lang.translate('step_5_title'),
+                style: const TextStyle(
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Please take a clear photo of the patient or the affected area if visible. This helps with remote triage.',
-                style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+              Text(
+                lang.state.languageCode == 'mr'
+                    ? 'रुग्णाचा किंवा आजाराच्या भागाचा फोटो घ्या (पर्यायी).'
+                    : lang.state.languageCode == 'hi'
+                        ? 'मरीज़ या प्रभावित क्षेत्र का फोटो लें (वैकल्पिक).'
+                        : 'Take a clear photo of patient or symptoms (optional).',
+                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 24),
 
               Container(
-                height: 300,
+                height: 260,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
@@ -101,21 +109,28 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                 child: _imagePath != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(File(_imagePath!), fit: BoxFit.cover),
+                        child: Image.file(
+                          File(_imagePath!),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
                       )
                     : Center(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.camera_alt,
+                              Icons.camera_alt_outlined,
                               size: 64,
-                              color: Colors.grey.withOpacity(0.5),
+                              color: AppColors.primary.withOpacity(0.4),
                             ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'No Image Captured',
-                              style: TextStyle(color: Colors.grey),
+                            const SizedBox(height: 12),
+                            Text(
+                              lang.state.languageCode == 'mr' ? 'फोटो घेतलेला नाही' : lang.state.languageCode == 'hi' ? 'कोई फोटो नहीं ली गई' : 'No photo captured',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 14,
+                              ),
                             ),
                           ],
                         ),
@@ -123,27 +138,26 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
               ),
               const SizedBox(height: 24),
 
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CoachMark(
-                  id: 'report_photo',
-                  title: 'Capture Visuals',
-                  message: 'Taking a photo helps doctors diagnose remote cases much faster.',
-                  icon: Icons.camera_alt,
+              CoachMark(
+                id: 'camera_capture_button',
+                title: 'Capture Image',
+                message: 'Tap here to open the camera and take a clinical photo.',
+                icon: Icons.camera_alt,
+                child: SizedBox(
+                  height: 56,
                   child: OutlinedButton.icon(
                     onPressed: _isCapturing ? null : _capture,
                     icon: _isCapturing
                         ? const SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 20,
+                            height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Icon(
-                            Icons.camera_alt,
-                            color: AppColors.primary,
-                          ),
+                        : const Icon(Icons.camera_alt),
                     label: Text(
-                      _imagePath == null ? 'Take Photo' : 'Retake Photo',
+                      _imagePath == null
+                          ? (lang.state.languageCode == 'mr' ? 'फोटो काढा' : lang.state.languageCode == 'hi' ? 'फोटो लें' : 'Capture Photo')
+                          : (lang.state.languageCode == 'mr' ? 'पुन्हा फोटो काढा' : lang.state.languageCode == 'hi' ? 'दोबारा फोटो लें' : 'Retake Photo'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -185,8 +199,8 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                   child: Center(
                     child: Text(
                       _imagePath == null
-                          ? 'Skip for now'
-                          : 'Continue to Symptoms',
+                          ? (lang.state.languageCode == 'mr' ? 'पुढे जा (पर्यायी)' : lang.state.languageCode == 'hi' ? 'आगे बढ़ें (वैकल्पिक)' : 'Skip / Continue')
+                          : lang.translate('next_btn'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

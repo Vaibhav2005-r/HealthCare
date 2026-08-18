@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/providers.dart';
 import '../services/sync_service.dart';
@@ -354,47 +355,55 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _getRiskColor(report.riskTier),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          context.push('/saved-report-detail', extra: report);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _getRiskColor(report.riskTier),
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${report.age}y ${report.sex} • ${report.village}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: AppColors.textPrimary,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${report.patientName.isNotEmpty ? report.patientName : "Patient"} (${report.age}y ${report.sex}) • ${report.village}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${report.symptoms.take(3).join(", ")}${report.symptoms.length > 3 ? "..." : ""}',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
+                    const SizedBox(height: 4),
+                    Text(
+                      '${report.symptoms.take(3).join(", ")}${report.symptoms.length > 3 ? "..." : ""}',
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            _getStatusBadge(report.syncStatus),
-          ],
+              const SizedBox(width: 12),
+              _getStatusBadge(report.syncStatus),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, size: 20, color: AppColors.textDisabled),
+            ],
+          ),
         ),
       ),
     );

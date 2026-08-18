@@ -8,7 +8,11 @@ from dotenv import load_dotenv
 # Ensure environment variables are loaded
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "api", ".env"))
 
-import pypdf
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
+
 from sentence_transformers import SentenceTransformer
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
