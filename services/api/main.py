@@ -807,6 +807,62 @@ async def get_mobile_guidance(query: Optional[str] = None, category: Optional[st
     protocols = await fetch_clinical_guidance_from_db(query=query, category=category)
     return {"status": "success", "count": len(protocols), "protocols": protocols}
 
+@app.post("/api/v1/reports", status_code=201)
+async def create_report(report: SymptomReportCreate):
+    persisted, report_data = persist_report(report)
+    try:
+        await insert_case_report_to_db(report_data)
+    except Exception as e:
+        print(f"[Reports] Supabase insertion warning: {e}")
+    return {
+        "status": "success",
+        "message": "Report synced successfully",
+        "report_id": report_data.get("client_report_id") or str(uuid4()),
+        "data": report_data
+    }
+
+@app.post("/api/v1/reports/sync")
+async def sync_reports_batch(req: SyncBatchRequest):
+    synced_count = 0
+    synced_ids = []
+    for report in req.reports:
+        persisted, report_data = persist_report(report)
+        try:
+            await insert_case_report_to_db(report_data)
+        except Exception as e:
+            print(f"[Reports Batch] Supabase insertion warning: {e}")
+        synced_count += 1
+        synced_ids.append(report_data.get("client_report_id"))
+        
+    return {
+        "status": "success",
+        "synced": synced_count,
+        "synced_ids": synced_ids,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+@app.post("/api/v1/alerts/sos", status_code=201)
+async def trigger_sos_alert(alert: SOSAlert):
+    now_utc = datetime.now(timezone.utc).isoformat()
+    alert_payload = {
+        "id": f"alt-{int(datetime.now().timestamp()) % 100000}",
+        "district": alert.district,
+        "state": "Maharashtra",
+        "type": "SOS_TRIGGER",
+        "severity": alert.severity,
+        "risk_score": 0.95,
+        "cases_count": alert.cases,
+        "worker_role": "ASHA Field Worker",
+        "timestamp": now_utc,
+        "summary": f"Emergency SOS triggered by worker {alert.worker_id} in {alert.district} ({alert.cases} severe cases)",
+        "status": "UNACKNOWLEDGED"
+    }
+    try:
+        await insert_alert_to_db(alert_payload)
+    except Exception as e:
+        print(f"[SOS] Error inserting alert to DB: {e}")
+    return {"status": "success", "alert": alert_payload}
+
 @app.post("/api/v1/ask")
 async def ask_assistant(req: RAGRequest):
     try:

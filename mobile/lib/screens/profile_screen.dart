@@ -177,73 +177,76 @@ class ProfileScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.language, color: AppColors.primary, size: 22),
                   ),
-                  child: Icon(Icons.language, color: AppColors.primary),
-                ),
-                title: Text(
-                  lang.translate('language'),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                trailing: DropdownButton<String>(
-                  value: langState.languageCode,
-                  underline: const SizedBox(),
-                  icon: Icon(
-                    Icons.expand_more,
-                    color: AppColors.textSecondary,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      lang.translate('language'),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                    ),
                   ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'en',
-                      child: Text(
-                        'English',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: langState.languageCode,
+                      icon: Icon(
+                        Icons.expand_more,
+                        color: AppColors.textSecondary,
                       ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'mr',
-                      child: Text(
-                        'मराठी (Marathi)',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'hi',
-                      child: Text(
-                        'हिंदी (Hindi)',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                  onChanged: (newCode) {
-                    if (newCode != null) {
-                      ref.read(languageProvider.notifier).setLanguage(newCode);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            newCode == 'mr'
-                                ? 'भाषा मराठी मध्ये बदलली'
-                                : newCode == 'hi'
-                                    ? 'भाषा बदलकर हिंदी कर दी गई'
-                                    : 'Language set to English',
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'en',
+                          child: Text(
+                            'English',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                           ),
-                          backgroundColor: AppColors.primary,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
                         ),
-                      );
-                    }
-                  },
-                ),
+                        DropdownMenuItem(
+                          value: 'mr',
+                          child: Text(
+                            'मराठी (Marathi)',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                        ),
+                        DropdownMenuItem(
+                          value: 'hi',
+                          child: Text(
+                            'हिंदी (Hindi)',
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                          ),
+                        ),
+                      ],
+                      onChanged: (newCode) {
+                        if (newCode != null) {
+                          ref.read(languageProvider.notifier).setLanguage(newCode);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                newCode == 'mr'
+                                    ? 'भाषा मराठी मध्ये बदलली'
+                                    : newCode == 'hi'
+                                        ? 'भाषा बदलकर हिंदी कर दी गई'
+                                        : 'Language set to English',
+                              ),
+                              backgroundColor: AppColors.primary,
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -266,20 +266,12 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
                   ),
                 ),
                 const SizedBox(width: 8),
-                CoachMark(
-                  id: 'assistant_send_btn',
-                  title: 'Ask Assistant',
-                  message: 'Send your clinical query to get standard medical protocols.',
-                  icon: Icons.send,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                      onPressed: () => _sendMessage(),
-                    ),
+                Material(
+                  color: AppColors.primary,
+                  shape: const CircleBorder(),
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white, size: 20),
+                    onPressed: () => _sendMessage(),
                   ),
                 ),
               ],

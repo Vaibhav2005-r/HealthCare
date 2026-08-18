@@ -295,20 +295,21 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
                     top: false,
                     child: import_scale_btn.AnimatedScaleButton(
                       onPressed: () async {
-                        await ref
+                        final synced = await ref
                             .read(syncServiceProvider.notifier)
                             .syncReports();
                         ref.invalidate(reportsProvider);
+                        ref.invalidate(pendingReportsProvider);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                isOnline
-                                    ? 'Sync Complete'
-                                    : 'Sync Failed: Offline',
+                                synced > 0
+                                    ? 'Sync Complete ($synced reports sent to server)'
+                                    : (isOnline ? 'Sync Complete: All reports up to date' : 'Sync Failed: Offline'),
                               ),
-                              backgroundColor: isOnline
-                                  ? Colors.green
+                              backgroundColor: synced > 0 || isOnline
+                                  ? const Color(0xFF1B8A5A)
                                   : Colors.red,
                               behavior: SnackBarBehavior.floating,
                             ),
