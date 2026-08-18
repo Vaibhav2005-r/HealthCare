@@ -15,6 +15,7 @@ web/build/
 
 # Mobile (Flutter)
 mobile/build/
+mobile/android/build/
 mobile/.dart_tool/
 mobile/android/.gradle/
 mobile/ios/Pods/
