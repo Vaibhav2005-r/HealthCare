@@ -295,25 +295,38 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
                     top: false,
                     child: import_scale_btn.AnimatedScaleButton(
                       onPressed: () async {
+                        final pendingBefore = pendingReports.length;
                         final synced = await ref
                             .read(syncServiceProvider.notifier)
                             .syncReports();
                         ref.invalidate(reportsProvider);
                         ref.invalidate(pendingReportsProvider);
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                synced > 0
-                                    ? 'Sync Complete ($synced reports sent to server)'
-                                    : (isOnline ? 'Sync Complete: All reports up to date' : 'Sync Failed: Offline'),
+                          if (synced > 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Sync Complete ($synced reports synced to Supabase)'),
+                                backgroundColor: const Color(0xFF1B8A5A),
+                                behavior: SnackBarBehavior.floating,
                               ),
-                              backgroundColor: synced > 0 || isOnline
-                                  ? const Color(0xFF1B8A5A)
-                                  : Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
+                            );
+                          } else if (pendingBefore > 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Sync Server Busy: Reports safely saved in local offline storage.'),
+                                backgroundColor: Color(0xFFE65100),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('All reports are synced up to date.'),
+                                backgroundColor: Color(0xFF1B8A5A),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
                         }
                       },
                       child: Container(

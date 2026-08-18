@@ -118,7 +118,8 @@ class SavedReportDetailScreen extends ConsumerWidget {
         ),
         title: Text(
           lang.translate('report_history'),
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 17),
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
