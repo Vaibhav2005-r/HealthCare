@@ -365,11 +365,27 @@ export default function ArogyaPrahariDashboard() {
           )}
 
           {/* Active View Module Rendering */}
-          {isLoading && !dashboardData ? (
+          {(!dashboardData && isLoading) ? (
             <DashboardSkeleton />
+          ) : !dashboardData ? (
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 text-center space-y-4 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mx-auto border border-amber-200">
+                <RefreshCw className="w-6 h-6 animate-spin" />
+              </div>
+              <h3 className="text-base font-bold text-[#1D2321]">Syncing with Supabase Live Telemetry...</h3>
+              <p className="text-xs text-[#5B6663] max-w-sm mx-auto">
+                Connecting to live PostgreSQL surveillance records across Maharashtra.
+              </p>
+              <button 
+                onClick={loadData}
+                className="px-4 py-2 bg-[#C2255C] hover:bg-[#A61E4D] text-white text-xs font-bold rounded-lg transition-colors"
+              >
+                Retry Connection
+              </button>
+            </div>
           ) : (
             <>
-              {activeTab === 'overview' && dashboardData && (
+              {activeTab === 'overview' && (
                 <OverviewView 
                   data={dashboardData}
                   districts={districts}
