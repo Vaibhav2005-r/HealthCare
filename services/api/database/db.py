@@ -432,22 +432,23 @@ async def fetch_inventory_from_db() -> List[Dict[str, Any]]:
 # --- WORKER PROFILES ---
 async def fetch_worker_profile_from_db(phone_number: str) -> Optional[Dict[str, Any]]:
     async with httpx.AsyncClient() as client:
-        res = await client.get(f"{SUPABASE_URL}/rest/v1/health_worker_directory?phone_number=eq.{phone_number}", headers=get_rest_headers(), timeout=5.0)
+        res = await client.get(f"{SUPABASE_URL}/rest/v1/asha_workers?phone_number=eq.{phone_number}", headers=get_rest_headers(), timeout=5.0)
         if res.status_code == 200:
             items = res.json()
             if items:
-                return items[0]
-    return {
-        "worker_id": "ASHA-MH-7001",
-        "full_name": "Sunita Patil",
-        "phone_number": phone_number,
-        "role": "ASHA",
-        "assigned_village": "Mokhada",
-        "assigned_block": "Mokhada",
-        "district": "Palghar",
-        "state": "Maharashtra",
-        "is_active": True
-    }
+                w = items[0]
+                return {
+                    "worker_id": w.get("id") or "ASHA-MH-7001",
+                    "full_name": w.get("full_name") or "Sunita Gaikwad",
+                    "phone_number": w.get("phone_number") or phone_number,
+                    "role": w.get("role") or "asha",
+                    "assigned_village": w.get("block") or "Haveli",
+                    "assigned_block": w.get("block") or "Haveli",
+                    "district": w.get("district") or "Pune",
+                    "state": w.get("state") or "Maharashtra",
+                    "is_active": True
+                }
+    return None
 
 # --- VILLAGES ---
 async def fetch_villages_from_db(district: Optional[str] = None, block: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -471,9 +472,9 @@ async def fetch_clinical_guidance_from_db(
 ) -> List[Dict[str, Any]]:
     search_term = disease or query
     async with httpx.AsyncClient() as client:
-        url = f"{SUPABASE_URL}/rest/v1/clinical_guidance?select=*&order=disease.asc&limit={limit}"
+        url = f"{SUPABASE_URL}/rest/v1/clinical_guidance?select=*&limit={limit}"
         if search_term:
-            url += f"&or=(disease.ilike.*{search_term}*,condition.ilike.*{search_term}*,clinical_criteria.ilike.*{search_term}*)"
+            url += f"&or=(condition.ilike.*{search_term}*,category.ilike.*{search_term}*,immediate_action.ilike.*{search_term}*)"
         if category:
             url += f"&category=ilike.*{category}*"
         res = await client.get(url, headers=get_rest_headers(), timeout=5.0)
@@ -481,34 +482,11 @@ async def fetch_clinical_guidance_from_db(
             data = res.json()
             if data:
                 return data
-    return [
-        {
-            "id": "cg-01",
-            "disease": "Dengue",
-            "condition": "Dengue Fever / DHF",
-            "category": "Vector-Borne Disease",
-            "clinical_criteria": "Acute high fever (>38.5C) with retro-orbital pain and thrombocytopenia (<100k).",
-            "immediate_action": "Initiate IV crystalloid fluid management (Normal Saline 10-15ml/kg/hr) and monitor hematocrit hourly.",
-            "field_actions": "Administer oral rehydration, verify platelet count, initiate vector larviciding within 500m.",
-            "buffer_stock_requirements": "IV Normal Saline (50 units), Paracetamol 500mg, NS1 Ag Rapid Test Strips.",
-            "source_authority": "National NVBDCP & WHO SEARO Guidelines 2024"
-        },
-        {
-            "id": "cg-02",
-            "disease": "Malaria (Falciparum / Vivax)",
-            "condition": "Plasmodium falciparum Malaria",
-            "category": "Vector-Borne Disease",
-            "clinical_criteria": "Intermittent fever with rigor, splenomegaly, RDT positive for Pf/Pv antigen.",
-            "immediate_action": "Administer immediate weight-based Artemether-Lumefantrine (ACT) oral blister packs.",
-            "field_actions": "Administer ACT (Artemisinin-based combination) within 24h, distribute LLIN bed nets.",
-            "buffer_stock_requirements": "Artesunate + SP Blister packs, Primaquine 7.5mg, Bivalent RDT kits.",
-            "source_authority": "National Malaria Elimination Programme Guidelines"
-        }
-    ]
+    return []
 
 async def fetch_asha_workers_from_db(district: Optional[str] = None) -> List[Dict[str, Any]]:
     async with httpx.AsyncClient() as client:
-        url = f"{SUPABASE_URL}/rest/v1/health_worker_directory?select=*&order=full_name.asc"
+        url = f"{SUPABASE_URL}/rest/v1/asha_workers?select=*&order=full_name.asc"
         if district:
             url += f"&district=eq.{district}"
         res = await client.get(url, headers=get_rest_headers(), timeout=5.0)

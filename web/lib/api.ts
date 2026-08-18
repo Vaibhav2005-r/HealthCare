@@ -220,6 +220,18 @@ export async function fetchInventory(): Promise<any[]> {
   return data.supplies || [];
 }
 
+export async function triggerBroadcast(targetVillage: string, message: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/resources/broadcast`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target_village: targetVillage, message })
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to send emergency broadcast: HTTP ${res.status}`);
+  }
+  return await res.json();
+}
+
 export async function fetchTelemetryLogs(district?: string): Promise<any[]> {
   const url = district 
     ? `${API_BASE}/telemetry/logs?district=${encodeURIComponent(district)}` 

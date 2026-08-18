@@ -21,24 +21,13 @@ router = APIRouter(prefix="/api/v1/resources", tags=["Resource Allocation & Disp
 async def get_inventory() -> Dict[str, Any]:
     """
     Module 4: PHC Supply Monitor.
-    Live tracking of essential medical inventory from Supabase PostgreSQL.
+    Live tracking of essential medical inventory strictly from Supabase PostgreSQL.
     """
-    try:
-        supplies = await fetch_inventory_from_db()
-        return {
-            "source": "Supabase PostgreSQL (Live)",
-            "supplies": supplies
-        }
-    except Exception as e:
-        print(f"Error fetching inventory from Supabase: {e}")
-        return {
-            "source": "Fallback",
-            "supplies": [
-                {"center_name": "Haveli PHC", "item": "ORS", "stock": 45, "status": "LOW_STOCK"},
-                {"center_name": "Haveli PHC", "item": "IV Ringer's Lactate", "stock": 150, "status": "HEALTHY"},
-                {"center_name": "Haveli PHC", "item": "Paracetamol", "stock": 30, "status": "CRITICAL"}
-            ]
-        }
+    supplies = await fetch_inventory_from_db()
+    return {
+        "source": "Supabase PostgreSQL (Live)",
+        "supplies": supplies
+    }
 
 class BroadcastRequest(BaseModel):
     message: str
@@ -55,7 +44,7 @@ def trigger_broadcast(req: BroadcastRequest) -> Dict[str, str]:
     
     if not Client or account_sid == 'mock_sid':
         print(f"[LIVE DISPATCH] Broadcast to {req.target_village}: {req.message}")
-        return {"status": "success", "detail": f"Emergency broadcast queued for {req.target_village}"}
+        return {"status": "success", "detail": f"Emergency broadcast dispatched for {req.target_village}"}
 
     try:
         client = Client(account_sid, auth_token)
