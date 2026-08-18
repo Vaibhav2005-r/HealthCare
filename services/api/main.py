@@ -89,9 +89,7 @@ def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global lstm_model, scaler
-    
-    print("Starting ML & Database initialization...")
+    print("Starting Arogya Prahari API...")
     # 0. Init Local Idempotency DB & Supabase Connection Pool
     initialise_offline_sync_database()
     try:
@@ -100,33 +98,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"Supabase connection error: {e}")
     
-    # 1. Init LSTM
-    print("Loading LSTM model...")
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    ml_dir = os.path.join(os.path.dirname(base_dir), "ml")
-    
-    lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=1)
-    model_path = os.path.join(ml_dir, "lstm_forecast_model.pt")
-    if os.path.exists(model_path):
-        lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
-    lstm_model.eval()
-    
-    # 2. Fit Scaler dynamically from synthetic/real time-series data
-    print("Fitting Scaler...")
-    data_path = os.path.join(ml_dir, "outbreak_time_series.csv")
-    if os.path.exists(data_path):
-        df = pd.read_csv(data_path)
-        features = ['rainfall_mm', 'avg_temp_c', 'humidity_pct', 'daily_cases']
-        scaler = MinMaxScaler(feature_range=(-1, 1))
-        scaler.fit(df[features].values)
-        
-    print("FastAPI is ready! Starting background Open-Meteo & LSTM telemetry worker...")
-    telemetry_task = asyncio.create_task(telemetry_worker())
-    
+    print("FastAPI is ready to serve live requests!")
     yield
     
     print("Shutting down FastAPI & Database pool...")
-    telemetry_task.cancel()
     await close_db_pool()
 
 app = FastAPI(
