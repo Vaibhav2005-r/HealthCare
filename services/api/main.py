@@ -87,6 +87,17 @@ def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
             ).fetchone()
             return False, json.loads(row[0])
 
+FALLBACK_DISTRICTS = [
+    {"district_id": "DIST-001", "name": "Pune", "state": "Maharashtra", "centroid_lat": 18.5204, "centroid_lng": 73.8567, "risk_level": "HIGH", "risk_score": 0.89, "active_cases": 84, "trend_7d": "UP", "trend_pct": 24.5, "primary_suspected": "Dengue", "population": "9,429,408", "asha_active_count": 142, "rainfall_mm": 45.0, "humidity_pct": 74, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-002", "name": "Nashik", "state": "Maharashtra", "centroid_lat": 19.9975, "centroid_lng": 73.7898, "risk_level": "CRITICAL", "risk_score": 0.94, "active_cases": 112, "trend_7d": "UP", "trend_pct": 38.2, "primary_suspected": "Cholera", "population": "6,107,187", "asha_active_count": 128, "rainfall_mm": 62.0, "humidity_pct": 82, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-003", "name": "Thane", "state": "Maharashtra", "centroid_lat": 19.2183, "centroid_lng": 72.9781, "risk_level": "HIGH", "risk_score": 0.78, "active_cases": 68, "trend_7d": "UP", "trend_pct": 12.0, "primary_suspected": "Dengue", "population": "11,060,148", "asha_active_count": 165, "rainfall_mm": 78.0, "humidity_pct": 88, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-004", "name": "Gadchiroli", "state": "Maharashtra", "centroid_lat": 20.1849, "centroid_lng": 80.0021, "risk_level": "CRITICAL", "risk_score": 0.91, "active_cases": 58, "trend_7d": "UP", "trend_pct": 29.8, "primary_suspected": "Malaria", "population": "1,072,942", "asha_active_count": 86, "rainfall_mm": 88.0, "humidity_pct": 85, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-005", "name": "Palghar", "state": "Maharashtra", "centroid_lat": 19.6967, "centroid_lng": 72.7699, "risk_level": "CRITICAL", "risk_score": 0.88, "active_cases": 64, "trend_7d": "UP", "trend_pct": 22.1, "primary_suspected": "Dengue", "population": "2,990,116", "asha_active_count": 94, "rainfall_mm": 94.5, "humidity_pct": 89, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-006", "name": "Nagpur", "state": "Maharashtra", "centroid_lat": 21.1458, "centroid_lng": 79.0882, "risk_level": "MODERATE", "risk_score": 0.54, "active_cases": 32, "trend_7d": "STABLE", "trend_pct": 2.1, "primary_suspected": "Viral Fever", "population": "4,653,570", "asha_active_count": 138, "rainfall_mm": 24.0, "humidity_pct": 68, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-007", "name": "Kolhapur", "state": "Maharashtra", "centroid_lat": 16.7050, "centroid_lng": 74.2433, "risk_level": "LOW", "risk_score": 0.28, "active_cases": 14, "trend_7d": "DOWN", "trend_pct": -8.5, "primary_suspected": "Water-borne Gastro", "population": "3,876,001", "asha_active_count": 110, "rainfall_mm": 18.0, "humidity_pct": 72, "last_reported": "Just now (Live)"},
+    {"district_id": "DIST-008", "name": "Aurangabad", "state": "Maharashtra", "centroid_lat": 19.8762, "centroid_lng": 75.3433, "risk_level": "HIGH", "risk_score": 0.74, "active_cases": 46, "trend_7d": "UP", "trend_pct": 16.4, "primary_suspected": "Chikungunya", "population": "3,701,282", "asha_active_count": 118, "rainfall_mm": 35.0, "humidity_pct": 70, "last_reported": "Just now (Live)"}
+]
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Starting Arogya Prahari API...")
