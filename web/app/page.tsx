@@ -34,6 +34,8 @@ import ImdFeedSection from '@/components/features/ImdFeedSection';
 import { GuidedTour } from '@/components/GuidedTour';
 import { toast } from 'sonner';
 import { useLanguage, Language } from '@/lib/i18n';
+import { useSupabaseRealtime } from '@/lib/supabase';
+import { Zap } from 'lucide-react';
 
 function DashboardSkeleton() {
   return (
@@ -107,10 +109,26 @@ export default function ArogyaPrahariDashboard() {
     }
   };
 
+  // Direct Supabase Postgres CDC Realtime Subscription
+  const { isConnected: isSupabaseRealtimeConnected } = useSupabaseRealtime({
+    onDistrictChange: () => {
+      loadData();
+    },
+    onAlertChange: () => {
+      loadData();
+    },
+    onCaseReportChange: () => {
+      loadData();
+    },
+    onInventoryChange: () => {
+      loadData();
+    }
+  });
+
   useEffect(() => {
     loadData();
 
-    // 1. WebSocket Real-time Live Stream
+    // 1. WebSocket Real-time Live Stream (FastAPI)
     let socket: WebSocket | null = null;
     try {
       const rawApiBase = process.env.NEXT_PUBLIC_API_URL?.trim();
@@ -238,6 +256,20 @@ export default function ArogyaPrahariDashboard() {
           {/* Quick Header Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Supabase Realtime Live Indicator */}
+            <div 
+              className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-mono font-bold transition-all ${
+                isSupabaseRealtimeConnected
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs'
+                  : 'bg-amber-50 text-amber-800 border-amber-200'
+              }`}
+              title={isSupabaseRealtimeConnected ? 'Connected to live Supabase Postgres CDC stream' : 'Connecting to Supabase...'}
+            >
+              <span className={`w-2 h-2 rounded-full ${isSupabaseRealtimeConnected ? 'bg-emerald-500 animate-ping' : 'bg-amber-500 animate-pulse'}`} />
+              <Zap className={`w-3.5 h-3.5 ${isSupabaseRealtimeConnected ? 'text-emerald-600' : 'text-amber-600'}`} />
+              <span>{isSupabaseRealtimeConnected ? 'Supabase Realtime' : 'Syncing DB...'}</span>
+            </div>
+
             {/* IMD Live Radar Shortcut */}
             <button
               onClick={() => setActiveTab('imd')}

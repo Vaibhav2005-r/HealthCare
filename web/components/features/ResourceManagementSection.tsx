@@ -16,6 +16,7 @@ import {
   Radio
 } from 'lucide-react';
 import { fetchInventory } from '@/lib/api';
+import { useSupabaseRealtime } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface SupplyItem {
@@ -83,6 +84,13 @@ export default function ResourceManagementPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Realtime Supabase CDC Inventory Sync
+  useSupabaseRealtime({
+    onInventoryChange: () => {
+      loadData();
+    }
+  });
 
   const handleBroadcast = async (centerName: string, district: string) => {
     setBroadcastingTo(centerName);

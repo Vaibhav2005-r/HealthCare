@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { AlertItem, AlertAuditLogItem, triggerSOS, updateAlertStatus, fetchAlertAuditLogs } from '@/lib/api';
 import { RiskFilterType } from '../RiskPulseBar';
+import { useSupabaseRealtime } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface AlertsViewProps {
@@ -111,6 +112,18 @@ export function AlertsView({ alerts, activeFilter, onFilterChange, onRefreshAler
   useEffect(() => {
     setLocalAlerts(alerts);
   }, [alerts]);
+
+  // Realtime Supabase CDC Alert Sync
+  useSupabaseRealtime({
+    onAlertChange: () => {
+      onRefreshAlerts();
+    },
+    onAuditLogChange: () => {
+      if (viewingAuditAlert) {
+        fetchAlertAuditLogs(viewingAuditAlert.id).then(setAuditLogs).catch(console.error);
+      }
+    }
+  });
 
   // Filter alerts
   const filteredAlerts = localAlerts.filter((alt) => {

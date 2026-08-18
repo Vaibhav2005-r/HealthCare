@@ -711,6 +711,36 @@ def get_forecast(req: ForecastRequest):
         
     return {"risk_score": round(risk_score, 4)}
 
+@app.get("/api/v1/forecast/simultaneous/{district_id}")
+async def get_simultaneous_forecast(district_id: str):
+    from ml.nvidia_fourcastnet_engine import run_simultaneous_fourcastnet_lstm_forecast
+    districts = await fetch_districts_from_db()
+    matched = next((d for d in districts if d.get("district_id") == district_id or d.get("name", "").lower() == district_id.lower()), None)
+    
+    if not matched:
+        matched = districts[0] if districts else {
+            "district_id": "MH-PLG", "name": "Palghar", "centroid_lat": 19.7420, "centroid_lng": 72.8800, "active_cases": 46
+        }
+        
+    did = matched.get("district_id", "MH-PLG")
+    dname = matched.get("name", "Palghar")
+    lat = float(matched.get("centroid_lat") or 19.7420)
+    lng = float(matched.get("centroid_lng") or 72.8800)
+    base_cases = int(matched.get("active_cases") or 46)
+    
+    history_rows = await fetch_district_case_history_from_db(did, days=14)
+    
+    forecast_data = await run_simultaneous_fourcastnet_lstm_forecast(
+        district_id=did,
+        district_name=dname,
+        lat=lat,
+        lng=lng,
+        current_cases=base_cases,
+        history_rows=history_rows,
+        forecast_days=14
+    )
+    return forecast_data
+
 class MobileLoginRequest(BaseModel):
     phone_number: str
 
