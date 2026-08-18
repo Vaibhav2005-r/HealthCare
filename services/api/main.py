@@ -1,5 +1,16 @@
 import os
 import sys
+from pathlib import Path
+
+# Add current and parent directories to sys.path before any local imports
+API_DIR = Path(__file__).resolve().parent
+SERVICES_DIR = API_DIR.parent
+ROOT_DIR = SERVICES_DIR.parent
+
+for p in [str(API_DIR), str(SERVICES_DIR), str(ROOT_DIR)]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
 import math
 import torch
 import numpy as np
@@ -10,7 +21,6 @@ import random
 import sqlite3
 import json
 from datetime import datetime, timezone
-from pathlib import Path
 from uuid import uuid4
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,10 +29,6 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from sklearn.preprocessing import MinMaxScaler
 from contextlib import asynccontextmanager
-
-# Add parent directory to path to import ml & database module
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from ml.train_lstm_forecast import OutbreakForecastLSTM
 from ml.rag_pipeline import RAGEngine, get_rag_engine
