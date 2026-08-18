@@ -147,9 +147,9 @@ class SavedReportDetailScreen extends ConsumerWidget {
                         margin: const EdgeInsets.only(bottom: 24),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: AppColors.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -173,9 +173,9 @@ class SavedReportDetailScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                       decoration: BoxDecoration(
-                        color: riskColor.withOpacity(0.1),
+                        color: riskColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: riskColor.withOpacity(0.3)),
+                        border: Border.all(color: riskColor.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -247,7 +247,7 @@ class SavedReportDetailScreen extends ConsumerWidget {
                                 ...report.symptoms.map((s) => Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
+                                    color: AppColors.primary.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(s, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
@@ -255,9 +255,9 @@ class SavedReportDetailScreen extends ConsumerWidget {
                                 ...report.customSymptoms.map((s) => Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
+                                    color: AppColors.primary.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                                   ),
                                   child: Text(s, style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
                                 )),
@@ -300,9 +300,9 @@ class SavedReportDetailScreen extends ConsumerWidget {
                           const Icon(Icons.picture_as_pdf, color: AppColors.primary),
                           const SizedBox(width: 8),
                           Text(
-                            lang.state.languageCode == 'mr'
+                            lang.currentLanguageCode == 'mr'
                                 ? 'रेफरल स्लिप प्रिंट / डाउनलोड करा (PDF)'
-                                : lang.state.languageCode == 'hi'
+                                : lang.currentLanguageCode == 'hi'
                                     ? 'रेफरल पर्ची प्रिंट / डाउनलोड करें (PDF)'
                                     : 'Print / Download Referral Slip (PDF)',
                             style: const TextStyle(
@@ -339,9 +339,9 @@ class SavedReportDetailScreen extends ConsumerWidget {
                       ),
                       child: Center(
                         child: Text(
-                          lang.state.languageCode == 'mr'
+                          lang.currentLanguageCode == 'mr'
                               ? 'पुन्हा तपासणी / फॉलो-अप'
-                              : lang.state.languageCode == 'hi'
+                              : lang.currentLanguageCode == 'hi'
                                   ? 'पुनः जांच / फॉलो-अप'
                                   : 'Re-Triage / Follow-up Visit',
                           style: const TextStyle(
@@ -413,7 +413,7 @@ class _ShareOption extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 28),

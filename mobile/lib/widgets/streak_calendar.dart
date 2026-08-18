@@ -63,7 +63,7 @@ class StreakCalendar extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withOpacity(0.1),
+                    color: AppColors.primaryLight.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -130,9 +130,9 @@ class StreakCalendar extends StatelessWidget {
   }
 
   Color _getColorForCount(int count) {
-    if (count == 0) return AppColors.border.withOpacity(0.5);
-    if (count == 1) return AppColors.primaryLight.withOpacity(0.4);
-    if (count == 2) return AppColors.primaryLight.withOpacity(0.7);
+    if (count == 0) return AppColors.border.withValues(alpha: 0.5);
+    if (count == 1) return AppColors.primaryLight.withValues(alpha: 0.4);
+    if (count == 2) return AppColors.primaryLight.withValues(alpha: 0.7);
     return AppColors.primary;
   }
 }

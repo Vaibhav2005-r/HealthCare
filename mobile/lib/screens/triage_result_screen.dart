@@ -112,7 +112,7 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A5F7A).withOpacity(0.08),
+                          color: const Color(0xFF1A5F7A).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Row(

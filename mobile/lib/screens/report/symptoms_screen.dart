@@ -107,16 +107,16 @@ class SymptomsScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A5F7A).withOpacity(0.1),
+                          color: const Color(0xFF1A5F7A).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.mic, color: Color(0xFF1A5F7A), size: 24),
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        lang.state.languageCode == 'mr'
+                        lang.currentLanguageCode == 'mr'
                             ? 'आवाजाने लक्षणे सांगा'
-                            : lang.state.languageCode == 'hi'
+                            : lang.currentLanguageCode == 'hi'
                                 ? 'बोलकर लक्षण बताएं'
                                 : 'Voice Dictate Symptoms',
                         style: const TextStyle(
@@ -129,9 +129,9 @@ class SymptomsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    lang.state.languageCode == 'mr'
+                    lang.currentLanguageCode == 'mr'
                         ? 'उदा. "ताप आणि उलट्या", "तीव्र जुलाब", "खोकला व डोकेदुखी"'
-                        : lang.state.languageCode == 'hi'
+                        : lang.currentLanguageCode == 'hi'
                             ? 'उदा. "बुखार और उल्टी", "दस्त और कमजोरी", "खांसी और सिरदर्द"'
                             : 'e.g. "Patient has high fever and diarrhea", "Vomiting and headache"',
                     style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
@@ -141,9 +141,9 @@ class SymptomsScreen extends ConsumerWidget {
                     controller: textController,
                     autofocus: true,
                     decoration: InputDecoration(
-                      hintText: lang.state.languageCode == 'mr'
+                      hintText: lang.currentLanguageCode == 'mr'
                           ? 'येथे बोला किंवा लिहा...'
-                          : lang.state.languageCode == 'hi'
+                          : lang.currentLanguageCode == 'hi'
                               ? 'यहाँ बोलें या लिखें...'
                               : 'Speak or type symptoms...',
                       filled: true,
@@ -211,9 +211,9 @@ class SymptomsScreen extends ConsumerWidget {
                       }
                     },
                     child: Text(
-                      lang.state.languageCode == 'mr'
+                      lang.currentLanguageCode == 'mr'
                           ? 'लक्षणे जोडा'
-                          : lang.state.languageCode == 'hi'
+                          : lang.currentLanguageCode == 'hi'
                               ? 'लक्षण जोड़ें'
                               : 'Apply Symptoms',
                       style: const TextStyle(
@@ -264,7 +264,7 @@ class SymptomsScreen extends ConsumerWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index <= 3 ? accentColor : Colors.grey.withOpacity(0.3),
+                        color: index <= 3 ? accentColor : Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -287,7 +287,7 @@ class SymptomsScreen extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.volume_up, color: accentColor),
                     onPressed: () {
-                      ref.read(voiceServiceProvider).speak('Select symptoms from the list / लक्षणे निवडा', lang.state.languageCode);
+                      ref.read(voiceServiceProvider).speak('Select symptoms from the list / लक्षणे निवडा', lang.currentLanguageCode);
                     },
                   ),
                 ],
@@ -298,9 +298,9 @@ class SymptomsScreen extends ConsumerWidget {
                 onPressed: () => _showDictationModal(context, ref, lang),
                 icon: const Icon(Icons.mic, color: accentColor),
                 label: Text(
-                  lang.state.languageCode == 'mr'
+                  lang.currentLanguageCode == 'mr'
                       ? 'आवाजाने लक्षणे सांगा (Voice Dictate)'
-                      : lang.state.languageCode == 'hi'
+                      : lang.currentLanguageCode == 'hi'
                           ? 'बोलकर लक्षण बताएं (Voice Dictate)'
                           : 'Voice Dictate Symptoms',
                   style: const TextStyle(color: accentColor, fontWeight: FontWeight.bold),
@@ -340,7 +340,7 @@ class SymptomsScreen extends ConsumerWidget {
                           boxShadow: [
                             if (!isSelected)
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.02),
+                                color: Colors.black.withValues(alpha: 0.02),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -353,7 +353,7 @@ class SymptomsScreen extends ConsumerWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.white.withOpacity(0.2) : bgColor,
+                                color: isSelected ? Colors.white.withValues(alpha: 0.2) : bgColor,
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(

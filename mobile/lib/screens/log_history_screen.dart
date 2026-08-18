@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/providers.dart';
-import '../services/sync_service.dart';
 import '../models/models.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_scale_button.dart' as import_scale_btn;
@@ -48,8 +47,8 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isOnline
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.2),
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.grey.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -77,7 +76,7 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
               Switch(
                 value: isOnline,
                 activeColor: AppColors.primary,
-                activeTrackColor: AppColors.primary.withOpacity(0.5),
+                activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
                 onChanged: (val) {
                   ref.read(syncServiceProvider.notifier).toggleOnline();
                 },
@@ -168,7 +167,7 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
                           },
                           calendarStyle: CalendarStyle(
                             todayDecoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               shape: BoxShape.circle,
                             ),
                             selectedDecoration: const BoxDecoration(
@@ -261,7 +260,7 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
                               Icon(
                                 Icons.history,
                                 size: 64,
-                                color: Colors.grey.withOpacity(0.5),
+                                color: Colors.grey.withValues(alpha: 0.5),
                               ),
                               const SizedBox(height: 16),
                               const Text(
@@ -286,7 +285,7 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
                     color: AppColors.surface,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
+                        color: Colors.black.withValues(alpha: 0.02),
                         offset: const Offset(0, -8),
                         blurRadius: 24,
                       ),
@@ -427,22 +426,22 @@ class _LogHistoryScreenState extends ConsumerState<LogHistoryScreen> {
 
     switch (status) {
       case SyncStatus.syncing:
-        bgColor = Colors.blue.withOpacity(0.2);
+        bgColor = Colors.blue.withValues(alpha: 0.2);
         textColor = Colors.blue;
         label = 'Syncing';
         break;
       case SyncStatus.syncFailed:
-        bgColor = Colors.red.withOpacity(0.2);
+        bgColor = Colors.red.withValues(alpha: 0.2);
         textColor = Colors.red;
         label = 'Failed';
         break;
       case SyncStatus.synced:
-        bgColor = Colors.green.withOpacity(0.2);
+        bgColor = Colors.green.withValues(alpha: 0.2);
         textColor = Colors.green;
         label = 'Synced';
         break;
       default:
-        bgColor = Colors.orange.withOpacity(0.2);
+        bgColor = Colors.orange.withValues(alpha: 0.2);
         textColor = Colors.orange;
         label = 'Pending';
         break;

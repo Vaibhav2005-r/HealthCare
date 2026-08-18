@@ -4,9 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'router.dart';
 
-import 'services/local_db_service.dart';
-import 'services/mock_data.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -42,7 +39,7 @@ class SmartHealthApp extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 24,
                       offset: const Offset(0, 12),
                     ),

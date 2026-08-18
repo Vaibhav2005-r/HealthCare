@@ -17,6 +17,9 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
           languageName: 'English',
         ));
 
+  String get currentLanguageCode => state.languageCode;
+  String get currentLanguageName => state.languageName;
+
   void setLanguage(String code) {
     switch (code) {
       case 'mr':

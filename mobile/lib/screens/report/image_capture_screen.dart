@@ -65,7 +65,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                       decoration: BoxDecoration(
                         color: index <= 2
                             ? AppColors.primary
-                            : Colors.grey.withOpacity(0.3),
+                            : Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -84,9 +84,9 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                lang.state.languageCode == 'mr'
+                lang.currentLanguageCode == 'mr'
                     ? 'रुग्णाचा किंवा आजाराच्या भागाचा फोटो घ्या (पर्यायी).'
-                    : lang.state.languageCode == 'hi'
+                    : lang.currentLanguageCode == 'hi'
                         ? 'मरीज़ या प्रभावित क्षेत्र का फोटो लें (वैकल्पिक).'
                         : 'Take a clear photo of patient or symptoms (optional).',
                 style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
@@ -100,7 +100,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -122,12 +122,12 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                             Icon(
                               Icons.camera_alt_outlined,
                               size: 64,
-                              color: AppColors.primary.withOpacity(0.4),
+                              color: AppColors.primary.withValues(alpha: 0.4),
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              lang.state.languageCode == 'mr' ? 'फोटो घेतलेला नाही' : lang.state.languageCode == 'hi' ? 'कोई फोटो नहीं ली गई' : 'No photo captured',
-                              style: TextStyle(
+                              lang.currentLanguageCode == 'mr' ? 'फोटो घेतलेला नाही' : lang.currentLanguageCode == 'hi' ? 'कोई फोटो नहीं ली गई' : 'No photo captured',
+                              style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 14,
                               ),
@@ -156,8 +156,8 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                         : const Icon(Icons.camera_alt),
                     label: Text(
                       _imagePath == null
-                          ? (lang.state.languageCode == 'mr' ? 'फोटो काढा' : lang.state.languageCode == 'hi' ? 'फोटो लें' : 'Capture Photo')
-                          : (lang.state.languageCode == 'mr' ? 'पुन्हा फोटो काढा' : lang.state.languageCode == 'hi' ? 'दोबारा फोटो लें' : 'Retake Photo'),
+                          ? (lang.currentLanguageCode == 'mr' ? 'फोटो काढा' : lang.currentLanguageCode == 'hi' ? 'फोटो लें' : 'Capture Photo')
+                          : (lang.currentLanguageCode == 'mr' ? 'पुन्हा फोटो काढा' : lang.currentLanguageCode == 'hi' ? 'दोबारा फोटो लें' : 'Retake Photo'),
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -199,7 +199,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                   child: Center(
                     child: Text(
                       _imagePath == null
-                          ? (lang.state.languageCode == 'mr' ? 'पुढे जा (पर्यायी)' : lang.state.languageCode == 'hi' ? 'आगे बढ़ें (वैकल्पिक)' : 'Skip / Continue')
+                          ? (lang.currentLanguageCode == 'mr' ? 'पुढे जा (पर्यायी)' : lang.currentLanguageCode == 'hi' ? 'आगे बढ़ें (वैकल्पिक)' : 'Skip / Continue')
                           : lang.translate('next_btn'),
                       style: const TextStyle(
                         fontSize: 16,

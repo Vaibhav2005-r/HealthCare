@@ -5,7 +5,6 @@ import '../services/triage_service.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../services/sync_service.dart';
-import '../services/auth_service.dart';
 
 export '../services/auth_service.dart';
 export '../services/sync_service.dart';

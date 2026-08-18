@@ -83,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.1),
+                    color: accentColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -122,7 +122,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -141,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   decoration: InputDecoration(
                     labelText: 'Phone Number',
-                    labelStyle: TextStyle(color: const Color(0xFF1D2321).withOpacity(0.5)),
+                    labelStyle: TextStyle(color: const Color(0xFF1D2321).withValues(alpha: 0.5)),
                     errorText: _phoneError,
                     prefixIcon: Icon(Icons.phone, color: accentColor),
                     border: OutlineInputBorder(
@@ -162,7 +162,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -176,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'Select Your Role',
                       style: TextStyle(
                         fontSize: 16,
-                        color: const Color(0xFF1D2321).withOpacity(0.5),
+                        color: const Color(0xFF1D2321).withValues(alpha: 0.5),
                         fontWeight: FontWeight.normal,
                       ),
                     ),
@@ -242,13 +242,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.lock, size: 14, color: const Color(0xFF5B6663).withOpacity(0.8)),
+                  Icon(Icons.lock, size: 14, color: const Color(0xFF5B6663).withValues(alpha: 0.8)),
                   const SizedBox(width: 6),
                   Text(
                     'Secure · Works Offline',
                     style: TextStyle(
                       fontSize: 14,
-                      color: const Color(0xFF5B6663).withOpacity(0.8),
+                      color: const Color(0xFF5B6663).withValues(alpha: 0.8),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

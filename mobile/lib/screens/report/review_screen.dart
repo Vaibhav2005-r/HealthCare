@@ -6,7 +6,6 @@ import '../../providers/report_draft_provider.dart';
 import '../../providers/providers.dart';
 import '../../providers/language_provider.dart';
 import '../../models/models.dart';
-import '../../theme/app_colors.dart';
 import '../../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class ReviewScreen extends ConsumerWidget {
@@ -44,7 +43,7 @@ class ReviewScreen extends ConsumerWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index <= 5 ? accentColor : Colors.grey.withOpacity(0.3),
+                        color: index <= 5 ? accentColor : Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),

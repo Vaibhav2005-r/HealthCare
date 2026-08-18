@@ -80,7 +80,7 @@ class _MedicalBackgroundScreenState extends ConsumerState<MedicalBackgroundScree
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index <= 1 ? accentColor : Colors.grey.withOpacity(0.3),
+                        color: index <= 1 ? accentColor : Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -105,7 +105,7 @@ class _MedicalBackgroundScreenState extends ConsumerState<MedicalBackgroundScree
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

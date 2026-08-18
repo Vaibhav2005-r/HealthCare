@@ -129,7 +129,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.12),
+                color: AppColors.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
@@ -182,7 +182,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
               final prompt = _quickPrompts[index];
               return ActionChip(
                 backgroundColor: AppColors.surface,
-                side: BorderSide(color: AppColors.primary.withOpacity(0.2)),
+                side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
                 label: Text(
                   prompt,
                   style: const TextStyle(
@@ -237,7 +237,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
             color: AppColors.surface,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 offset: const Offset(0, -4),
                 blurRadius: 16,
               ),
@@ -316,7 +316,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
                   return ChoiceChip(
                     label: Text(cat),
                     selected: isSelected,
-                    selectedColor: AppColors.primary.withOpacity(0.15),
+                    selectedColor: AppColors.primary.withValues(alpha: 0.15),
                     labelStyle: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -346,14 +346,14 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                      side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
                     ),
                     child: ExpansionTile(
                       tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       leading: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: badgeColor.withOpacity(0.12),
+                          color: badgeColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.medical_services, color: badgeColor, size: 24),
@@ -369,7 +369,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: badgeColor.withOpacity(0.15),
+                                color: badgeColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -440,7 +440,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.08),
+                                  color: Colors.grey.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -506,7 +506,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
           boxShadow: [
             if (!isUser)
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -548,7 +548,7 @@ class _AssistantScreenState extends ConsumerState<AssistantScreen> with SingleTi
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (isUser ? Colors.white : AppColors.primary).withOpacity(0.12),
+                  color: (isUser ? Colors.white : AppColors.primary).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

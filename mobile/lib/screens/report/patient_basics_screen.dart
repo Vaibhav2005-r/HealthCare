@@ -5,7 +5,6 @@ import '../../providers/providers.dart';
 import '../../providers/report_draft_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../services/location_service.dart';
-import '../../theme/app_colors.dart';
 import '../../widgets/animated_scale_button.dart' as import_scale_btn;
 
 class PatientBasicsScreen extends ConsumerStatefulWidget {
@@ -130,7 +129,8 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
     }
     
     if (_manualLocationReason != null) {
-      return Chip(
+      return ActionChip(
+        onPressed: _promptManualLocation,
         label: const Text('Manual GPS', style: TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1),
         backgroundColor: Colors.blueGrey,
         avatar: const Icon(Icons.edit_location_alt, color: Colors.white, size: 16),
@@ -148,17 +148,23 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
         color = Colors.orange;
         label = lang.translate('gps_active');
       } else {
-        color = Colors.red;
+        color = Colors.blueGrey;
         label = lang.translate('gps_active');
       }
-      return Chip(
+      return ActionChip(
+        onPressed: _promptManualLocation,
         label: Text(label, style: const TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1),
         backgroundColor: color,
-        avatar: const Icon(Icons.gps_fixed, color: Colors.white, size: 16),
+        avatar: const Icon(Icons.location_on, color: Colors.white, size: 16),
       );
     }
     
-    return const SizedBox();
+    return ActionChip(
+      onPressed: _promptManualLocation,
+      label: const Text('Offline Loc', style: TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis, maxLines: 1),
+      backgroundColor: Colors.grey,
+      avatar: const Icon(Icons.location_off, color: Colors.white, size: 16),
+    );
   }
 
   @override
@@ -200,7 +206,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       height: 4,
                       decoration: BoxDecoration(
-                        color: index == 0 ? accentColor : Colors.grey.withOpacity(0.3),
+                        color: index == 0 ? accentColor : Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -237,7 +243,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/providers.dart';
 import '../providers/language_provider.dart';
-import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_scale_button.dart' as import_scale_btn;
 import '../widgets/streak_calendar.dart';
@@ -55,7 +54,7 @@ class ProfileScreen extends ConsumerWidget {
                     color: AppColors.background,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: AppColors.primary.withValues(alpha: 0.2),
                       width: 3,
                     ),
                   ),
@@ -139,7 +138,7 @@ class ProfileScreen extends ConsumerWidget {
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.history, color: AppColors.primary),
@@ -183,7 +182,7 @@ class ProfileScreen extends ConsumerWidget {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.language, color: AppColors.primary),
@@ -325,7 +324,7 @@ class ProfileScreen extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 28),
