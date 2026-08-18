@@ -16,9 +16,15 @@ import httpx
 import asyncio
 import random
 import sqlite3
-import json
-import torch
-import numpy as np
+try:
+    import torch
+except ImportError:
+    torch = None
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException

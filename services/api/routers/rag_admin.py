@@ -4,8 +4,11 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import Dict, Any, List
 
 # Ensure parent directory is in path for ml imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from ml.rag_pipeline import get_rag_engine
+try:
+    from ml.rag_pipeline import get_rag_engine
+except Exception:
+    def get_rag_engine():
+        return None
 
 router = APIRouter(prefix="/api/v1/rag", tags=["RAG & Guidelines Manager"])
 
