@@ -14,6 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+WORKDIR /app/api
+
 ENV PYTHONPATH=/app:/app/api
 ENV PORT=10000
 ENV OMP_NUM_THREADS=1
@@ -22,4 +24,4 @@ ENV MKL_NUM_THREADS=1
 
 EXPOSE 10000
 
-CMD ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"]
