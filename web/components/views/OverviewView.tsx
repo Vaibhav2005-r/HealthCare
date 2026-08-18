@@ -237,12 +237,12 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
       {/* 2. HERO SECTION: NVIDIA FourCastNet + PyTorch LSTM Simultaneous Forecast */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column (8 cols): Cascaded Weather & Disease Forecast Engine */}
-        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col">
           
           {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#76B900]/15 text-[#2E7D32] border border-[#76B900]/30">
                   <Cpu className="w-3 h-3 text-[#76B900]" />
                   NVIDIA FourCastNet + LSTM
@@ -250,9 +250,9 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                 <span className="text-xs text-[#5B6663]">•</span>
                 <span className="text-xs font-mono text-[#5B6663]">0.25° NWP Mesh</span>
               </div>
-              <h2 className="text-sm sm:text-base font-extrabold text-[#1D2321] mt-0.5 flex items-center gap-1.5">
+              <h2 className="text-base font-extrabold text-[#1D2321] flex items-center gap-1.5">
                 <TrendingUp className="w-4 h-4 text-[#C2255C]" />
-                14-Day Weather & Outbreak Trajectory
+                14-Day Simultaneous Weather & Outbreak Trajectory
               </h2>
             </div>
             
@@ -261,7 +261,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
               <select
                 value={selectedForecastDistrict}
                 onChange={(e) => setSelectedForecastDistrict(e.target.value)}
-                className="px-2.5 py-1.5 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold font-mono outline-none cursor-pointer transition-colors shadow-2xs max-w-[220px]"
+                className="px-3 py-1.5 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold font-mono outline-none cursor-pointer transition-colors shadow-2xs min-w-[220px]"
               >
                 {allDistrictsList.map((d) => (
                   <option key={d.district_id} value={d.district_id}>
@@ -273,16 +273,16 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
           </div>
 
           {/* Compact Architecture & Legend Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-2 py-1.5 px-3 mb-3 bg-[#F6F5F2] rounded-lg border border-[#E2E8F0] text-xs">
-            <div className="flex flex-wrap items-center gap-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-2 px-3 mb-3 bg-[#F6F5F2] rounded-lg border border-[#E2E8F0] text-xs">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="w-4 h-0.5 border-t-2 border-dashed border-[#C6362C]" />
-                <span className="font-bold text-[#C6362C] text-[11px]">LSTM Forecast</span>
+                <span className="font-bold text-[#C6362C]">LSTM Projected Caseload</span>
               </div>
 
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-xs bg-[#76B900]/50 border border-[#76B900]" />
-                <span className="font-bold text-[#1D2321] text-[11px]">FourCastNet Rain (mm)</span>
+                <span className="font-bold text-[#1D2321]">FourCastNet Rain (mm)</span>
               </div>
             </div>
 
@@ -291,18 +291,18 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </span>
           </div>
 
-          {/* Moderate-Sized Chart Canvas */}
-          <div className="h-56 sm:h-60 w-full">
+          {/* Moderate-Sized Chart Canvas with Zero Unwanted Whitespace */}
+          <div className="h-64 sm:h-72 w-full mt-1">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 8, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#5B6663', fontWeight: 600 }} axisLine={{ stroke: '#E2E8F0' }} tickLine={false} />
-                <YAxis yAxisId="left" tick={{ fontSize: 10, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Cases', angle: -90, position: 'insideLeft', offset: 20, fontSize: 10, fill: '#5B6663' }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Rain (mm)', angle: 90, position: 'insideRight', offset: 20, fontSize: 10, fill: '#5B6663' }} />
+                <YAxis yAxisId="left" domain={[0, 'auto']} tick={{ fontSize: 10, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Cases', angle: -90, position: 'insideLeft', offset: 20, fontSize: 10, fill: '#5B6663' }} />
+                <YAxis yAxisId="right" domain={[0, 'auto']} orientation="right" tick={{ fontSize: 10, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Rain (mm)', angle: 90, position: 'insideRight', offset: 20, fontSize: 10, fill: '#5B6663' }} />
                 <Tooltip 
                   formatter={(val: any, name: any) => {
                     if (name === 'LSTM Forecasted Incidence') return [`${val} cases`, 'Forecast'];
-                    if (name === 'Upper 95% Confidence Bound') return [`${val} cases`, 'Upper 95%'];
+                    if (name === 'Upper 95% Confidence Bound') return [`${val} cases`, 'Upper 95% Bound'];
                     return [`${val} mm`, 'FourCastNet Rain'];
                   }}
                   contentStyle={{ 
@@ -314,9 +314,9 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                     padding: '8px 12px'
                   }} 
                 />
-                <Bar yAxisId="right" dataKey="fourcastnet_rainfall_mm" name="NVIDIA FourCastNet Rainfall (mm)" fill="#76B900" fillOpacity={0.4} radius={[2, 2, 0, 0]} barSize={14} />
+                <Bar yAxisId="right" dataKey="fourcastnet_rainfall_mm" name="NVIDIA FourCastNet Rainfall (mm)" fill="#76B900" fillOpacity={0.4} radius={[2, 2, 0, 0]} barSize={16} />
                 <Area yAxisId="left" type="monotone" dataKey="upper_bound_cases" stroke="none" fill="#C6362C" fillOpacity={0.08} name="Upper 95% Confidence Bound" />
-                <Line yAxisId="left" type="monotone" dataKey="predicted_cases" name="LSTM Forecasted Incidence" stroke="#C6362C" strokeWidth={2.5} strokeDasharray="4 2" dot={{ r: 3, fill: '#C6362C', strokeWidth: 1, stroke: '#FFFFFF' }} activeDot={{ r: 5 }} />
+                <Line yAxisId="left" type="monotone" dataKey="predicted_cases" name="LSTM Forecasted Incidence" stroke="#C6362C" strokeWidth={2.5} strokeDasharray="4 2" dot={{ r: 3.5, fill: '#C6362C', strokeWidth: 1, stroke: '#FFFFFF' }} activeDot={{ r: 5.5 }} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
