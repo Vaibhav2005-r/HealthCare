@@ -16,6 +16,7 @@ import httpx
 import asyncio
 import random
 import sqlite3
+import json
 try:
     import torch
 except ImportError:
@@ -131,18 +132,29 @@ def persist_report(report: "SymptomReportCreate") -> tuple[bool, dict]:
     stored_report["client_report_id"] = client_report_id
     stored_report["received_at"] = received_at
 
-    with sqlite3.connect(OFFLINE_SYNC_DATABASE_PATH) as connection:
-        try:
-            connection.execute(
-                "INSERT INTO synced_reports (client_report_id, report_json, received_at) VALUES (?, ?, ?)",
-                (client_report_id, json.dumps(stored_report), received_at),
-            )
-            return True, stored_report
-        except sqlite3.IntegrityError:
-            row = connection.execute(
-                "SELECT report_json FROM synced_reports WHERE client_report_id = ?", (client_report_id,)
-            ).fetchone()
-            return False, json.loads(row[0])
+    try:
+        with sqlite3.connect(OFFLINE_SYNC_DATABASE_PATH) as connection:
+            connection.execute("""
+                CREATE TABLE IF NOT EXISTS synced_reports (
+                    client_report_id TEXT PRIMARY KEY,
+                    report_json TEXT NOT NULL,
+                    received_at TEXT NOT NULL
+                )
+            """)
+            try:
+                connection.execute(
+                    "INSERT INTO synced_reports (client_report_id, report_json, received_at) VALUES (?, ?, ?)",
+                    (client_report_id, json.dumps(stored_report), received_at),
+                )
+                return True, stored_report
+            except sqlite3.IntegrityError:
+                row = connection.execute(
+                    "SELECT report_json FROM synced_reports WHERE client_report_id = ?", (client_report_id,)
+                ).fetchone()
+                return False, json.loads(row[0]) if row else stored_report
+    except Exception as e:
+        print(f"[Sync] SQLite local storage warning: {e}")
+        return True, stored_report
 
 FALLBACK_DISTRICTS = [
     {"district_id": "DIST-001", "name": "Pune", "state": "Maharashtra", "centroid_lat": 18.5204, "centroid_lng": 73.8567, "risk_level": "HIGH", "risk_score": 0.89, "active_cases": 84, "trend_7d": "UP", "trend_pct": 24.5, "primary_suspected": "Dengue", "population": "9,429,408", "asha_active_count": 142, "rainfall_mm": 45.0, "humidity_pct": 74, "last_reported": "Just now (Live)"},
