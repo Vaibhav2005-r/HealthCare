@@ -59,13 +59,29 @@ interface OverviewViewProps {
   onSelectDistrict: (district: DistrictData) => void;
 }
 
+const FALLBACK_TRAJECTORY: FourCastNetForecastItem[] = [
+  { day: "Day +1", date: "2026-08-19", predicted_cases: 48.7, lower_bound_cases: 45.0, upper_bound_cases: 52.0, fourcastnet_rainfall_mm: 65.0, temp_c: 27.2, humidity_pct: 88.0, vector_breeding_risk: 0.82, risk_score: 0.8578, risk_level: "CRITICAL" },
+  { day: "Day +2", date: "2026-08-20", predicted_cases: 51.4, lower_bound_cases: 48.0, upper_bound_cases: 56.0, fourcastnet_rainfall_mm: 82.0, temp_c: 27.5, humidity_pct: 90.0, vector_breeding_risk: 0.88, risk_score: 0.8524, risk_level: "CRITICAL" },
+  { day: "Day +3", date: "2026-08-21", predicted_cases: 54.4, lower_bound_cases: 51.0, upper_bound_cases: 62.0, fourcastnet_rainfall_mm: 94.0, temp_c: 27.1, humidity_pct: 92.0, vector_breeding_risk: 0.94, risk_score: 0.8500, risk_level: "CRITICAL" },
+  { day: "Day +4", date: "2026-08-22", predicted_cases: 57.4, lower_bound_cases: 55.0, upper_bound_cases: 68.0, fourcastnet_rainfall_mm: 78.0, temp_c: 27.0, humidity_pct: 89.0, vector_breeding_risk: 0.85, risk_score: 0.8551, risk_level: "CRITICAL" },
+  { day: "Day +5", date: "2026-08-23", predicted_cases: 60.7, lower_bound_cases: 58.0, upper_bound_cases: 73.0, fourcastnet_rainfall_mm: 60.0, temp_c: 27.3, humidity_pct: 85.0, vector_breeding_risk: 0.78, risk_score: 0.8559, risk_level: "CRITICAL" },
+  { day: "Day +6", date: "2026-08-24", predicted_cases: 64.1, lower_bound_cases: 60.0, upper_bound_cases: 77.0, fourcastnet_rainfall_mm: 45.0, temp_c: 27.5, humidity_pct: 82.0, vector_breeding_risk: 0.72, risk_score: 0.8579, risk_level: "CRITICAL" },
+  { day: "Day +7", date: "2026-08-25", predicted_cases: 67.6, lower_bound_cases: 63.0, upper_bound_cases: 82.0, fourcastnet_rainfall_mm: 52.0, temp_c: 27.4, humidity_pct: 84.0, vector_breeding_risk: 0.76, risk_score: 0.8560, risk_level: "CRITICAL" },
+  { day: "Day +8", date: "2026-08-26", predicted_cases: 71.1, lower_bound_cases: 66.0, upper_bound_cases: 87.0, fourcastnet_rainfall_mm: 70.0, temp_c: 27.2, humidity_pct: 87.0, vector_breeding_risk: 0.84, risk_score: 0.8614, risk_level: "CRITICAL" },
+  { day: "Day +9", date: "2026-08-27", predicted_cases: 74.9, lower_bound_cases: 68.0, upper_bound_cases: 91.0, fourcastnet_rainfall_mm: 64.0, temp_c: 27.1, humidity_pct: 86.0, vector_breeding_risk: 0.80, risk_score: 0.8602, risk_level: "CRITICAL" },
+  { day: "Day +10", date: "2026-08-28", predicted_cases: 78.7, lower_bound_cases: 71.0, upper_bound_cases: 96.0, fourcastnet_rainfall_mm: 58.0, temp_c: 27.0, humidity_pct: 85.0, vector_breeding_risk: 0.75, risk_score: 0.8555, risk_level: "CRITICAL" },
+  { day: "Day +11", date: "2026-08-29", predicted_cases: 82.5, lower_bound_cases: 73.0, upper_bound_cases: 100.0, fourcastnet_rainfall_mm: 62.0, temp_c: 27.2, humidity_pct: 86.0, vector_breeding_risk: 0.79, risk_score: 0.8581, risk_level: "CRITICAL" },
+  { day: "Day +12", date: "2026-08-30", predicted_cases: 86.3, lower_bound_cases: 76.0, upper_bound_cases: 105.0, fourcastnet_rainfall_mm: 54.0, temp_c: 27.3, humidity_pct: 84.0, vector_breeding_risk: 0.74, risk_score: 0.8623, risk_level: "CRITICAL" },
+  { day: "Day +13", date: "2026-08-31", predicted_cases: 90.3, lower_bound_cases: 78.0, upper_bound_cases: 109.0, fourcastnet_rainfall_mm: 48.0, temp_c: 27.4, humidity_pct: 82.0, vector_breeding_risk: 0.70, risk_score: 0.8546, risk_level: "CRITICAL" },
+  { day: "Day +14", date: "2026-09-01", predicted_cases: 94.2, lower_bound_cases: 80.0, upper_bound_cases: 114.0, fourcastnet_rainfall_mm: 50.0, temp_c: 27.5, humidity_pct: 83.0, vector_breeding_risk: 0.72, risk_score: 0.8598, risk_level: "CRITICAL" }
+];
+
 export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistrict }: OverviewViewProps) {
   const { t } = useLanguage();
   const [selectedForecastDistrict, setSelectedForecastDistrict] = useState<string>('MH-PLG');
   const [simultaneousForecast, setSimultaneousForecast] = useState<SimultaneousForecastResponse | null>(null);
   const [loadingForecast, setLoadingForecast] = useState<boolean>(false);
 
-  // Load 14-day simultaneous FourCastNet + LSTM forecast
   useEffect(() => {
     let isMounted = true;
     const loadForecast = async () => {
@@ -83,30 +99,12 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
     return () => { isMounted = false; };
   }, [selectedForecastDistrict]);
 
-  // Filter top districts if a risk filter is active
   const filteredDistricts = activeFilter === 'ALL'
     ? data.top_at_risk
     : data.top_at_risk.filter(d => d.risk_level === activeFilter);
 
   const pieColors = ['#C2255C', '#C6362C', '#E8901A', '#146356'];
-
-  // Chart data: use simultaneous FourCastNet trajectory if available
-  const chartData: FourCastNetForecastItem[] = simultaneousForecast?.forecast_trajectory || [
-    { day: "Day +1", date: "2026-08-19", predicted_cases: 48.7, lower_bound_cases: 45.0, upper_bound_cases: 52.0, fourcastnet_rainfall_mm: 65.0, temp_c: 27.2, humidity_pct: 88.0, vector_breeding_risk: 0.82, risk_score: 0.8578, risk_level: "CRITICAL" },
-    { day: "Day +2", date: "2026-08-20", predicted_cases: 51.4, lower_bound_cases: 48.0, upper_bound_cases: 56.0, fourcastnet_rainfall_mm: 82.0, temp_c: 27.5, humidity_pct: 90.0, vector_breeding_risk: 0.88, risk_score: 0.8524, risk_level: "CRITICAL" },
-    { day: "Day +3", date: "2026-08-21", predicted_cases: 54.4, lower_bound_cases: 51.0, upper_bound_cases: 62.0, fourcastnet_rainfall_mm: 94.0, temp_c: 27.1, humidity_pct: 92.0, vector_breeding_risk: 0.94, risk_score: 0.8500, risk_level: "CRITICAL" },
-    { day: "Day +4", date: "2026-08-22", predicted_cases: 57.4, lower_bound_cases: 55.0, upper_bound_cases: 68.0, fourcastnet_rainfall_mm: 78.0, temp_c: 27.0, humidity_pct: 89.0, vector_breeding_risk: 0.85, risk_score: 0.8551, risk_level: "CRITICAL" },
-    { day: "Day +5", date: "2026-08-23", predicted_cases: 60.7, lower_bound_cases: 58.0, upper_bound_cases: 73.0, fourcastnet_rainfall_mm: 60.0, temp_c: 27.3, humidity_pct: 85.0, vector_breeding_risk: 0.78, risk_score: 0.8559, risk_level: "CRITICAL" },
-    { day: "Day +6", date: "2026-08-24", predicted_cases: 64.1, lower_bound_cases: 60.0, upper_bound_cases: 77.0, fourcastnet_rainfall_mm: 45.0, temp_c: 27.5, humidity_pct: 82.0, vector_breeding_risk: 0.72, risk_score: 0.8579, risk_level: "CRITICAL" },
-    { day: "Day +7", date: "2026-08-25", predicted_cases: 67.6, lower_bound_cases: 63.0, upper_bound_cases: 82.0, fourcastnet_rainfall_mm: 52.0, temp_c: 27.4, humidity_pct: 84.0, vector_breeding_risk: 0.76, risk_score: 0.8560, risk_level: "CRITICAL" },
-    { day: "Day +8", date: "2026-08-26", predicted_cases: 71.1, lower_bound_cases: 66.0, upper_bound_cases: 87.0, fourcastnet_rainfall_mm: 70.0, temp_c: 27.2, humidity_pct: 87.0, vector_breeding_risk: 0.84, risk_score: 0.8614, risk_level: "CRITICAL" },
-    { day: "Day +9", date: "2026-08-27", predicted_cases: 74.9, lower_bound_cases: 68.0, upper_bound_cases: 91.0, fourcastnet_rainfall_mm: 64.0, temp_c: 27.1, humidity_pct: 86.0, vector_breeding_risk: 0.80, risk_score: 0.8602, risk_level: "CRITICAL" },
-    { day: "Day +10", date: "2026-08-28", predicted_cases: 78.7, lower_bound_cases: 71.0, upper_bound_cases: 96.0, fourcastnet_rainfall_mm: 58.0, temp_c: 27.0, humidity_pct: 85.0, vector_breeding_risk: 0.75, risk_score: 0.8555, risk_level: "CRITICAL" },
-    { day: "Day +11", date: "2026-08-29", predicted_cases: 82.5, lower_bound_cases: 73.0, upper_bound_cases: 100.0, fourcastnet_rainfall_mm: 62.0, temp_c: 27.2, humidity_pct: 86.0, vector_breeding_risk: 0.79, risk_score: 0.8581, risk_level: "CRITICAL" },
-    { day: "Day +12", date: "2026-08-30", predicted_cases: 86.3, lower_bound_cases: 76.0, upper_bound_cases: 105.0, fourcastnet_rainfall_mm: 54.0, temp_c: 27.3, humidity_pct: 84.0, vector_breeding_risk: 0.74, risk_score: 0.8623, risk_level: "CRITICAL" },
-    { day: "Day +13", date: "2026-08-31", predicted_cases: 90.3, lower_bound_cases: 78.0, upper_bound_cases: 109.0, fourcastnet_rainfall_mm: 48.0, temp_c: 27.4, humidity_pct: 82.0, vector_breeding_risk: 0.70, risk_score: 0.8546, risk_level: "CRITICAL" },
-    { day: "Day +14", date: "2026-09-01", predicted_cases: 94.2, lower_bound_cases: 80.0, upper_bound_cases: 114.0, fourcastnet_rainfall_mm: 50.0, temp_c: 27.5, humidity_pct: 83.0, vector_breeding_risk: 0.72, risk_score: 0.8598, risk_level: "CRITICAL" }
-  ];
+  const chartData: FourCastNetForecastItem[] = simultaneousForecast?.forecast_trajectory || FALLBACK_TRAJECTORY;
 
   return (
     <div className="space-y-6">
@@ -200,13 +198,8 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
             <span className="text-xs text-[#146356] font-semibold">Online</span>
           </div>
           <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
-<<<<<<< HEAD
-            <span>{t('overview.field_uploads')}</span>
-            <span className="font-mono text-[#146356] font-semibold">{data.summary.registered_asha_workers ?? 46} {t('overview.pilot_registered')}</span>
-=======
             <span>Mesh Status:</span>
             <span className="text-[#146356] font-semibold">Connected to Supabase</span>
->>>>>>> 79ed2e8 (feat(ml): integrate NVIDIA FourCastNet medium-range weather NWP with PyTorch LSTM for simultaneous 14-day cascaded epidemiological forecasting)
           </div>
         </div>
       </div>
@@ -248,7 +241,6 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                {/* NVIDIA Green Badge */}
                 <span className="flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#76B900]/15 text-[#2E7D32] border border-[#76B900]/30 shadow-2xs">
                   <Cpu className="w-3 h-3 text-[#76B900]" />
                   NVIDIA FourCastNet + PyTorch LSTM
@@ -433,68 +425,8 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
         <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
-<<<<<<< HEAD
-              <h2 className="text-base font-bold text-[#1D2321] flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#C2255C]" />
-                Spatial Outbreak Preview
-              </h2>
-              <p className="text-xs text-[#5B6663]">
-                Centroid risk overlay across Maharashtra districts with live cluster intensity
-              </p>
-            </div>
-            <button
-              onClick={() => onNavigateTab('heatmap')}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#C2255C] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors"
-            >
-              <span>Full Screen Heatmap</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="flex-1 min-h-[300px] rounded-lg overflow-hidden border border-[#E2E8F0] relative">
-            <CompactMap 
-              activeFilter={activeFilter} 
-              districts={data.top_at_risk} 
-              onSelectDistrict={onSelectDistrict} 
-            />
-          </div>
-
-          <div className="mt-3 flex flex-wrap items-center justify-between text-xs text-[#5B6663] pt-2 border-t border-[#E2E8F0]/60">
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#8B0000]" /> Critical (0.8+)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#C6362C]" /> High (0.7+)
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#E8901A]" /> Moderate
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#146356]" /> Low / Normal
-              </span>
-            </div>
-            <span className="font-mono text-[11px] text-[#146356] font-semibold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#146356] animate-pulse" /> Live Telemetry
-            </span>
-          </div>
-        </div>
-
-        {/* Right Column (5 cols): Top At-Risk Districts Table */}
-        <div className="lg:col-span-5 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-bold text-[#1D2321] flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-[#C6362C]" />
-                Top At-Risk Districts
-              </h2>
-              <p className="text-xs text-[#5B6663]">
-                Immediate DHO triage priority queue
-              </p>
-=======
               <h2 className="text-base font-bold text-[#1D2321]">District Outbreak Priority Leaderboard</h2>
               <p className="text-xs text-[#5B6663] mt-0.5">Ranked by real-time epidemiological composite risk index</p>
->>>>>>> 79ed2e8 (feat(ml): integrate NVIDIA FourCastNet medium-range weather NWP with PyTorch LSTM for simultaneous 14-day cascaded epidemiological forecasting)
             </div>
             <button
               onClick={() => onNavigateTab('districts')}
