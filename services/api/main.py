@@ -12,9 +12,6 @@ for p in [str(API_DIR), str(SERVICES_DIR), str(ROOT_DIR)]:
         sys.path.insert(0, p)
 
 import math
-import torch
-import numpy as np
-import pandas as pd
 import httpx
 import asyncio
 import random
@@ -27,11 +24,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
-from sklearn.preprocessing import MinMaxScaler
 from contextlib import asynccontextmanager
 
-from ml.train_lstm_forecast import OutbreakForecastLSTM
-from ml.rag_pipeline import RAGEngine, get_rag_engine
 from database.connection import init_db_pool, close_db_pool as close_conn_pool, get_db_pool as get_conn_pool
 from database.db import (
     get_db_pool,

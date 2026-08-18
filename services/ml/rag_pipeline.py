@@ -13,17 +13,31 @@ try:
 except ImportError:
     pypdf = None
 
-from sentence_transformers import SentenceTransformer
-from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    PointStruct,
-    VectorParams,
-    Distance,
-    Filter,
-    FieldCondition,
-    MatchValue,
-    ScrollRequest
-)
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
+
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import (
+        PointStruct,
+        VectorParams,
+        Distance,
+        Filter,
+        FieldCondition,
+        MatchValue,
+        ScrollRequest
+    )
+except ImportError:
+    QdrantClient = None
+    PointStruct = None
+    VectorParams = None
+    Distance = None
+    Filter = None
+    FieldCondition = None
+    MatchValue = None
+    ScrollRequest = None
 
 # Standard Baseline Medical Corpus (IDSP / WHO)
 BASELINE_MEDICAL_CORPUS = [
@@ -60,8 +74,16 @@ BASELINE_MEDICAL_CORPUS = [
 class RAGEngine:
     def __init__(self):
         print("Initializing Arogya Prahari RAG Engine...")
-        print("Loading SentenceTransformer model (all-MiniLM-L6-v2)...")
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.model = None
+        if SentenceTransformer is not None:
+            try:
+                print("Loading SentenceTransformer model (all-MiniLM-L6-v2)...")
+                self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            except Exception as e:
+                print(f"SentenceTransformer init warning: {e}. Falling back to baseline corpus.")
+        else:
+            print("SentenceTransformer not installed. Running in lightweight baseline corpus mode.")
+
         self.collection_name = "medical_guidelines"
         
         # Connect to Qdrant (Cloud first, fallback to local persistent or in-memory)
@@ -69,7 +91,7 @@ class RAGEngine:
         qdrant_key = os.environ.get("QDRANT_API_KEY")
         
         self.client = None
-        if qdrant_url and qdrant_key:
+        if QdrantClient is not None and qdrant_url and qdrant_key:
             try:
                 print(f"Connecting to Qdrant Cloud at {qdrant_url[:35]}...")
                 self.client = QdrantClient(url=qdrant_url, api_key=qdrant_key, timeout=10)
@@ -80,7 +102,7 @@ class RAGEngine:
                 print(f"Qdrant Cloud connection warning: {e}. Falling back to local storage.")
                 self.client = None
                 
-        if self.client is None:
+        if self.client is None and QdrantClient is not None:
             local_db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "qdrant_storage")
             os.makedirs(local_db_path, exist_ok=True)
             print(f"Using local persistent Qdrant at {local_db_path}...")
@@ -88,13 +110,16 @@ class RAGEngine:
                 self.client = QdrantClient(path=local_db_path)
             except Exception as e:
                 print(f"Local storage fallback error: {e}. Using in-memory Qdrant.")
-                self.client = QdrantClient(location=":memory:")
+                try:
+                    self.client = QdrantClient(location=":memory:")
+                except Exception:
+                    self.client = None
 
-        # Ensure collection exists
-        self._ensure_collection()
-
-        # Seed baseline if empty
-        self._seed_baseline_if_empty()
+        # Ensure collection exists if client is available
+        if self.client is not None and self.model is not None:
+            self._ensure_collection()
+            # Seed baseline if empty
+            self._seed_baseline_if_empty()
 
         # Initialize LLM Client
         api_key = os.environ.get("NVIDIA_API_KEY", "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")
@@ -372,26 +397,38 @@ class RAGEngine:
         Performs semantic search in Qdrant, aggregates context, and generates
         a medical-grade grounded clinical answer via Meta LLaMA 3.1 with exact citations.
         """
-        query_vector = self.model.encode(query).tolist()
-        
-        try:
-            if hasattr(self.client, 'query_points'):
-                search_result = self.client.query_points(
-                    collection_name=self.collection_name,
-                    query=query_vector,
-                    limit=top_k
-                ).points
-            elif hasattr(self.client, 'search'):
-                search_result = self.client.search(
-                    collection_name=self.collection_name,
-                    query_vector=query_vector,
-                    limit=top_k
-                )
-            else:
+        search_result = []
+        if self.model is not None and self.client is not None:
+            try:
+                query_vector = self.model.encode(query).tolist()
+                if hasattr(self.client, 'query_points'):
+                    search_result = self.client.query_points(
+                        collection_name=self.collection_name,
+                        query=query_vector,
+                        limit=top_k
+                    ).points
+                elif hasattr(self.client, 'search'):
+                    search_result = self.client.search(
+                        collection_name=self.collection_name,
+                        query_vector=query_vector,
+                        limit=top_k
+                    )
+            except Exception as e:
+                print(f"Qdrant search error: {e}")
                 search_result = []
-        except Exception as e:
-            print(f"Qdrant search error: {e}")
-            search_result = []
+        else:
+            # Fallback to keyword matching on baseline corpus
+            q_lower = query.lower()
+            matched = [
+                doc for doc in BASELINE_MEDICAL_CORPUS
+                if any(w in doc["text"].lower() or w in doc["filename"].lower() for w in q_lower.split())
+            ]
+            if matched:
+                return {
+                    "answer": f"Clinical Directive (IDSP Guidelines):\n\n{matched[0]['text']}",
+                    "citations": [matched[0]["source"]],
+                    "retrieved_excerpts": [{"source": matched[0]["source"], "text": matched[0]["text"]}]
+                }
 
         if not search_result:
             return {
