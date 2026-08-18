@@ -5,6 +5,9 @@ import '../services/triage_service.dart';
 import '../services/api_service.dart';
 import '../models/models.dart';
 import '../services/sync_service.dart';
+import '../services/auth_service.dart';
+
+export '../services/auth_service.dart';
 
 final localDbProvider = Provider((ref) => LocalDbService());
 final apiServiceProvider = Provider((ref) => ApiService());

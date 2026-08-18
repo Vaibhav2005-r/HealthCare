@@ -53,20 +53,37 @@ class AuthService extends StateNotifier<AuthState> {
       if (sessionData != null) {
         final data = jsonDecode(sessionData);
         final phone = data['phone'] as String?;
-        Map<String, dynamic>? worker = data['worker'] as Map<String, dynamic>?;
+        Map<String, dynamic>? worker;
 
-        // Refresh profile from Supabase if online
+        // Validate phone is still registered + refresh profile from Supabase
         if (phone != null && phone.isNotEmpty) {
           try {
             worker = await _apiService.fetchWorkerProfile(phone: phone);
-          } catch (_) {}
+          } catch (e) {
+            // If phone returns 404 (not registered), clear session and reject
+            if (e is ApiException && e.statusCode == 404) {
+              await _storage.delete(key: 'asha_session_token');
+              await _storage.delete(key: 'user_pin');
+              state = AuthState(); // stay logged out
+              return;
+            }
+            // Network unavailable — use cached data for offline access
+            worker = data['worker'] as Map<String, dynamic>?;
+          }
+        }
+
+        if (worker == null) {
+          // No valid worker found, clear session
+          await _storage.delete(key: 'asha_session_token');
+          state = AuthState();
+          return;
         }
 
         state = state.copyWith(
           isAuthenticated: true,
           hasPinSetup: storedPin != null,
           phoneNumber: phone,
-          role: worker?['role'] ?? data['role'],
+          role: worker['role'] ?? data['role'],
           workerProfile: worker,
         );
       }

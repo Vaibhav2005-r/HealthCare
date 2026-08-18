@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/providers.dart';
 import '../models/models.dart';
+import '../services/auth_service.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -88,14 +89,9 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
     final profileAsync = ref.watch(workerProfileProvider);
-    final profile = authState.workerProfile ?? profileAsync.valueOrNull ?? {
-      'name': 'Sunita Gaikwad',
-      'full_name': 'Sunita Gaikwad',
-      'role': 'ASHA Lead',
-      'district': 'Pune',
-    };
-    final displayName = profile['full_name'] ?? profile['name'] ?? 'Healthcare Worker';
-    final firstName = displayName.toString().split(' ').first;
+    final profile = authState.workerProfile ?? profileAsync.valueOrNull ?? const <String, dynamic>{};
+    final String rawName = (profile['full_name'] ?? profile['name'] ?? 'Healthcare Worker').toString();
+    final String firstName = rawName.trim().isNotEmpty ? rawName.trim().split(' ').first : 'Worker';
     final pendingReports = ref.watch(pendingReportsProvider);
     final allReportsAsync = ref.watch(reportsProvider);
 
