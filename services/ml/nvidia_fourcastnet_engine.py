@@ -26,7 +26,24 @@ _WEATHER_CACHE: Dict[str, Any] = {}
 
 def get_ml_assets():
     global _scaler, _lstm_model
-    from ml.train_lstm_forecast import OutbreakForecastLSTM
+    try:
+        from ml.train_lstm_forecast import OutbreakForecastLSTM
+    except ImportError:
+        try:
+            from train_lstm_forecast import OutbreakForecastLSTM
+        except ImportError:
+            class OutbreakForecastLSTM(torch.nn.Module):
+                def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=1):
+                    super(OutbreakForecastLSTM, self).__init__()
+                    self.hidden_size = hidden_size
+                    self.num_layers = num_layers
+                    self.lstm = torch.nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+                    self.fc = torch.nn.Linear(hidden_size, output_size)
+                def forward(self, x):
+                    h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+                    c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+                    out, _ = self.lstm(x, (h0, c0))
+                    return self.fc(out[:, -1, :])
     
     if _scaler is None:
         _scaler = MinMaxScaler(feature_range=(-1, 1))
