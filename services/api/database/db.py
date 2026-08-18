@@ -5,19 +5,30 @@ from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
-DB_URL = os.getenv("SUPABASE_DB_URL")
-
 _pool: Optional[asyncpg.Pool] = None
 
-async def get_db_pool() -> asyncpg.Pool:
+def get_database_url() -> Optional[str]:
+    return os.getenv("SUPABASE_DB_URL") or os.getenv("DATABASE_URL")
+
+async def get_db_pool() -> Optional[asyncpg.Pool]:
     global _pool
+    db_url = get_database_url()
+    if not db_url:
+        print("[Database] Warning: No SUPABASE_DB_URL or DATABASE_URL environment variable found.")
+        return None
+
     if _pool is None:
-        _pool = await asyncpg.create_pool(
-            dsn=DB_URL,
-            min_size=2,
-            max_size=10,
-            command_timeout=30
-        )
+        try:
+            _pool = await asyncpg.create_pool(
+                dsn=db_url,
+                min_size=1,
+                max_size=10,
+                statement_cache_size=0,
+                command_timeout=30
+            )
+        except Exception as e:
+            print(f"[Database] Failed to connect to database: {e}")
+            _pool = None
     return _pool
 
 async def close_db_pool():
