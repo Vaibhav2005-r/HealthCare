@@ -492,7 +492,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             <div className="h-64 w-full rounded-lg overflow-hidden border border-[#E2E8F0] my-2 relative">
               <CompactMap 
                 districts={data.top_at_risk} 
-                selectedDistrict={null}
+                selectedDistrictId={undefined}
                 onSelectDistrict={onSelectDistrict}
               />
             </div>
