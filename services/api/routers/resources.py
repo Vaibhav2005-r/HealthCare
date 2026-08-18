@@ -1,12 +1,19 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Dict, Any, List
-from twilio.rest import Client
 import os
 import sys
 
+try:
+    from twilio.rest import Client
+except ImportError:
+    Client = None
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database.db import fetch_inventory_from_db
+try:
+    from database.db import fetch_inventory_from_db
+except ImportError:
+    from api.database.db import fetch_inventory_from_db
 
 router = APIRouter(prefix="/api/v1/resources", tags=["Resource Allocation & Dispatch"])
 
@@ -46,7 +53,7 @@ def trigger_broadcast(req: BroadcastRequest) -> Dict[str, str]:
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID', 'mock_sid')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN', 'mock_token')
     
-    if account_sid == 'mock_sid':
+    if not Client or account_sid == 'mock_sid':
         print(f"[LIVE DISPATCH] Broadcast to {req.target_village}: {req.message}")
         return {"status": "success", "detail": f"Emergency broadcast queued for {req.target_village}"}
 
