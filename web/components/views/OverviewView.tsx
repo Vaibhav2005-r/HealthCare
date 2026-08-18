@@ -282,12 +282,12 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
 
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-xs bg-[#76B900]/50 border border-[#76B900]" />
-                <span className="font-bold text-[#1D2321]">FourCastNet Rain (mm)</span>
+                <span className="font-bold text-[#1D2321]">IMD-Calibrated Rain (mm)</span>
               </div>
             </div>
 
             <span className="text-[10px] font-mono font-bold text-[#146356]">
-              {loadingForecast ? 'Computing...' : '✓ 14-Day Horizon'}
+              {loadingForecast ? 'Computing...' : '✓ 14-Day Horizon (IMD Aligned)'}
             </span>
           </div>
 
@@ -303,7 +303,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                   formatter={(val: any, name: any) => {
                     if (name === 'LSTM Forecasted Incidence') return [`${val} cases`, 'Forecast'];
                     if (name === 'Upper 95% Confidence Bound') return [`${val} cases`, 'Upper 95% Bound'];
-                    return [`${val} mm`, 'FourCastNet Rain'];
+                    return [`${val} mm`, 'IMD-Calibrated Rain'];
                   }}
                   contentStyle={{ 
                     backgroundColor: '#FFFFFF', 

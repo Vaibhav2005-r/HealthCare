@@ -289,10 +289,10 @@ export default function AnalyticsSection({
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-sm bg-[#76B900]/50 border border-[#76B900]" />
-              <span className="font-bold text-[#2E7D32]">NVIDIA FourCastNet Rain (mm)</span>
+              <span className="font-bold text-[#2E7D32]">IMD-Calibrated Rain (mm)</span>
             </div>
           </div>
-          <span className="text-[11px] text-[#5B6663] font-mono">0.25° AFNO Global NWP + PyTorch LSTM</span>
+          <span className="text-[11px] text-[#5B6663] font-mono">0.25° AFNO Global NWP (IMD Aligned) + PyTorch LSTM</span>
         </div>
 
         <div className="h-80 w-full">
