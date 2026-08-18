@@ -11,7 +11,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from routers import gis, analytics, telemetry, resources, rag_admin, exports
 from pydantic import BaseModel
@@ -561,26 +561,27 @@ class MobileOtpRequest(BaseModel):
 @app.post("/api/v1/mobile/auth/login")
 async def mobile_login(req: MobileLoginRequest):
     profile = await fetch_worker_profile_from_db(req.phone_number)
+    if not profile:
+        raise HTTPException(
+            status_code=404,
+            detail="Phone number not registered in IDSP Health Worker Directory. Only registered ASHA/ANM workers can log in."
+        )
     return {
         "status": "success",
-        "message": "OTP sent successfully to registered phone.",
+        "message": f"OTP sent to registered worker {profile['full_name']} ({profile['role'].upper()}).",
         "phone_number": req.phone_number,
-        "is_registered": profile is not None,
-        "mock_otp_hint": "Use any 6 digits (e.g. 123456) in offline/sandbox mode"
+        "is_registered": True,
+        "worker": profile
     }
 
 @app.post("/api/v1/mobile/auth/verify-otp")
 async def mobile_verify_otp(req: MobileOtpRequest):
     profile = await fetch_worker_profile_from_db(req.phone_number)
     if not profile:
-        profile = {
-            "full_name": "ASHA Field Worker",
-            "role": "asha",
-            "district": "Pune",
-            "block": "Haveli",
-            "state": "Maharashtra",
-            "phone_number": req.phone_number
-        }
+        raise HTTPException(
+            status_code=404,
+            detail="Phone number not registered in IDSP Health Worker Directory."
+        )
     token = f"asha_auth_{uuid4().hex[:16]}"
     return {
         "status": "success",
@@ -589,17 +590,13 @@ async def mobile_verify_otp(req: MobileOtpRequest):
     }
 
 @app.get("/api/v1/mobile/profile")
-async def get_mobile_profile(phone: Optional[str] = "9876543210"):
-    profile = await fetch_worker_profile_from_db(phone or "9876543210")
+async def get_mobile_profile(phone: str):
+    profile = await fetch_worker_profile_from_db(phone)
     if not profile:
-        profile = {
-            "full_name": "Sunita Gaikwad",
-            "role": "ASHA Lead",
-            "block": "Haveli",
-            "district": "Pune",
-            "state": "Maharashtra",
-            "phone_number": "9876543210"
-        }
+        raise HTTPException(
+            status_code=404,
+            detail=f"No healthcare worker profile found for phone number {phone}."
+        )
     return {"status": "success", "profile": profile}
 
 @app.get("/api/v1/mobile/villages")

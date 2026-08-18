@@ -52,12 +52,22 @@ class AuthService extends StateNotifier<AuthState> {
       
       if (sessionData != null) {
         final data = jsonDecode(sessionData);
+        final phone = data['phone'] as String?;
+        Map<String, dynamic>? worker = data['worker'] as Map<String, dynamic>?;
+
+        // Refresh profile from Supabase if online
+        if (phone != null && phone.isNotEmpty) {
+          try {
+            worker = await _apiService.fetchWorkerProfile(phone: phone);
+          } catch (_) {}
+        }
+
         state = state.copyWith(
           isAuthenticated: true,
           hasPinSetup: storedPin != null,
-          phoneNumber: data['phone'],
-          role: data['role'],
-          workerProfile: data['worker'],
+          phoneNumber: phone,
+          role: worker?['role'] ?? data['role'],
+          workerProfile: worker,
         );
       }
     } catch (e) {
@@ -65,42 +75,54 @@ class AuthService extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> sendOtp(String phone, String role) async {
+  Future<String?> sendOtp(String phone, String role) async {
     try {
-      await _apiService.login(phone);
-    } catch (_) {}
-    state = state.copyWith(phoneNumber: phone, role: role);
+      final res = await _apiService.login(phone);
+      final worker = res['worker'] as Map<String, dynamic>?;
+      state = state.copyWith(
+        phoneNumber: phone,
+        role: worker?['role'] ?? role,
+        workerProfile: worker,
+      );
+      return null;
+    } on ApiException catch (e) {
+      return e.body;
+    } catch (e) {
+      return 'Unable to verify registration in IDSP database: $e';
+    }
   }
 
-  Future<bool> verifyOtp(String otp) async {
-    if (otp.length >= 4 && otp.length <= 6) {
-      try {
-        final res = await _apiService.verifyOtp(state.phoneNumber ?? '9876543210', otp);
-        final worker = res['worker'] as Map<String, dynamic>? ?? {};
-        
-        final sessionData = jsonEncode({
-          'phone': state.phoneNumber ?? worker['phone_number'] ?? '9876543210',
-          'role': worker['role'] ?? state.role ?? 'asha',
-          'token': res['token'] ?? 'token_${DateTime.now().millisecondsSinceEpoch}',
-          'worker': worker,
-        });
-
-        try {
-          await _storage.write(key: 'asha_session_token', value: sessionData);
-        } catch (_) {}
-
-        state = state.copyWith(
-          isAuthenticated: true,
-          workerProfile: worker,
-          role: worker['role'] ?? state.role,
-        );
-        return true;
-      } catch (_) {
-        state = state.copyWith(isAuthenticated: true);
-        return true;
-      }
+  Future<String?> verifyOtp(String otp) async {
+    if (otp.length < 4) {
+      return 'Please enter a valid 4-6 digit OTP';
     }
-    return false;
+    try {
+      final phone = state.phoneNumber ?? '';
+      final res = await _apiService.verifyOtp(phone, otp);
+      final worker = res['worker'] as Map<String, dynamic>? ?? {};
+      
+      final sessionData = jsonEncode({
+        'phone': phone,
+        'role': worker['role'] ?? state.role ?? 'asha',
+        'token': res['token'] ?? 'token_${DateTime.now().millisecondsSinceEpoch}',
+        'worker': worker,
+      });
+
+      try {
+        await _storage.write(key: 'asha_session_token', value: sessionData);
+      } catch (_) {}
+
+      state = state.copyWith(
+        isAuthenticated: true,
+        workerProfile: worker,
+        role: worker['role'] ?? state.role,
+      );
+      return null;
+    } on ApiException catch (e) {
+      return e.body;
+    } catch (e) {
+      return 'Authentication failed: $e';
+    }
   }
 
   Future<void> setupPin(String pin) async {

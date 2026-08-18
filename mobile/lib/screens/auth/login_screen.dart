@@ -37,15 +37,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() => _phoneError = 'Enter a valid 10-digit phone number');
       return;
     }
-    setState(() => _phoneError = null);
+    setState(() {
+      _phoneError = null;
+      _isLoading = true;
+    });
 
-    setState(() => _isLoading = true);
-    await ref.read(authProvider.notifier).sendOtp(phone, _selectedRole ?? 'ASHA Worker');
+    final error = await ref.read(authProvider.notifier).sendOtp(phone, _selectedRole ?? 'ASHA Worker');
+    if (!mounted) return;
+
     setState(() => _isLoading = false);
 
-    if (mounted) {
-      context.push('/otp');
+    if (error != null) {
+      setState(() => _phoneError = error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
     }
+
+    context.push('/otp');
   }
 
   @override

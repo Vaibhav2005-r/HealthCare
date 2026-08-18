@@ -13,18 +13,21 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
     final profileAsync = ref.watch(workerProfileProvider);
-    final profile = profileAsync.maybeWhen(
-      data: (p) => p,
-      orElse: () => {
-        'name': 'Sunita Gaikwad',
-        'full_name': 'Sunita Gaikwad',
-        'id': 'ASHA-4029',
-        'role': 'ASHA Lead',
-        'phc': 'Haveli PHC',
-        'district': 'Pune',
-      },
-    );
+    final profile = authState.workerProfile ?? profileAsync.valueOrNull ?? {
+      'full_name': 'Sunita Gaikwad',
+      'name': 'Sunita Gaikwad',
+      'id': 'ASHA-4029',
+      'role': 'ASHA Lead',
+      'block': 'Haveli',
+      'district': 'Pune',
+      'state': 'Maharashtra',
+    };
+    final fullName = profile['full_name'] ?? profile['name'] ?? 'Healthcare Worker';
+    final role = (profile['role'] ?? 'ASHA Lead').toString().toUpperCase();
+    final block = profile['block'] ?? 'Haveli';
+    final district = profile['district'] ?? 'Pune';
     final allReportsAsync = ref.watch(reportsProvider);
 
     return Scaffold(
@@ -55,7 +58,7 @@ class ProfileScreen extends ConsumerWidget {
                   child: CircleAvatar(
                     radius: 48,
                     backgroundColor: AppColors.primary,
-                    child: Icon(
+                    child: const Icon(
                       Icons.account_circle,
                       size: 48,
                       color: Colors.white,
@@ -64,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  profile['name'],
+                  fullName,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 24,
@@ -74,7 +77,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'ID: ${profile['id']} • ${profile['phc']}',
+                  '$role • $block, $district',
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontWeight: FontWeight.w600,

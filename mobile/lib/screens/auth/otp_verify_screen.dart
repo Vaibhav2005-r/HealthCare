@@ -31,11 +31,11 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
       _error = null;
     });
     
-    final success = await ref.read(authProvider.notifier).verifyOtp(otp);
+    final error = await ref.read(authProvider.notifier).verifyOtp(otp);
     
     if (mounted) {
       setState(() => _isLoading = false);
-      if (success) {
+      if (error == null) {
         final authState = ref.read(authProvider);
         if (authState.hasPinSetup) {
           context.go('/');
@@ -43,7 +43,7 @@ class _OtpVerifyScreenState extends ConsumerState<OtpVerifyScreen> {
           context.go('/pin-setup');
         }
       } else {
-        setState(() => _error = 'Invalid OTP. Please enter a 4-6 digit code.');
+        setState(() => _error = error);
       }
     }
   }

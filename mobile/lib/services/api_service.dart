@@ -11,12 +11,6 @@ class ApiService {
 
   static const String _configuredUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
-  static String get _baseUrl {
-    if (_configuredUrl.isNotEmpty) return _configuredUrl;
-    if (kIsWeb) return 'http://127.0.0.1:8001';
-    return 'http://127.0.0.1:8001';
-  }
-
   static const _demoWorkerId = 'ASHA-4029';
   final http.Client _client;
 
@@ -67,39 +61,40 @@ class ApiService {
       final response = await _getWithFallback('/api/v1/mobile/profile', {'phone': phone});
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        return data['profile'] as Map<String, dynamic>? ?? _fallbackProfile;
+        return data['profile'] as Map<String, dynamic>;
+      } else {
+        final err = jsonDecode(response.body);
+        throw ApiException(response.statusCode, err['detail'] ?? 'Worker not found');
       }
-    } catch (_) {}
-    return _fallbackProfile;
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(500, 'Unable to connect to Health Worker Directory: $e');
+    }
   }
 
   Future<Map<String, dynamic>> login(String phoneNumber) async {
-    try {
-      final response = await _postWithFallback('/api/v1/mobile/auth/login', {
-        'phone_number': phoneNumber,
-      });
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-    } catch (_) {}
-    return {'status': 'success', 'message': 'OTP sent', 'phone_number': phoneNumber};
+    final response = await _postWithFallback('/api/v1/mobile/auth/login', {
+      'phone_number': phoneNumber,
+    });
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final err = jsonDecode(response.body);
+      throw ApiException(response.statusCode, err['detail'] ?? 'Phone number not registered');
+    }
   }
 
   Future<Map<String, dynamic>> verifyOtp(String phoneNumber, String otp) async {
-    try {
-      final response = await _postWithFallback('/api/v1/mobile/auth/verify-otp', {
-        'phone_number': phoneNumber,
-        'otp': otp,
-      });
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-    } catch (_) {}
-    return {
-      'status': 'success',
-      'token': 'session_offline_${DateTime.now().millisecondsSinceEpoch}',
-      'worker': _fallbackProfile,
-    };
+    final response = await _postWithFallback('/api/v1/mobile/auth/verify-otp', {
+      'phone_number': phoneNumber,
+      'otp': otp,
+    });
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final err = jsonDecode(response.body);
+      throw ApiException(response.statusCode, err['detail'] ?? 'Invalid verification code');
+    }
   }
 
   // --- VILLAGES (SUPABASE) ---
@@ -256,24 +251,6 @@ class ApiService {
       default: return 'O';
     }
   }
-
-  static const Map<String, dynamic> _fallbackProfile = {
-    'name': 'Sunita Gaikwad',
-    'full_name': 'Sunita Gaikwad',
-    'worker_id': 'ASHA-4029',
-    'id': '432dd594-da07-4d05-a7bc-2f027586d88c',
-    'role': 'ASHA Lead',
-    'phone': '9876543210',
-    'phone_number': '9876543210',
-    'district': 'Pune',
-    'block': 'Haveli',
-    'state': 'Maharashtra',
-    'coverage_villages': ['Khed', 'Manchar', 'Hadapsar Rural', 'Wagholi'],
-    'assigned_population': 4200,
-    'total_surveys_logged': 142,
-    'sync_pending_count': 0,
-    'app_version': 'v2.4.0 (Live Supabase)',
-  };
 }
 
 class ApiException implements Exception {

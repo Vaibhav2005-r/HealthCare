@@ -86,16 +86,16 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
     final profileAsync = ref.watch(workerProfileProvider);
-    final profile = profileAsync.maybeWhen(
-      data: (p) => p,
-      orElse: () => {
-        'name': 'Sunita Gaikwad',
-        'full_name': 'Sunita Gaikwad',
-        'role': 'ASHA Lead',
-        'district': 'Pune',
-      },
-    );
+    final profile = authState.workerProfile ?? profileAsync.valueOrNull ?? {
+      'name': 'Sunita Gaikwad',
+      'full_name': 'Sunita Gaikwad',
+      'role': 'ASHA Lead',
+      'district': 'Pune',
+    };
+    final displayName = profile['full_name'] ?? profile['name'] ?? 'Healthcare Worker';
+    final firstName = displayName.toString().split(' ').first;
     final pendingReports = ref.watch(pendingReportsProvider);
     final allReportsAsync = ref.watch(reportsProvider);
 
@@ -134,7 +134,7 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Good Morning,\n${profile['name'].split(" ")[0]}',
+                      'Good Morning,\n$firstName',
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.w900,

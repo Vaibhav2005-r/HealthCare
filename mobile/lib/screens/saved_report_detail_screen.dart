@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../models/models.dart';
-import '../providers/providers.dart';
 import '../providers/report_draft_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_scale_button.dart' as scale_btn;
@@ -14,7 +13,7 @@ class SavedReportDetailScreen extends ConsumerWidget {
 
   const SavedReportDetailScreen({super.key, required this.report});
 
-  void _showMockShareSheet(BuildContext context) {
+  void _showShareSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -117,7 +116,7 @@ class SavedReportDetailScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share, color: AppColors.textPrimary),
-            onPressed: () => _showMockShareSheet(context),
+            onPressed: () => _showShareSheet(context),
           ),
         ],
       ),
