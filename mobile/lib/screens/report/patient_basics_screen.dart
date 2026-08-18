@@ -148,8 +148,15 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mockData = ref.watch(mockDataProvider);
-    final villages = mockData.getVillages();
+    final villagesAsync = ref.watch(villagesProvider);
+    final villages = villagesAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => [
+        'Khed', 'Manchar', 'Junnar', 'Shirur', 'Ambegaon',
+        'Wagholi', 'Hadapsar Rural', 'Trimbak Rural', 'Igatpuri',
+        'Sinnar', 'Kalyan Rural', 'Karveer Rural', 'Ramtek', 'Paithan Rural', 'Pandharpur Rural'
+      ],
+    );
     const bgColor = Color(0xFFF5F0E8);
     const accentColor = Color(0xFF1A5F7A);
     const surfaceColor = Color(0xFFFFFDF8);

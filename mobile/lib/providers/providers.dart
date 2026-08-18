@@ -2,10 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/local_db_service.dart';
 import '../services/mock_data.dart';
 import '../services/triage_service.dart';
+import '../services/api_service.dart';
 import '../models/models.dart';
 import '../services/sync_service.dart';
 
 final localDbProvider = Provider((ref) => LocalDbService());
+final apiServiceProvider = Provider((ref) => ApiService());
 final mockDataProvider = Provider((ref) => MockDataService());
 final triageProvider = Provider((ref) => TriageService());
 
@@ -19,5 +21,17 @@ final pendingReportsProvider = FutureProvider<List<Report>>((ref) async {
   return db.getPendingReports();
 });
 
-// We already created syncServiceProvider in sync_service.dart, we'll export it here if needed,
-// but it's fine to just import it directly.
+final workerProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  return api.fetchWorkerProfile();
+});
+
+final villagesProvider = FutureProvider<List<String>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  return api.fetchVillages();
+});
+
+final guidanceProtocolsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  return api.fetchClinicalGuidance();
+});

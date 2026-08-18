@@ -308,7 +308,7 @@ async def fetch_inventory_from_db() -> List[Dict[str, Any]]:
             inventory.append(d)
         return inventory
 
-# --- ASHA WORKERS ---
+# --- ASHA WORKERS & AUTH ---
 async def fetch_asha_workers_from_db() -> List[Dict[str, Any]]:
     pool = await get_db_pool()
     async with pool.acquire() as conn:
@@ -323,3 +323,97 @@ async def fetch_asha_workers_from_db() -> List[Dict[str, Any]]:
                     d[k] = str(v)
             workers.append(d)
         return workers
+
+async def fetch_worker_profile_from_db(phone_number: str) -> Optional[Dict[str, Any]]:
+    pool = await get_db_pool()
+    clean_phone = phone_number.strip().replace("+91", "").replace(" ", "").replace("-", "")
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow("""
+            SELECT id, phone_number, full_name, role, block, district, state, created_at
+            FROM public.asha_workers
+            WHERE phone_number = $1 OR phone_number = $2
+            LIMIT 1
+        """, clean_phone, phone_number.strip())
+        if not row:
+            # Fallback to first worker if demo
+            row = await conn.fetchrow("SELECT * FROM public.asha_workers ORDER BY created_at ASC LIMIT 1")
+            if not row:
+                return None
+        d = dict(row)
+        for k, v in d.items():
+            if hasattr(v, 'isoformat'):
+                d[k] = v.isoformat()
+            elif hasattr(v, '__str__') and not isinstance(v, (str, int, float, bool, list, dict, type(None))):
+                d[k] = str(v)
+        return d
+
+# --- VILLAGES ---
+async def fetch_villages_from_db(district: Optional[str] = None, block: Optional[str] = None) -> List[Dict[str, Any]]:
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        if district and block:
+            rows = await conn.fetch("""
+                SELECT id, village_name, block, district, state, population, latitude, longitude
+                FROM public.villages
+                WHERE LOWER(district) = LOWER($1) AND LOWER(block) = LOWER($2)
+                ORDER BY village_name ASC
+            """, district, block)
+        elif district:
+            rows = await conn.fetch("""
+                SELECT id, village_name, block, district, state, population, latitude, longitude
+                FROM public.villages
+                WHERE LOWER(district) = LOWER($1)
+                ORDER BY village_name ASC
+            """, district)
+        else:
+            rows = await conn.fetch("""
+                SELECT id, village_name, block, district, state, population, latitude, longitude
+                FROM public.villages
+                ORDER BY village_name ASC
+            """)
+        villages = []
+        for r in rows:
+            d = dict(r)
+            d["id"] = str(d["id"])
+            villages.append(d)
+        return villages
+
+# --- CLINICAL GUIDANCE ---
+async def fetch_clinical_guidance_from_db(query: Optional[str] = None, category: Optional[str] = None) -> List[Dict[str, Any]]:
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        if query:
+            search_pattern = f"%{query.strip().lower()}%"
+            rows = await conn.fetch("""
+                SELECT id, condition, category, severity_tier, trigger_symptoms, immediate_action,
+                       red_flags, standard_dosage, isolation_protocol, source_document, page_number
+                FROM public.clinical_guidance
+                WHERE LOWER(condition) LIKE $1 
+                   OR LOWER(category) LIKE $1
+                   OR LOWER(immediate_action) LIKE $1
+                   OR $2 = ANY(trigger_symptoms)
+                ORDER BY condition ASC
+            """, search_pattern, query.strip())
+        elif category:
+            rows = await conn.fetch("""
+                SELECT id, condition, category, severity_tier, trigger_symptoms, immediate_action,
+                       red_flags, standard_dosage, isolation_protocol, source_document, page_number
+                FROM public.clinical_guidance
+                WHERE LOWER(category) = LOWER($1)
+                ORDER BY condition ASC
+            """, category.strip())
+        else:
+            rows = await conn.fetch("""
+                SELECT id, condition, category, severity_tier, trigger_symptoms, immediate_action,
+                       red_flags, standard_dosage, isolation_protocol, source_document, page_number
+                FROM public.clinical_guidance
+                ORDER BY condition ASC
+            """)
+            
+        guidance = []
+        for r in rows:
+            d = dict(r)
+            d["id"] = str(d["id"])
+            guidance.append(d)
+        return guidance
+

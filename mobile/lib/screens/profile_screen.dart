@@ -13,8 +13,18 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mockData = ref.watch(mockDataProvider);
-    final profile = mockData.getWorkerProfile();
+    final profileAsync = ref.watch(workerProfileProvider);
+    final profile = profileAsync.maybeWhen(
+      data: (p) => p,
+      orElse: () => {
+        'name': 'Sunita Gaikwad',
+        'full_name': 'Sunita Gaikwad',
+        'id': 'ASHA-4029',
+        'role': 'ASHA Lead',
+        'phc': 'Haveli PHC',
+        'district': 'Pune',
+      },
+    );
     final allReportsAsync = ref.watch(reportsProvider);
 
     return Scaffold(

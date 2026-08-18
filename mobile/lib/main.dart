@@ -10,11 +10,6 @@ import 'services/mock_data.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Seed database
-  final dbService = LocalDbService();
-  final mockDataService = MockDataService();
-  await dbService.seedDatabaseIfNeeded(mockDataService.generateHistoricalReports());
-
   runApp(
     const ProviderScope(
       child: SmartHealthApp(),
