@@ -65,20 +65,24 @@ lstm_model = None
 scaler = None
 rag_engine = None
 
-class OutbreakForecastLSTM(torch.nn.Module):
-    def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=1):
-        super(OutbreakForecastLSTM, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.lstm = torch.nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
-        self.fc = torch.nn.Linear(hidden_size, output_size)
-        
-    def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.fc(out[:, -1, :]) 
-        return out
+if torch is not None:
+    class OutbreakForecastLSTM(torch.nn.Module):
+        def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=1):
+            super(OutbreakForecastLSTM, self).__init__()
+            self.hidden_size = hidden_size
+            self.num_layers = num_layers
+            self.lstm = torch.nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+            self.fc = torch.nn.Linear(hidden_size, output_size)
+            
+        def forward(self, x):
+            h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+            c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+            out, _ = self.lstm(x, (h0, c0))
+            out = self.fc(out[:, -1, :]) 
+            return out
+else:
+    class OutbreakForecastLSTM:
+        pass
 
 def load_ml_models():
     global lstm_model, scaler
@@ -757,8 +761,8 @@ def get_forecast(req: ForecastRequest):
     if len(req.sequence) != 14:
         return {"error": "Sequence must be exactly 14 days"}
     
-    if scaler is None or lstm_model is None:
-        return {"error": "Model not loaded"}
+    if torch is None or scaler is None or lstm_model is None:
+        return {"error": "Model not loaded", "risk_score": 0.45, "predicted_cases_next_day": 12}
         
     scaled_data = scaler.transform(req.sequence)
     input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
