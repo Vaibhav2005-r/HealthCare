@@ -17,6 +17,8 @@ import asyncio
 import random
 import sqlite3
 import json
+import torch
+import numpy as np
 from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
@@ -809,9 +811,10 @@ async def get_mobile_guidance(query: Optional[str] = None, category: Optional[st
 async def ask_assistant(req: RAGRequest):
     try:
         engine = get_rag_engine()
-        response = engine.ask(req.query)
-        if response and response.get("answer") and "Error" not in response.get("answer", ""):
-            return response
+        if engine is not None:
+            response = engine.ask(req.query)
+            if response and response.get("answer") and "Error" not in response.get("answer", ""):
+                return response
     except Exception as e:
         print(f"RAG Engine primary exception: {e}")
         

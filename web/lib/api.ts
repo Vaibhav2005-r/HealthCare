@@ -1193,7 +1193,7 @@ export interface SimultaneousForecastResponse {
 
 export async function fetchSimultaneousForecast(districtId: string = 'MH-PLG'): Promise<SimultaneousForecastResponse> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/forecast/simultaneous/${encodeURIComponent(districtId)}`);
+    const res = await fetch(`${API_BASE}/forecast/simultaneous/${encodeURIComponent(districtId)}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {

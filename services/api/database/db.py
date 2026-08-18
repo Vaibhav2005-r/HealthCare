@@ -395,19 +395,32 @@ async def fetch_villages_from_db(district: Optional[str] = None, block: Optional
     return []
 
 # --- CLINICAL GUIDANCE & ASHA DIRECTORY ---
-async def fetch_clinical_guidance_from_db(disease: Optional[str] = None) -> List[Dict[str, Any]]:
+async def fetch_clinical_guidance_from_db(
+    query: Optional[str] = None,
+    disease: Optional[str] = None,
+    category: Optional[str] = None,
+    limit: int = 50
+) -> List[Dict[str, Any]]:
+    search_term = disease or query
     async with httpx.AsyncClient() as client:
-        url = f"{SUPABASE_URL}/rest/v1/clinical_guidance?select=*&order=disease.asc"
-        if disease:
-            url += f"&disease=ilike.*{disease}*"
+        url = f"{SUPABASE_URL}/rest/v1/clinical_guidance?select=*&order=disease.asc&limit={limit}"
+        if search_term:
+            url += f"&or=(disease.ilike.*{search_term}*,condition.ilike.*{search_term}*,clinical_criteria.ilike.*{search_term}*)"
+        if category:
+            url += f"&category=ilike.*{category}*"
         res = await client.get(url, headers=get_rest_headers(), timeout=5.0)
         if res.status_code == 200:
-            return res.json()
+            data = res.json()
+            if data:
+                return data
     return [
         {
             "id": "cg-01",
             "disease": "Dengue",
+            "condition": "Dengue Fever / DHF",
+            "category": "Vector-Borne Disease",
             "clinical_criteria": "Acute high fever (>38.5C) with retro-orbital pain and thrombocytopenia (<100k).",
+            "immediate_action": "Initiate IV crystalloid fluid management (Normal Saline 10-15ml/kg/hr) and monitor hematocrit hourly.",
             "field_actions": "Administer oral rehydration, verify platelet count, initiate vector larviciding within 500m.",
             "buffer_stock_requirements": "IV Normal Saline (50 units), Paracetamol 500mg, NS1 Ag Rapid Test Strips.",
             "source_authority": "National NVBDCP & WHO SEARO Guidelines 2024"
@@ -415,7 +428,10 @@ async def fetch_clinical_guidance_from_db(disease: Optional[str] = None) -> List
         {
             "id": "cg-02",
             "disease": "Malaria (Falciparum / Vivax)",
+            "condition": "Plasmodium falciparum Malaria",
+            "category": "Vector-Borne Disease",
             "clinical_criteria": "Intermittent fever with rigor, splenomegaly, RDT positive for Pf/Pv antigen.",
+            "immediate_action": "Administer immediate weight-based Artemether-Lumefantrine (ACT) oral blister packs.",
             "field_actions": "Administer ACT (Artemisinin-based combination) within 24h, distribute LLIN bed nets.",
             "buffer_stock_requirements": "Artesunate + SP Blister packs, Primaquine 7.5mg, Bivalent RDT kits.",
             "source_authority": "National Malaria Elimination Programme Guidelines"
