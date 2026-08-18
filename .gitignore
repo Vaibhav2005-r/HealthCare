@@ -11,6 +11,7 @@ web/.env*
 web/.next/
 web/out/
 web/build/
+*.tsbuildinfo
 
 # Mobile (Flutter)
 mobile/build/
