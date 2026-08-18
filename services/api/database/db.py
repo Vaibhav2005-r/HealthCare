@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
-DB_URL = os.getenv("SUPABASE_DB_URL")
+DB_URL = os.getenv("SUPABASE_DB_URL") or os.getenv("DATABASE_URL")
 
 _pool: Optional[asyncpg.Pool] = None
 

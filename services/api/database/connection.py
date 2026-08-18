@@ -5,16 +5,16 @@ from typing import Optional
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("SUPABASE_DB_URL")
+DATABASE_URL = os.getenv("SUPABASE_DB_URL") or os.getenv("DATABASE_URL")
 
 _pool: Optional[asyncpg.Pool] = None
 
 async def init_db_pool() -> Optional[asyncpg.Pool]:
     """
-    Initializes a global asyncpg connection pool if SUPABASE_DB_URL is set.
+    Initializes a global asyncpg connection pool if SUPABASE_DB_URL or DATABASE_URL is set.
     """
     global _pool
-    db_url = os.getenv("SUPABASE_DB_URL")
+    db_url = os.getenv("SUPABASE_DB_URL") or os.getenv("DATABASE_URL")
     if not db_url or "YOUR-PASSWORD" in db_url:
         print("[Database] SUPABASE_DB_URL not configured. Running in memory / offline mode.")
         return None
