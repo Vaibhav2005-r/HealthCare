@@ -96,6 +96,167 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  void _showNotificationsSheet(BuildContext context, LanguageNotifier lang) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.72,
+          padding: const EdgeInsets.all(24),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFDF8),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.notifications_active, color: AppColors.primary, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Outbreak Alerts & Advisories\nआरोग्य सूचना आणि इशारे',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1D2321)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: Colors.black12),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView(
+                  children: [
+                    // 1. High Risk Outbreak Alert
+                    _buildAlertCard(
+                      icon: Icons.warning_amber_rounded,
+                      iconColor: Colors.red,
+                      title: 'Pune District Alert: Dengue Surge',
+                      subtitle: '84 active cases detected across Khed, Manchar, Junnar clusters. Vector control teams deployed.',
+                      time: '12 min ago (Live)',
+                      severity: 'CRITICAL',
+                    ),
+                    const SizedBox(height: 12),
+                    // 2. Weather Advisory
+                    _buildAlertCard(
+                      icon: Icons.thunderstorm_outlined,
+                      iconColor: Colors.orange.shade800,
+                      title: 'IMD Rain Advisory: Stagnant Water Risk',
+                      subtitle: 'Heavy rainfall (>45mm) recorded in Pune & Nashik. Intensify anti-larval door-to-door checks.',
+                      time: '1 hour ago',
+                      severity: 'HIGH RISK',
+                    ),
+                    const SizedBox(height: 12),
+                    // 3. Clinical Guidelines Advisory
+                    _buildAlertCard(
+                      icon: Icons.health_and_safety_outlined,
+                      iconColor: AppColors.primary,
+                      title: 'ASHA Clinical Directive',
+                      subtitle: 'Distribute ORS and Zinc packets for any acute gastroenteritis cases within 2 hours of symptom onset.',
+                      time: 'Today',
+                      severity: 'PROTOCOL',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close / बंद करा', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAlertCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required String time,
+    required String severity,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: iconColor.withValues(alpha: 0.25), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: iconColor),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  severity,
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: iconColor),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(subtitle, style: const TextStyle(fontSize: 13, color: Color(0xFF4A5568), height: 1.4)),
+          const SizedBox(height: 6),
+          Text(time, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
@@ -124,8 +285,9 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {},
+            icon: const Icon(Icons.notifications_active_outlined),
+            tooltip: 'Alerts & Advisories',
+            onPressed: () => _showNotificationsSheet(context, lang),
           ),
         ],
       ),

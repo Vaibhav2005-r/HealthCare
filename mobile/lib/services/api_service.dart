@@ -15,9 +15,17 @@ class ApiService {
   final http.Client _client;
 
   List<String> get _candidateUrls {
-    if (_configuredUrl.isNotEmpty) return [_configuredUrl];
-    if (kIsWeb) return ['http://127.0.0.1:8001', 'http://localhost:8001'];
-    return ['http://127.0.0.1:8001', 'http://10.0.2.2:8001', 'http://localhost:8001'];
+    final list = <String>[];
+    if (_configuredUrl.isNotEmpty) {
+      list.add(_configuredUrl);
+    }
+    list.add('https://arogya-prahari-api.onrender.com');
+    if (kIsWeb) {
+      list.addAll(['http://127.0.0.1:8001', 'http://localhost:8001']);
+    } else {
+      list.addAll(['http://10.0.2.2:8001', 'http://127.0.0.1:8001']);
+    }
+    return list;
   }
 
   Future<http.Response> _postWithFallback(String path, Map<String, dynamic> body) async {

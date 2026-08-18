@@ -157,8 +157,20 @@ class ReviewScreen extends ConsumerWidget {
                     imagePath: draft.imagePath,
                   );
 
-                  // Pass the report to the triage result screen
-                  context.go('/triage-result', extra: report);
+                  // 1. Immediately persist to SQLite local database
+                  try {
+                    final db = ref.read(localDbProvider);
+                    await db.insertReport(report);
+                    ref.invalidate(reportsProvider);
+                    ref.invalidate(pendingReportsProvider);
+                  } catch (e) {
+                    debugPrint('[ReviewScreen] Local DB save error: $e');
+                  }
+
+                  // 2. Pass the report to the triage result screen
+                  if (context.mounted) {
+                    context.go('/triage-result', extra: report);
+                  }
                 },
                 child: Container(
                   height: 56,

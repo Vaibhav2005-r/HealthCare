@@ -19,30 +19,46 @@ class TriageResultScreen extends ConsumerStatefulWidget {
 class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
   bool _isAnalyzing = true;
   bool _isSaved = false;
+  Report? _report;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_report == null) {
+      final extra = GoRouterState.of(context).extra;
+      if (extra is Report) {
+        _report = extra;
+        _saveReportToDb(_report!);
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 900), () async {
+    Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) {
         setState(() {
           _isAnalyzing = false;
         });
-        _autoSaveReport();
       }
     });
   }
 
-  Future<void> _autoSaveReport() async {
-    final report = GoRouterState.of(context).extra as Report?;
-    if (report != null && !_isSaved) {
+  Future<void> _saveReportToDb(Report report) async {
+    if (_isSaved) return;
+    try {
+      final db = ref.read(localDbProvider);
+      await db.insertReport(report);
+      _isSaved = true;
+      ref.read(reportDraftProvider.notifier).clear();
+      ref.invalidate(pendingReportsProvider);
+      ref.invalidate(reportsProvider);
       try {
-        final db = ref.read(localDbProvider);
-        await db.insertReport(report);
-        _isSaved = true;
-        ref.invalidate(pendingReportsProvider);
-        ref.invalidate(reportsProvider);
+        ref.read(syncServiceProvider.notifier).syncReports();
       } catch (_) {}
+    } catch (e) {
+      debugPrint('[TriageResultScreen] DB save error: $e');
     }
   }
 
