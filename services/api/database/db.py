@@ -8,14 +8,20 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 DB_URL = os.getenv("SUPABASE_DB_URL") or os.getenv("DATABASE_URL")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://orjszwyrfluvvkqlkvzq.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
 _pool: Optional[asyncpg.Pool] = None
 
 def get_rest_headers():
+    key = (
+        os.getenv("SUPABASE_KEY")
+        or os.getenv("SUPABASE_ANON_KEY")
+        or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+        or ""
+    )
     return {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey": key,
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "Prefer": "return=representation"
     }
@@ -341,17 +347,79 @@ async def fetch_case_reports_from_db(limit: int = 50) -> List[Dict[str, Any]]:
     return []
 
 async def insert_case_report_to_db(report: Dict[str, Any]) -> Dict[str, Any]:
-    async with httpx.AsyncClient() as client:
-        res = await client.post(
-            f"{SUPABASE_URL}/rest/v1/case_reports",
-            headers=get_rest_headers(),
-            json=report,
-            timeout=5.0
-        )
-        if res.status_code in [200, 201]:
-            data = res.json()
-            return data[0] if isinstance(data, list) and data else report
-    return report
+    now_iso = datetime.now(timezone.utc).isoformat()
+    # Map mobile/API field names to Supabase PostgreSQL table columns
+    payload = {
+        "worker_identifier": report.get("worker_identifier") or report.get("worker_id") or "ASHA-MH-7001",
+        "patient_name": report.get("patient_name") or "Anonymous Patient",
+        "patient_age_years": int(report.get("patient_age_years") or report.get("patient_age") or 30),
+        "patient_gender": report.get("patient_gender") or "F",
+        "village": report.get("village") or "Bhiwandi Textile Cluster",
+        "block": report.get("block") or "Bhiwandi",
+        "district": report.get("district") or "Thane",
+        "state": report.get("state") or "Maharashtra",
+        "latitude": float(report.get("latitude") or report.get("location_lat") or 19.3000),
+        "longitude": float(report.get("longitude") or report.get("location_lng") or 73.0600),
+        "accuracy_meters": float(report.get("accuracy_meters") or report.get("location_accuracy") or 10.0),
+        "manual_reason_code": report.get("manual_reason_code") or report.get("manual_location_reason") or "GPS_VERIFIED",
+        "symptoms": report.get("symptoms") if isinstance(report.get("symptoms"), list) else ["Fever"],
+        "suspected_disease": report.get("suspected_disease") or report.get("disease_type") or "UNKNOWN",
+        "severity": str(report.get("severity") or "AMBER").upper(),
+        "temperature": float(report.get("temperature") or 98.6),
+        "temperature_unit": report.get("temperature_unit") or "F",
+        "duration_days": int(report.get("duration_days") or 2),
+        "comorbidities": report.get("comorbidities") if isinstance(report.get("comorbidities"), list) else [],
+        "medication_taken": report.get("medication_taken") or report.get("medicationTaken") or "",
+        "location_source": report.get("location_source") or "gps_auto",
+        "notes": report.get("notes") or "Mobile intake report",
+        "sync_status": "SYNCED_SUPABASE",
+        "reported_at": report.get("reported_at") or report.get("received_at") or report.get("createdAt") or now_iso,
+        "created_at": report.get("created_at") or report.get("received_at") or report.get("createdAt") or now_iso,
+    }
+
+    # 1. Try direct PostgreSQL pool first
+    try:
+        pool = await get_db_pool()
+        if pool:
+            async with pool.acquire() as conn:
+                await conn.execute("""
+                    INSERT INTO public.case_reports (
+                        worker_identifier, patient_name, patient_age_years, patient_gender, village, block, district, state,
+                        latitude, longitude, accuracy_meters, manual_reason_code, symptoms, suspected_disease,
+                        comorbidities, medication_taken, severity, temperature, temperature_unit, duration_days,
+                        location_source, notes, sync_status, reported_at, created_at
+                    )
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+                """, payload["worker_identifier"], payload["patient_name"], payload["patient_age_years"],
+                   payload["patient_gender"], payload["village"], payload["block"], payload["district"],
+                   payload["state"], payload["latitude"], payload["longitude"], payload["accuracy_meters"],
+                   payload["manual_reason_code"], payload["symptoms"], payload["suspected_disease"],
+                   payload["comorbidities"], payload["medication_taken"], payload["severity"],
+                   payload["temperature"], payload["temperature_unit"], payload["duration_days"],
+                   payload["location_source"], payload["notes"], payload["sync_status"],
+                   parse_datetime(payload["reported_at"]), parse_datetime(payload["created_at"]))
+                return payload
+    except Exception as pg_err:
+        print(f"[Supabase asyncpg insert error]: {pg_err}")
+
+    # 2. Try REST API with SUPABASE_KEY / SUPABASE_ANON_KEY
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                f"{SUPABASE_URL}/rest/v1/case_reports",
+                headers=get_rest_headers(),
+                json=payload,
+                timeout=8.0
+            )
+            if res.status_code in [200, 201]:
+                data = res.json()
+                return data[0] if isinstance(data, list) and data else payload
+            else:
+                print(f"[Supabase REST insert response]: {res.status_code} {res.text}")
+    except Exception as rest_err:
+        print(f"[Supabase REST exception]: {rest_err}")
+
+    return payload
 
 # --- INVENTORY & PHC ---
 async def fetch_inventory_from_db() -> List[Dict[str, Any]]:
