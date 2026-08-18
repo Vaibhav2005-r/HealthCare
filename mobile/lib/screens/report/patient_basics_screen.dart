@@ -352,7 +352,7 @@ class _PatientBasicsScreenState extends ConsumerState<PatientBasicsScreen> {
                       accuracy: _location?.accuracy,
                       reason: _manualLocationReason,
                     );
-                    context.push('/report/medical-background');
+                    context.push('/report/symptoms');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

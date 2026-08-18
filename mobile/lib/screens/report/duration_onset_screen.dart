@@ -185,7 +185,7 @@ class _DurationOnsetScreenState extends ConsumerState<DurationOnsetScreen> {
                   ref
                       .read(reportDraftProvider.notifier)
                       .updateDuration(_days.toInt());
-                  context.push('/report/review');
+                  context.push('/report/medical-background');
                 },
                 child: Container(
                   height: 56,

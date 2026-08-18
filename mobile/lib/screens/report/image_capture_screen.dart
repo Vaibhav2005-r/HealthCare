@@ -188,7 +188,7 @@ class _ImageCaptureScreenState extends ConsumerState<ImageCaptureScreen> {
                   ref
                       .read(reportDraftProvider.notifier)
                       .updateImage(_imagePath);
-                  context.push('/report/symptoms');
+                  context.push('/report/review');
                 },
                 child: Container(
                   height: 56,
