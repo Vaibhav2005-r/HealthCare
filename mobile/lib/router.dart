@@ -23,18 +23,21 @@ import 'screens/report_history_screen.dart';
 import 'screens/assistant_screen.dart';
 import 'screens/profile_screen.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
-
 final routerProvider = Provider<GoRouter>((ref) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  final shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
   final listenable = ValueNotifier<bool>(false);
   
+  ref.onDispose(() {
+    listenable.dispose();
+  });
+
   ref.listen<AuthState>(authProvider, (previous, next) {
     listenable.value = !listenable.value;
   });
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     refreshListenable: listenable,
     redirect: (context, state) {
@@ -75,7 +78,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const UnlockScreen(),
       ),
       ShellRoute(
-        navigatorKey: _shellNavigatorKey,
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) {
           return HomeShell(child: child);
         },
