@@ -54,9 +54,10 @@ class _TriageResultScreenState extends ConsumerState<TriageResultScreen> {
       ref.read(reportDraftProvider.notifier).clear();
       ref.invalidate(pendingReportsProvider);
       ref.invalidate(reportsProvider);
-      try {
-        ref.read(syncServiceProvider.notifier).syncReports();
-      } catch (_) {}
+      ref.read(syncServiceProvider.notifier).syncReports().then((_) {
+        ref.invalidate(pendingReportsProvider);
+        ref.invalidate(reportsProvider);
+      }).catchError((_) {});
     } catch (e) {
       debugPrint('[TriageResultScreen] DB save error: $e');
     }

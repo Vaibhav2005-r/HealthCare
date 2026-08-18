@@ -157,12 +157,18 @@ class ReviewScreen extends ConsumerWidget {
                     imagePath: draft.imagePath,
                   );
 
-                  // 1. Immediately persist to SQLite local database
+                  // 1. Immediately persist to SQLite local database and trigger auto-sync
                   try {
                     final db = ref.read(localDbProvider);
                     await db.insertReport(report);
                     ref.invalidate(reportsProvider);
                     ref.invalidate(pendingReportsProvider);
+                    
+                    // Auto-sync immediately in background
+                    ref.read(syncServiceProvider.notifier).syncReports().then((_) {
+                      ref.invalidate(reportsProvider);
+                      ref.invalidate(pendingReportsProvider);
+                    }).catchError((_) {});
                   } catch (e) {
                     debugPrint('[ReviewScreen] Local DB save error: $e');
                   }
