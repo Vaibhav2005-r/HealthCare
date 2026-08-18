@@ -81,7 +81,11 @@ export interface LiveDashboardData {
   recent_alerts: AlertItem[];
 }
 
-const API_BASE = 'http://localhost:8001/api/v1';
+const rawApiBase = process.env.NEXT_PUBLIC_API_URL?.trim();
+const normalizedApiBase = rawApiBase?.replace(/\/+$/, '');
+const API_BASE = normalizedApiBase
+  ? (normalizedApiBase.endsWith('/api/v1') ? normalizedApiBase : `${normalizedApiBase}/api/v1`)
+  : 'http://localhost:8001/api/v1';
 
 export const FALLBACK_DISTRICTS: DistrictData[] = [
   // 1. Konkan Division (7)
