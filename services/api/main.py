@@ -38,6 +38,7 @@ from database.db import (
     close_db_pool,
     fetch_districts_from_db,
     fetch_district_case_history_from_db,
+    fetch_state_case_history_from_db,
     update_district_in_db,
     fetch_alerts_from_db,
     insert_alert_to_db,
@@ -393,16 +394,22 @@ async def get_dashboard_live():
         })
     disease_breakdown.sort(key=lambda x: x["cases"], reverse=True)
     
-    # 4. Multi-day Trend Series based on live district case volume
-    trend_series = [
-        {"day": "Mon", "cases": max(10, int(total_cases * 0.70)), "forecast": max(10, int(total_cases * 0.68)), "rainfall": 45},
-        {"day": "Tue", "cases": max(10, int(total_cases * 0.78)), "forecast": max(10, int(total_cases * 0.76)), "rainfall": 62},
-        {"day": "Wed", "cases": max(10, int(total_cases * 0.85)), "forecast": max(10, int(total_cases * 0.83)), "rainfall": 80},
-        {"day": "Thu", "cases": max(10, int(total_cases * 0.92)), "forecast": max(10, int(total_cases * 0.90)), "rainfall": 95},
-        {"day": "Fri", "cases": max(10, int(total_cases * 0.96)), "forecast": max(10, int(total_cases * 0.95)), "rainfall": 78},
-        {"day": "Sat", "cases": max(10, int(total_cases * 0.98)), "forecast": max(10, int(total_cases * 0.97)), "rainfall": 110},
-        {"day": "Sun", "cases": total_cases, "forecast": int(total_cases * 1.05), "rainfall": 88}
-    ]
+    # 4. Multi-day Trend Series derived from district_case_history
+    history_rows = await fetch_state_case_history_from_db(days=7)
+    trend_series = []
+    if history_rows:
+        case_values = [int(r.get("cases_reported") or 0) for r in history_rows]
+        for idx, row in enumerate(history_rows):
+            rec_date = row.get("record_date")
+            day = rec_date.strftime("%a") if hasattr(rec_date, "strftime") else str(rec_date)
+            current_cases = case_values[idx]
+
+            trend_series.append({
+                "day": day,
+                "cases": current_cases,
+                "forecast": None,
+                "rainfall": float(row.get("rainfall_mm") or 0.0),
+            })
     
     return {
         "pulse": pulse,

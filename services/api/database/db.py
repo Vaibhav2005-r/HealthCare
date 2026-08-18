@@ -75,6 +75,31 @@ async def fetch_district_case_history_from_db(district_id: str, days: int = 14) 
             h["data_quality"] = "INSUFFICIENT_DISTRICT_HISTORY"
         return history
 
+async def fetch_state_case_history_from_db(days: int = 7) -> List[Dict[str, Any]]:
+    """Fetch latest statewide daily history aggregated from district_case_history."""
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            WITH latest_dates AS (
+                SELECT DISTINCT record_date
+                FROM public.district_case_history
+                ORDER BY record_date DESC
+                LIMIT $1
+            )
+            SELECT
+                h.record_date,
+                SUM(h.cases_reported)::INT AS cases_reported,
+                ROUND(AVG(h.rainfall_mm)::NUMERIC, 1)::FLOAT AS rainfall_mm
+            FROM public.district_case_history h
+            INNER JOIN latest_dates d ON d.record_date = h.record_date
+            GROUP BY h.record_date
+            ORDER BY h.record_date ASC
+            """,
+            days,
+        )
+        return [dict(r) for r in rows]
+
 async def update_district_in_db(
     district_id: str,
     rainfall_mm: float,

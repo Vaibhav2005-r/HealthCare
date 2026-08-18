@@ -69,7 +69,7 @@ export interface LiveDashboardData {
   trend_series: Array<{
     day: string;
     cases: number;
-    forecast: number;
+    forecast: number | null;
     rainfall: number;
   }>;
   disease_breakdown: Array<{
