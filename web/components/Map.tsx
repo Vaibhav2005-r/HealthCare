@@ -320,13 +320,15 @@ interface MapProps {
   activeFilter?: RiskFilterType;
   onSelectDistrict?: (district: DistrictData) => void;
   selectedDistrictId?: string;
+  districts?: DistrictData[];
 }
 
 export default function MapComponent({ 
   dayOffset = 0, 
   activeFilter = 'ALL', 
   onSelectDistrict,
-  selectedDistrictId 
+  selectedDistrictId,
+  districts
 }: MapProps) {
   const [mounted, setMounted] = useState(false);
   const [diseaseFilter, setDiseaseFilter] = useState<DiseaseFilterType>('ALL');
@@ -548,7 +550,8 @@ export default function MapComponent({
                 eventHandlers={{
                   click: () => {
                     if (onSelectDistrict) {
-                      const matched = FALLBACK_DISTRICTS.find(d => d.name.toLowerCase() === cluster.district.toLowerCase()) || {
+                      const matched = (districts && districts.find(d => d.name.toLowerCase() === cluster.district.toLowerCase())) ||
+                        FALLBACK_DISTRICTS.find(d => d.name.toLowerCase() === cluster.district.toLowerCase()) || {
                         district_id: cluster.id,
                         name: cluster.district,
                         state: 'Maharashtra',

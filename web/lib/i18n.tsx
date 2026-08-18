@@ -41,9 +41,11 @@ const translations = {
     'overview.vs_prev_week': 'vs prev week',
     'overview.active_cases_total': 'Active Cases Total',
     'overview.patients': 'patients',
-    'overview.asha_telemetry': 'Active ASHA Telemetry',
-    'overview.workers_reporting': 'Workers reporting',
-    'overview.field_uploads': 'Field Uploads Today',
+    'overview.asha_telemetry': 'Active ASHA Cadre',
+    'overview.workers_reporting': 'State Deployed Workforce',
+    'overview.field_uploads': 'Digital Pilot Accounts',
+    'overview.pilot_registered': 'pilot app accounts',
+    'overview.field_cadre_deployed': 'deployed across 36 districts',
     
     // Page Header
     'header.executive_overview': 'Executive Surveillance Overview',
@@ -97,9 +99,11 @@ const translations = {
     'overview.vs_prev_week': 'मागील आठवड्याच्या तुलनेत',
     'overview.active_cases_total': 'एकूण उपचाराधीन रुग्ण (Active Cases)',
     'overview.patients': 'रुग्ण',
-    'overview.asha_telemetry': 'आशा (ASHA) स्वयंसेविकांचे अहवाल',
-    'overview.workers_reporting': 'कार्यरत स्वयंसेविका',
-    'overview.field_uploads': 'आज प्राप्त झालेले क्षेत्रीय अहवाल',
+    'overview.asha_telemetry': 'आशा (ASHA) क्षेत्रीय कर्मचारी वर्ग',
+    'overview.workers_reporting': 'एकूण कार्यरत कर्मचारी',
+    'overview.field_uploads': 'डिजिटल पायलट खाती',
+    'overview.pilot_registered': 'नोंदणीकृत अ‍ॅप खाती',
+    'overview.field_cadre_deployed': '३६ जिल्ह्यांमध्ये कार्यरत',
 
     // Page Header
     'header.executive_overview': 'साथरोग सर्वेक्षण व नियंत्रण अहवाल',
@@ -153,9 +157,11 @@ const translations = {
     'overview.vs_prev_week': 'पिछले सप्ताह की तुलना में',
     'overview.active_cases_total': 'कुल उपचाराधीन मरीज़ (Active Cases)',
     'overview.patients': 'मरीज़',
-    'overview.asha_telemetry': 'आशा (ASHA) कार्यकर्ताओं की रिपोर्ट',
-    'overview.workers_reporting': 'कार्यरत कार्यकर्ता',
-    'overview.field_uploads': 'आज की प्राप्त क्षेत्रीय रिपोर्ट',
+    'overview.asha_telemetry': 'आशा (ASHA) क्षेत्रीय कार्यबल',
+    'overview.workers_reporting': 'कुल तैनात कार्यबल',
+    'overview.field_uploads': 'डिजिटल पायलट खाते',
+    'overview.pilot_registered': 'पंजीकृत ऐप खाते',
+    'overview.field_cadre_deployed': '36 ज़िलों में तैनात',
 
     // Page Header
     'header.executive_overview': 'महामारी निगरानी एवं नियंत्रण सारांश',

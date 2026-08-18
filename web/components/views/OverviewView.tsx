@@ -159,7 +159,7 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
           </div>
           <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
             <span>{t('overview.field_uploads')}</span>
-            <span className="font-mono text-[#146356] font-semibold">1,248 visits</span>
+            <span className="font-mono text-[#146356] font-semibold">{data.summary.registered_asha_workers ?? 46} {t('overview.pilot_registered')}</span>
           </div>
         </div>
       </div>
@@ -349,7 +349,11 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
           </div>
 
           <div className="flex-1 min-h-[300px] rounded-lg overflow-hidden border border-[#E2E8F0] relative">
-            <CompactMap activeFilter={activeFilter} />
+            <CompactMap 
+              activeFilter={activeFilter} 
+              districts={data.top_at_risk} 
+              onSelectDistrict={onSelectDistrict} 
+            />
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between text-xs text-[#5B6663] pt-2 border-t border-[#E2E8F0]/60">
@@ -367,7 +371,9 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
                 <span className="w-2.5 h-2.5 rounded-full bg-[#146356]" /> Low / Normal
               </span>
             </div>
-            <span className="font-mono text-[11px]">Updated 5m ago</span>
+            <span className="font-mono text-[11px] text-[#146356] font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#146356] animate-pulse" /> Live Telemetry
+            </span>
           </div>
         </div>
 

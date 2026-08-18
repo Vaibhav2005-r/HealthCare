@@ -133,6 +133,7 @@ export function HeatmapView({ districts, activeFilter, selectedDistrict, onSelec
             activeFilter={activeFilter} 
             onSelectDistrict={(dist: any) => onSelectDistrict(dist)}
             selectedDistrictId={selectedDistrict?.district_id}
+            districts={districts}
           />
         </div>
 

@@ -374,6 +374,8 @@ async def get_dashboard_live():
     
     total_cases = sum(d.get("active_cases", 0) for d in districts)
     total_ashas = sum(d.get("asha_active_count", 0) for d in districts)
+    registered_workers = await fetch_asha_workers_from_db()
+    registered_ashas = len(registered_workers)
     
     # 3. Dynamic Disease Breakdown from Supabase
     disease_counts = {}
@@ -418,6 +420,7 @@ async def get_dashboard_live():
             "active_cases_total": total_cases,
             "high_critical_districts": pulse["high_count"] + pulse["critical_count"],
             "active_asha_workers": total_ashas,
+            "registered_asha_workers": registered_ashas,
             "case_delta_7d_pct": "+14.8%",
             "system_state": "ELEVATED_SURVEILLANCE" if (pulse["high_count"] + pulse["critical_count"]) > 0 else "NORMAL"
         },

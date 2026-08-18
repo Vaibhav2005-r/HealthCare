@@ -62,6 +62,7 @@ export interface LiveDashboardData {
     active_cases_total: number;
     high_critical_districts: number;
     active_asha_workers: number;
+    registered_asha_workers?: number;
     case_delta_7d_pct: string;
     system_state: string;
   };
@@ -749,6 +750,95 @@ export const FALLBACK_DISTRICTS: DistrictData[] = [
   }
 ];
 
+export const FALLBACK_DASHBOARD: LiveDashboardData = {
+  pulse: {
+    total_districts: 36,
+    low_count: 30,
+    moderate_count: 6,
+    high_count: 0,
+    critical_count: 0,
+  },
+  summary: {
+    total_monitored_districts: 36,
+    active_cases_total: 838,
+    high_critical_districts: 0,
+    active_asha_workers: 4392,
+    registered_asha_workers: 46,
+    case_delta_7d_pct: "+14.8%",
+    system_state: "NORMAL"
+  },
+  top_at_risk: FALLBACK_DISTRICTS.slice(0, 5),
+  trend_series: [
+    { day: "Aug 12", cases: 112, forecast: null, rainfall: 45 },
+    { day: "Aug 13", cases: 128, forecast: null, rainfall: 62 },
+    { day: "Aug 14", cases: 142, forecast: null, rainfall: 80 },
+    { day: "Aug 15", cases: 156, forecast: null, rainfall: 95 },
+    { day: "Aug 16", cases: 169, forecast: null, rainfall: 78 },
+    { day: "Aug 17", cases: 178, forecast: null, rainfall: 110 },
+    { day: "Aug 18", cases: 186, forecast: null, rainfall: 88 }
+  ],
+  disease_breakdown: [
+    { disease: "Dengue", cases: 68, pct: 36.5, severity: "HIGH" },
+    { disease: "Cholera / Diarrhea", cases: 54, pct: 29.0, severity: "CRITICAL" },
+    { disease: "Malaria", cases: 38, pct: 20.4, severity: "HIGH" },
+    { disease: "Acute Respiratory", cases: 26, pct: 14.1, severity: "MODERATE" }
+  ],
+  recent_alerts: [
+    {
+      id: "alt-01",
+      district: "Pune",
+      state: "Maharashtra",
+      type: "SOS_TRIGGER",
+      severity: "CRITICAL",
+      risk_score: 0.89,
+      cases_count: 18,
+      worker_role: "ASHA Lead (Haveli Block)",
+      timestamp: "2026-08-16T01:15:00Z",
+      summary: "URGENT: Cluster of 18 severe diarrhea and acute dehydration cases reported within 6 hours. High risk of localized Cholera outbreak. Immediate IV fluids and isolation protocol required.",
+      status: "UNACKNOWLEDGED"
+    },
+    {
+      id: "alt-02",
+      district: "Nashik",
+      state: "Maharashtra",
+      type: "ML_SPIKE_PREDICTION",
+      severity: "HIGH",
+      risk_score: 0.76,
+      cases_count: 12,
+      worker_role: "ANM Supervisor (Trimbak)",
+      timestamp: "2026-08-15T22:40:00Z",
+      summary: "SPATIAL ANOMALY: Dengue incidence increased 42% over baseline following heavy rainfall (112mm). Vector transmission rate accelerating across 3 adjacent sub-centers.",
+      status: "INVESTIGATING"
+    },
+    {
+      id: "alt-03",
+      district: "Thane",
+      state: "Maharashtra",
+      type: "ML_SPIKE_PREDICTION",
+      severity: "HIGH",
+      risk_score: 0.72,
+      cases_count: 14,
+      worker_role: "PHC Officer (Bhiwandi)",
+      timestamp: "2026-08-15T18:20:00Z",
+      summary: "THRESHOLD EXCEEDED: Malaria positive test strip confirmations crossed the 95th percentile trigger. Deploy additional rapid diagnostic kits.",
+      status: "ACKNOWLEDGED"
+    },
+    {
+      id: "alt-04",
+      district: "Kolhapur",
+      state: "Maharashtra",
+      type: "SOS_TRIGGER",
+      severity: "MODERATE",
+      risk_score: 0.54,
+      cases_count: 7,
+      worker_role: "ASHA Worker (Karvir)",
+      timestamp: "2026-08-15T14:10:00Z",
+      summary: "EARLY WARNING: 7 suspected viral fever cases with joint pain reported. ASHA workers deployed for active house-to-house screening.",
+      status: "RESOLVED"
+    }
+  ]
+};
+
 export async function fetchLiveDashboard(): Promise<LiveDashboardData> {
   try {
     const res = await fetch(`${API_BASE}/dashboard/live`, { cache: 'no-store' });
@@ -756,93 +846,7 @@ export async function fetchLiveDashboard(): Promise<LiveDashboardData> {
     return await res.json();
   } catch (err) {
     console.warn('API /dashboard/live unreachable, using rich fallback data', err);
-    return {
-      pulse: {
-        total_districts: 36,
-        low_count: 12,
-        moderate_count: 13,
-        high_count: 7,
-        critical_count: 4,
-      },
-      summary: {
-        total_monitored_districts: 36,
-        active_cases_total: 824,
-        high_critical_districts: 11,
-        active_asha_workers: 4620,
-        case_delta_7d_pct: "+14.8%",
-        system_state: "ELEVATED_SURVEILLANCE"
-      },
-      top_at_risk: FALLBACK_DISTRICTS.slice(0, 5),
-      trend_series: [
-        { day: "Mon", cases: 112, forecast: 110, rainfall: 45 },
-        { day: "Tue", cases: 128, forecast: 125, rainfall: 62 },
-        { day: "Wed", cases: 142, forecast: 139, rainfall: 80 },
-        { day: "Thu", cases: 156, forecast: 152, rainfall: 95 },
-        { day: "Fri", cases: 169, forecast: 165, rainfall: 78 },
-        { day: "Sat", cases: 178, forecast: 174, rainfall: 110 },
-        { day: "Sun", cases: 186, forecast: 182, rainfall: 88 }
-      ],
-      disease_breakdown: [
-        { disease: "Dengue", cases: 68, pct: 36.5, severity: "HIGH" },
-        { disease: "Cholera / Diarrhea", cases: 54, pct: 29.0, severity: "CRITICAL" },
-        { disease: "Malaria", cases: 38, pct: 20.4, severity: "HIGH" },
-        { disease: "Acute Respiratory", cases: 26, pct: 14.1, severity: "MODERATE" }
-      ],
-      recent_alerts: [
-        {
-          id: "alt-01",
-          district: "Pune",
-          state: "Maharashtra",
-          type: "SOS_TRIGGER",
-          severity: "CRITICAL",
-          risk_score: 0.89,
-          cases_count: 18,
-          worker_role: "ASHA Lead (Haveli Block)",
-          timestamp: "2026-08-16T01:15:00Z",
-          summary: "URGENT: Cluster of 18 severe diarrhea and acute dehydration cases reported within 6 hours. High risk of localized Cholera outbreak. Immediate IV fluids and isolation protocol required.",
-          status: "UNACKNOWLEDGED"
-        },
-        {
-          id: "alt-02",
-          district: "Nashik",
-          state: "Maharashtra",
-          type: "ML_SPIKE_PREDICTION",
-          severity: "HIGH",
-          risk_score: 0.76,
-          cases_count: 12,
-          worker_role: "ANM Supervisor (Trimbak)",
-          timestamp: "2026-08-15T22:40:00Z",
-          summary: "SPATIAL ANOMALY: Dengue incidence increased 42% over baseline following heavy rainfall (112mm). Vector transmission rate accelerating across 3 adjacent sub-centers.",
-          status: "INVESTIGATING"
-        },
-        {
-          id: "alt-03",
-          district: "Thane",
-          state: "Maharashtra",
-          type: "ML_SPIKE_PREDICTION",
-          severity: "HIGH",
-          risk_score: 0.72,
-          cases_count: 14,
-          worker_role: "PHC Officer (Bhiwandi)",
-          timestamp: "2026-08-15T18:20:00Z",
-          summary: "THRESHOLD EXCEEDED: Malaria positive test strip confirmations crossed the 95th percentile trigger. Deploy additional rapid diagnostic kits.",
-          status: "ACKNOWLEDGED"
-        },
-        {
-          id: "alt-04",
-          district: "Kolhapur",
-          state: "Maharashtra",
-          type: "SOS_TRIGGER",
-          severity: "MODERATE",
-          risk_score: 0.54,
-          cases_count: 7,
-          worker_role: "ASHA Worker (Karvir)",
-          timestamp: "2026-08-15T14:10:00Z",
-          summary: "EARLY WARNING: 7 suspected viral fever cases with joint pain reported. ASHA workers deployed for active house-to-house screening.",
-          status: "RESOLVED"
-        }
-      ]
-    };
+    return FALLBACK_DASHBOARD;
   }
 }
 
