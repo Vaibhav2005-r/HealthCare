@@ -235,9 +235,9 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
       </div>
 
       {/* 2. HERO SECTION: NVIDIA FourCastNet + PyTorch LSTM Simultaneous Forecast */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column (8 cols): Cascaded Weather & Disease Forecast Engine */}
-        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col">
+        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 shadow-sm">
           
           {/* Section Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
@@ -292,7 +292,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
           </div>
 
           {/* Moderate-Sized Chart Canvas with Zero Unwanted Whitespace */}
-          <div className="h-64 sm:h-72 w-full mt-1">
+          <div className="h-56 sm:h-60 w-full mt-1">
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart data={chartData} margin={{ top: 8, right: 10, left: -15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
@@ -323,7 +323,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
         </div>
 
         {/* Right Column (4 cols): Suspected Pathogen Share */}
-        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-3">
           <div>
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-sm sm:text-base font-bold text-[#1D2321]">Suspected Pathogens</h2>
@@ -354,7 +354,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                     contentStyle={{ 
                       backgroundColor: '#FFFFFF', 
                       borderRadius: '8px', 
-                      border: '1px solid #E2E8F0',
+                      border: '1px solid #E2E8F0', 
                       fontSize: '11px' 
                     }}
                   />
@@ -370,9 +370,9 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
               </div>
             </div>
 
-            <div className="space-y-2 mt-2">
+            <div className="space-y-1.5 mt-2">
               {diseaseBreakdown.map((item, idx) => (
-                <div key={item.disease} className="flex items-center justify-between text-xs py-1 border-b border-[#E2E8F0]/40 last:border-0">
+                <div key={item.disease} className="flex items-center justify-between text-xs py-0.5 border-b border-[#E2E8F0]/40 last:border-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: pieColors[idx % pieColors.length] }} />
                     <span className="font-medium text-[#1D2321]">{item.disease}</span>
@@ -386,7 +386,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#E2E8F0] mt-3">
+          <div className="pt-2 border-t border-[#E2E8F0]">
             <button
               onClick={() => onNavigateTab('rag')}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] rounded-lg text-xs font-semibold border border-[#E2E8F0] transition-colors"
