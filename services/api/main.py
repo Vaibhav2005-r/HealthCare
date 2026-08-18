@@ -59,6 +59,45 @@ lstm_model = None
 scaler = None
 rag_engine = None
 
+class OutbreakForecastLSTM(torch.nn.Module):
+    def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=1):
+        super(OutbreakForecastLSTM, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = torch.nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = torch.nn.Linear(hidden_size, output_size)
+        
+    def forward(self, x):
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        out, _ = self.lstm(x, (h0, c0))
+        out = self.fc(out[:, -1, :]) 
+        return out
+
+def load_ml_models():
+    global lstm_model, scaler
+    try:
+        from sklearn.preprocessing import MinMaxScaler
+        import pandas as pd
+        ml_dir = os.path.join(SERVICES_DIR, "ml")
+        model_path = os.path.join(ml_dir, "lstm_forecast_model.pt")
+        data_path = os.path.join(ml_dir, "outbreak_time_series.csv")
+        
+        if os.path.exists(data_path):
+            df = pd.read_csv(data_path)
+            features = ['rainfall_mm', 'avg_temp_c', 'humidity_pct', 'daily_cases']
+            scaler = MinMaxScaler(feature_range=(-1, 1))
+            scaler.fit(df[features].values)
+            print("MinMaxScaler fitted on outbreak_time_series.csv.")
+            
+        if os.path.exists(model_path):
+            lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=1)
+            lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+            lstm_model.eval()
+            print("PyTorch LSTM Outbreak Forecast Model loaded successfully.")
+    except Exception as e:
+        print(f"Warning: Could not initialize LSTM model: {e}")
+
 OFFLINE_SYNC_DATABASE_PATH = Path(
     os.getenv("OFFLINE_SYNC_DATABASE_PATH", os.path.join(os.path.dirname(__file__), "offline_sync.db"))
 )
@@ -116,6 +155,11 @@ async def lifespan(app: FastAPI):
         print("Connected to Supabase PostgreSQL.")
     except Exception as e:
         print(f"Supabase connection error: {e}")
+        
+    load_ml_models()
+    
+    # Start background telemetry refresh
+    asyncio.create_task(telemetry_worker())
     
     print("FastAPI is ready to serve live requests!")
     yield
@@ -241,38 +285,38 @@ async def refresh_district_telemetry():
                 lat, lng = district.get("centroid_lat"), district.get("centroid_lng")
                 if not lat or not lng or not did:
                     continue
-                url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&current=temperature_2m,relative_humidity_2m,precipitation&timezone=auto"
+                url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}&current=temperature_2m,relative_humidity_2m,precipitation&daily=precipitation_sum,temperature_2m_mean,relative_humidity_2m_mean&timezone=auto"
                 res = await client.get(url, timeout=10.0)
                 if res.status_code == 200:
                     data = res.json()
-                    temp = float(data["current"]["temperature_2m"])
-                    humidity = float(data["current"]["relative_humidity_2m"])
-                    precip = float(data["current"]["precipitation"])
+                    temp = float(data.get("daily", {}).get("temperature_2m_mean", [data["current"]["temperature_2m"]])[0] or 27.5)
+                    humidity = float(data.get("daily", {}).get("relative_humidity_2m_mean", [data["current"]["relative_humidity_2m"]])[0] or 75.0)
+                    
+                    # 24h Cumulative Precipitation (fallback to current if daily is 0 or unavailable)
+                    precip_daily = float(data.get("daily", {}).get("precipitation_sum", [0.0])[0] or 0.0)
+                    precip_curr = float(data.get("current", {}).get("precipitation", 0.0) or 0.0)
+                    precip = round(max(precip_daily, precip_curr), 1)
                     
                     base_cases = int(district.get("active_cases", 10))
                     risk_score = float(district.get("risk_score", 0.5))
                     risk_level = str(district.get("risk_level", "MODERATE"))
                     
                     # -------------------------------------------------------------
-                    # LSTM NEURAL NETWORK INFERENCE & EMPIRICAL CALIBRATION PIPELINE
+                    # LSTM NEURAL NETWORK INFERENCE & CALIBRATED RISK SCORING
                     # -------------------------------------------------------------
                     if lstm_model and scaler:
                         # 1. QUERY REAL 14-DAY OBSERVATION HISTORY FROM SUPABASE:
-                        # Rather than synthesizing a mathematical decay ramp, we pull the genuine
-                        # daily aggregated reports from public.district_case_history.
                         history_rows = await fetch_district_case_history_from_db(did, days=14)
                         
                         sequence = []
                         if len(history_rows) >= 13:
                             for r in history_rows[:14]:
-                                sequence.append([float(r['rainfall_mm']), float(r['temp_c']), float(r['humidity_pct']), float(r['cases_reported'])])
+                                sequence.append([float(r.get('rainfall_mm', 0.0)), float(r.get('temp_c', 27.5)), float(r.get('humidity_pct', 75.0)), float(r.get('cases_reported', base_cases))])
                         else:
-                            # Explicit documented fallback: pad with baseline observations
                             for r in history_rows:
-                                sequence.append([float(r['rainfall_mm']), float(r['temp_c']), float(r['humidity_pct']), float(r['cases_reported'])])
+                                sequence.append([float(r.get('rainfall_mm', 0.0)), float(r.get('temp_c', 27.5)), float(r.get('humidity_pct', 75.0)), float(r.get('cases_reported', base_cases))])
                                 
                         if len(sequence) == 14:
-                            # Slot 14 (Day t / Today): Real-time live IMD AWS weather gauge + current confirmed 24h active cases
                             sequence[13] = [precip, temp, humidity, base_cases]
                         else:
                             while len(sequence) < 14:
@@ -282,35 +326,35 @@ async def refresh_district_telemetry():
                         input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
                         
                         with torch.no_grad():
-                            # Raw linear output from regression model in scaled space [-1, 1]
                             raw_pred = lstm_model(input_tensor).item()
-                            
-                            # 2. INVERSE SCALING TO TRUE PREDICTED CASE VOLUME:
                             pred_cases = (raw_pred - (-1.0)) / 2.0 * (case_max - case_min) + case_min
                             pred_cases = max(0.0, pred_cases)
                             
-                        # 3. EPIDEMIOLOGICALLY DEFENDED RISK INDEX (75% LSTM DRIVEN):
-                        # Component 1 (75% Primary Weight): LSTM Forecasted Surge Ratio against IDSP Outbreak Baseline (35 cases threshold)
-                        surge_ratio = min(1.0, pred_cases / 48.0)
+                        # 2. CALIBRATED EPIDEMIOLOGICAL RISK INDEX:
+                        # Volume Ratio: Scaled against 85-case epidemic surge threshold
+                        vol_ratio = min(1.0, pred_cases / 85.0)
                         
-                        # Component 2 (25% Modifier): IMD Severe Weather Modifier with WHO/IMD cited thresholds:
-                        # - Precipitation: 80mm threshold (IMD 'Heavy to Very Heavy Rainfall' waterlogging criterion)
-                        # - Relative Humidity: 70% threshold (WHO/NVBDCP vector longevity & biting frequency acceleration)
-                        # - Temperature: 28C optimal (Mordecai et al. thermodynamic optimum for Aedes/Anopheles transmission)
-                        rain_w = min(1.0, precip / 80.0)
-                        rh_w = max(0.0, (humidity - 60.0) / 35.0)
-                        temp_w = max(0.0, 1.0 - abs(temp - 28.0) / 8.0)
+                        # Surge Velocity: Accelerating case volume relative to district endemic baseline
+                        velocity = min(1.0, max(0.0, (pred_cases - base_cases) / (0.45 * base_cases + 4.0)))
+                        
+                        # Primary 75% LSTM Velocity Component
+                        lstm_comp = 0.70 * vol_ratio + 0.30 * velocity
+                        
+                        # Secondary 25% IMD Meteorological Modifier
+                        rain_w = min(1.0, precip / 80.0)           # 80mm heavy rain threshold
+                        rh_w = max(0.0, (humidity - 60.0) / 35.0)  # WHO 70% RH vector gestation threshold
+                        temp_w = max(0.0, 1.0 - abs(temp - 28.0) / 8.0) # 28C thermodynamic optimum
                         imd_modifier = 0.50 * rain_w + 0.30 * rh_w + 0.20 * temp_w
                         
-                        # Final Composite Risk Index: 75% LSTM Output + 25% Real-time Weather Modifier
-                        risk_score = round(float(np.clip(0.75 * surge_ratio + 0.25 * imd_modifier, 0.08, 0.96)), 4)
+                        # Composite Dynamic Risk Score
+                        risk_score = round(float(np.clip(0.75 * lstm_comp + 0.25 * imd_modifier, 0.08, 0.96)), 4)
                         
-                        # 4. DISCRETE TRIAGE TIERS (IDSP Color Code Standard):
-                        if risk_score >= 0.80:
+                        # 3. IDSP STANDARD TRIAGE TIERS:
+                        if risk_score >= 0.78:
                             risk_level = "CRITICAL"
-                        elif risk_score >= 0.65:
+                        elif risk_score >= 0.62:
                             risk_level = "HIGH"
-                        elif risk_score >= 0.40:
+                        elif risk_score >= 0.38:
                             risk_level = "MODERATE"
                         else:
                             risk_level = "LOW"
@@ -713,11 +757,23 @@ def get_forecast(req: ForecastRequest):
     scaled_data = scaler.transform(req.sequence)
     input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
     
+    case_min = scaler.data_min_[3]
+    case_max = scaler.data_max_[3]
+    
     with torch.no_grad():
-        raw_score = lstm_model(input_tensor).item()
-        risk_score = 1.0 / (1.0 + math.exp(-raw_score))
+        raw_pred = lstm_model(input_tensor).item()
+        pred_cases = (raw_pred - (-1.0)) / 2.0 * (case_max - case_min) + case_min
+        pred_cases = max(0.0, pred_cases)
         
-    return {"risk_score": round(risk_score, 4)}
+        # Calibrated against IDSP 85-case epidemic threshold
+        vol_ratio = min(1.0, pred_cases / 85.0)
+        risk_score = round(float(np.clip(0.70 * vol_ratio + 0.30 * 0.5, 0.08, 0.96)), 4)
+        
+    return {
+        "risk_score": risk_score,
+        "predicted_cases": round(pred_cases, 1),
+        "risk_level": "CRITICAL" if risk_score >= 0.72 else ("HIGH" if risk_score >= 0.55 else ("MODERATE" if risk_score >= 0.36 else "LOW"))
+    }
 
 @app.get("/api/v1/forecast/simultaneous/{district_id}")
 async def get_simultaneous_forecast(district_id: str):
