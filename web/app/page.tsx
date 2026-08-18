@@ -23,30 +23,82 @@ import {
   X, 
   Database, 
   Package, 
-  Search 
+  Search,
+  Sparkles,
+  CloudRain 
 } from 'lucide-react';
 import RagAdminSection from '@/components/features/RagAdminSection';
 import ResourceManagementSection from '@/components/features/ResourceManagementSection';
+import ImdFeedSection from '@/components/features/ImdFeedSection';
+import { GuidedTour } from '@/components/GuidedTour';
 import { toast } from 'sonner';
 import { useLanguage, Language } from '@/lib/i18n';
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      {/* KPI Cards Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm h-28 flex flex-col justify-between">
+            <div className="flex justify-between items-center">
+              <div className="w-24 h-3 bg-[#EAE8E3] rounded" />
+              <div className="w-4 h-4 bg-[#EAE8E3] rounded-full" />
+            </div>
+            <div className="w-16 h-7 bg-[#EAE8E3] rounded" />
+            <div className="w-full h-2 bg-[#F6F5F2] rounded pt-2" />
+          </div>
+        ))}
+      </div>
+
+      {/* Hero Forecast Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-sm h-96 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-4">
+            <div className="space-y-2">
+              <div className="w-32 h-3 bg-[#EAE8E3] rounded" />
+              <div className="w-64 h-5 bg-[#EAE8E3] rounded" />
+            </div>
+            <div className="w-28 h-6 bg-[#F6F5F2] rounded-lg" />
+          </div>
+          <div className="flex-1 bg-[#F6F5F2]/60 rounded-lg flex items-end p-4 gap-4">
+            {[40, 65, 80, 55, 90, 75, 85].map((h, idx) => (
+              <div key={idx} className="flex-1 bg-[#EAE8E3] rounded-t" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </div>
+
+        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm h-96 flex flex-col justify-between">
+          <div className="w-40 h-4 bg-[#EAE8E3] rounded mb-2" />
+          <div className="w-32 h-32 rounded-full border-8 border-[#EAE8E3] self-center my-auto" />
+          <div className="space-y-2 pt-4 border-t border-[#E2E8F0]/60">
+            <div className="w-full h-3 bg-[#EAE8E3] rounded" />
+            <div className="w-full h-3 bg-[#EAE8E3] rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ArogyaPrahariDashboard() {
   const [activeTab, setActiveTab] = useState<NavTab>('overview');
   const [activeRiskFilter, setActiveRiskFilter] = useState<RiskFilterType>('ALL');
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictData | null>(null);
+  const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
   const [dashboardData, setDashboardData] = useState<LiveDashboardData>({
     pulse: {
-      total_districts: 8,
-      low_count: 3,
-      moderate_count: 2,
-      high_count: 2,
-      critical_count: 1,
+      total_districts: 36,
+      low_count: 12,
+      moderate_count: 13,
+      high_count: 7,
+      critical_count: 4,
     },
     summary: {
-      total_monitored_districts: 8,
-      active_cases_total: 161,
-      high_critical_districts: 3,
-      active_asha_workers: 986,
+      total_monitored_districts: 36,
+      active_cases_total: 824,
+      high_critical_districts: 11,
+      active_asha_workers: 4620,
       case_delta_7d_pct: "+14.8%",
       system_state: "ELEVATED_SURVEILLANCE"
     },
@@ -154,7 +206,6 @@ export default function ArogyaPrahariDashboard() {
             toast.error(`🚨 LIVE REALTIME SOS: ${data.alert.cases_count} cases in ${data.alert.district}!`, {
               duration: 6000,
             });
-            // Update live alerts stream immediately
             setDashboardData(prev => ({
               ...prev,
               recent_alerts: [data.alert, ...prev.recent_alerts]
@@ -183,9 +234,17 @@ export default function ArogyaPrahariDashboard() {
     setSelectedDistrict(district);
   };
 
-
   return (
     <div className="min-h-screen bg-[#F6F5F2] text-[#1D2321] flex flex-col md:flex-row">
+      {/* Guided Presentation Tour Modal */}
+      <GuidedTour 
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
       
       {/* 1. Sidebar Navigation (Desktop & Mobile Drawer) */}
       <div className="hidden md:block">
@@ -243,6 +302,7 @@ export default function ArogyaPrahariDashboard() {
                   {activeTab === 'overview' && t('header.executive_overview')}
                   {activeTab === 'heatmap' && t('header.gis_heatmap')}
                   {activeTab === 'districts' && t('header.district_matrix')}
+                  {activeTab === 'imd' && 'IMD Meteorological Radar & Precipitation'}
                   {activeTab === 'rag' && t('header.rag_protocols')}
                   {activeTab === 'resources' && t('header.phc_buffer')}
                   {activeTab === 'alerts' && t('header.incident_feed')}
@@ -259,8 +319,30 @@ export default function ArogyaPrahariDashboard() {
           {/* Quick Header Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* IMD Live Radar Shortcut */}
+            <button
+              onClick={() => setActiveTab('imd')}
+              className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                activeTab === 'imd' 
+                  ? 'bg-[#1A5F7A] text-white border-[#1A5F7A] shadow-xs' 
+                  : 'bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border-[#E2E8F0]'
+              }`}
+            >
+              <CloudRain className="w-3.5 h-3.5" />
+              <span>IMD Radar</span>
+            </button>
+
+            {/* Presentation Tour Button */}
+            <button
+              onClick={() => setIsTourOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C2255C] hover:bg-[#A61E4D] text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Guided Tour</span>
+            </button>
+
             {/* Language Switcher */}
-            <div className="flex items-center bg-[#F6F5F2] border border-[#E2E8F0] rounded-lg p-0.5 mr-2">
+            <div className="flex items-center bg-[#F6F5F2] border border-[#E2E8F0] rounded-lg p-0.5 mr-1">
               <button 
                 onClick={() => setLanguage('en')}
                 className={`px-2 py-1 text-[10px] font-bold rounded-md transition-colors ${language === 'en' ? 'bg-white shadow-sm text-[#1D2321]' : 'text-[#5B6663] hover:text-[#1D2321]'}`}
@@ -278,7 +360,7 @@ export default function ArogyaPrahariDashboard() {
             {/* RAG Query Shortcut */}
             <button
               onClick={() => setActiveTab('rag')}
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+              className={`hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                 activeTab === 'rag' 
                   ? 'bg-[#C2255C] text-white border-[#C2255C] shadow-xs' 
                   : 'bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border-[#E2E8F0]'
@@ -286,19 +368,6 @@ export default function ArogyaPrahariDashboard() {
             >
               <Database className="w-3.5 h-3.5" />
               <span>{t('header.rag')}</span>
-            </button>
-
-            {/* PHC Resource Management Shortcut */}
-            <button
-              onClick={() => setActiveTab('resources')}
-              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                activeTab === 'resources' 
-                  ? 'bg-[#146356] text-white border-[#146356] shadow-xs' 
-                  : 'bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] border-[#E2E8F0]'
-              }`}
-            >
-              <Package className="w-3.5 h-3.5" />
-              <span>{t('header.phc')}</span>
             </button>
 
             {/* Refresh Live Telemetry */}
@@ -317,7 +386,7 @@ export default function ArogyaPrahariDashboard() {
 
             {/* System Live Pill */}
             <div className="flex items-center gap-1.5 bg-emerald-50 text-[#146356] border border-emerald-200 px-2.5 py-1 rounded-full text-xs font-mono font-bold">
-              <span className="w-2 h-2 rounded-full bg-[#146356] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#146356]" />
               <span className="hidden sm:inline">DHO ONLINE</span>
             </div>
           </div>
@@ -326,7 +395,7 @@ export default function ArogyaPrahariDashboard() {
         {/* Main Work Area */}
         <main className="flex-1 p-4 md:p-6 space-y-6 max-w-7xl w-full mx-auto">
           
-          {/* Pinned Signature Component: Risk Pulse Bar (Active across all views) */}
+          {/* Pinned Signature Component: Risk Pulse Bar */}
           {dashboardData && (
             <div className="no-print">
               <RiskPulseBar 
@@ -339,11 +408,7 @@ export default function ArogyaPrahariDashboard() {
 
           {/* Active View Module Rendering */}
           {isLoading && !dashboardData ? (
-            <div className="h-96 flex flex-col items-center justify-center gap-3 bg-white rounded-xl border border-[#E2E8F0] shadow-sm">
-              <div className="w-8 h-8 border-3 border-[#C2255C] border-t-transparent rounded-full animate-spin" />
-              <p className="text-xs font-bold text-[#1D2321]">Loading District Outbreak Intelligence...</p>
-              <p className="text-[11px] text-[#5B6663]">Aggregating ASHA case reports, Qdrant vectors & LSTM forecast</p>
-            </div>
+            <DashboardSkeleton />
           ) : (
             <>
               {activeTab === 'overview' && dashboardData && (
@@ -375,6 +440,10 @@ export default function ArogyaPrahariDashboard() {
                   selectedDistrict={selectedDistrict}
                   onSelectDistrict={handleSelectDistrict}
                 />
+              )}
+
+              {activeTab === 'imd' && (
+                <ImdFeedSection />
               )}
 
               {activeTab === 'rag' && (

@@ -34,6 +34,61 @@ interface AlertsViewProps {
   onRefreshAlerts: () => void;
 }
 
+function AlertLifecycleStepper({ status }: { status: string }) {
+  const steps = [
+    { key: 'UNACKNOWLEDGED', label: '1. Detected' },
+    { key: 'ACKNOWLEDGED', label: '2. Acknowledged' },
+    { key: 'INVESTIGATING', label: '3. Response' },
+    { key: 'RESOLVED', label: '4. Resolved' }
+  ];
+
+  const getStepIndex = (st: string) => {
+    if (st === 'RESOLVED') return 3;
+    if (st === 'INVESTIGATING' || st === 'BUFFER_DISPATCHED') return 2;
+    if (st === 'ACKNOWLEDGED') return 1;
+    return 0;
+  };
+
+  const currentIndex = getStepIndex(status);
+
+  return (
+    <div className="py-2 px-3 bg-[#F6F5F2] border border-[#E2E8F0] rounded-lg my-1">
+      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#5B6663] mb-1.5">
+        <span>Incident State Machine</span>
+        <span className="font-mono text-[#1D2321]">Stage {currentIndex + 1} of 4: <strong>{status}</strong></span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        {steps.map((step, idx) => {
+          const isDone = idx < currentIndex;
+          const isCurrent = idx === currentIndex;
+
+          return (
+            <React.Fragment key={step.key}>
+              <div className={`flex-1 flex items-center gap-1.5 py-1 px-2 rounded text-[10px] font-bold transition-all ${
+                isDone ? 'bg-emerald-100 text-emerald-800' :
+                isCurrent ? (status === 'RESOLVED' ? 'bg-emerald-600 text-white' : 'bg-[#C2255C] text-white shadow-xs') :
+                'bg-white text-[#5B6663] border border-[#E2E8F0]'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${
+                  isDone ? 'bg-emerald-600' :
+                  isCurrent ? 'bg-white' :
+                  'bg-[#CBD5E1]'
+                }`} />
+                <span className="truncate">{step.label}</span>
+              </div>
+              {idx < steps.length - 1 && (
+                <span className={`text-[10px] font-bold ${idx < currentIndex ? 'text-emerald-600' : 'text-[#CBD5E1]'}`}>
+                  &rarr;
+                </span>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AlertsView({ alerts, activeFilter, onFilterChange, onRefreshAlerts }: AlertsViewProps) {
   const [selectedType, setSelectedType] = useState<'ALL' | 'SOS_TRIGGER' | 'ML_SPIKE_PREDICTION'>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | 'UNACKNOWLEDGED' | 'INVESTIGATING' | 'ACKNOWLEDGED' | 'RESOLVED'>('ALL');
@@ -348,6 +403,9 @@ export function AlertsView({ alerts, activeFilter, onFilterChange, onRefreshAler
                         {formatTimestamp(alert.timestamp)}
                       </span>
                     </div>
+
+                    {/* Incident Lifecycle Stepper */}
+                    <AlertLifecycleStepper status={alert.status} />
 
                     {/* Plain Language Summary / LLM Brief */}
                     <div className="p-3.5 bg-[#F6F5F2] rounded-lg border border-[#E2E8F0] text-xs text-[#1D2321] leading-relaxed">

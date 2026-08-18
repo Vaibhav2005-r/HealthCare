@@ -647,6 +647,56 @@ export default function MapComponent({
             );
           })}
         </MapContainer>
+
+        {/* Floating On-Map Risk Threshold Legend */}
+        <div className="absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur-md border border-[#E2E8F0] shadow-xl rounded-xl p-3 text-xs space-y-2 pointer-events-auto max-w-[240px]">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0]/80 pb-1.5">
+            <span className="font-bold text-[11px] uppercase tracking-wider text-[#1D2321] flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#C2255C]" />
+              Risk Thresholds
+            </span>
+            <span className="font-mono text-[10px] text-[#5B6663]">IDSP v2.4</span>
+          </div>
+
+          <div className="space-y-1.5 font-mono text-[11px]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#8B0000] ring-2 ring-[#8B0000]/20" />
+                <span className="font-bold text-[#8B0000]">Critical</span>
+              </div>
+              <span className="text-[#5B6663]">&ge; 0.75</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#C6362C]" />
+                <span className="font-bold text-[#C6362C]">High</span>
+              </div>
+              <span className="text-[#5B6663]">0.55 &ndash; 0.74</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#E8901A]" />
+                <span className="font-bold text-[#E8901A]">Moderate</span>
+              </div>
+              <span className="text-[#5B6663]">0.35 &ndash; 0.54</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#146356]" />
+                <span className="font-bold text-[#146356]">Low / Normal</span>
+              </div>
+              <span className="text-[#5B6663]">&lt; 0.35</span>
+            </div>
+          </div>
+
+          <div className="pt-1.5 border-t border-[#E2E8F0]/60 flex items-center justify-between text-[10px] text-[#5B6663]">
+            <span>Active Outbreak Radii</span>
+            <span className="font-bold text-[#1D2321]">{displayedClusters.length} Hotspots</span>
+          </div>
+        </div>
       </div>
 
     </div>

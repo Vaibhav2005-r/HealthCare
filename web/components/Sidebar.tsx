@@ -16,11 +16,12 @@ import {
   Cpu,
   UserCheck,
   Sparkles,
-  Package
+  Package,
+  CloudRain
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n';
 
-export type NavTab = 'overview' | 'heatmap' | 'districts' | 'rag' | 'resources' | 'alerts' | 'reports';
+export type NavTab = 'overview' | 'heatmap' | 'districts' | 'imd' | 'rag' | 'resources' | 'alerts' | 'reports';
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -31,58 +32,108 @@ interface SidebarProps {
 export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 }: SidebarProps) {
   const { t } = useLanguage();
 
-  const navItems = [
+  const monitorItems = [
     {
       id: 'overview' as NavTab,
       label: t('nav.overview'),
-      labelHi: '', // Handled dynamically in translations
       icon: LayoutDashboard,
       desc: t('nav.overview.desc')
     },
     {
       id: 'heatmap' as NavTab,
       label: t('nav.heatmap'),
-      labelHi: '',
       icon: MapIcon,
       desc: t('nav.heatmap.desc')
     },
     {
       id: 'districts' as NavTab,
       label: t('nav.districts'),
-      labelHi: '',
       icon: Building2,
       desc: t('nav.districts.desc')
     },
     {
-      id: 'rag' as NavTab,
-      label: t('nav.rag'),
-      labelHi: '',
-      icon: Sparkles,
-      desc: t('nav.rag.desc')
+      id: 'imd' as NavTab,
+      label: 'IMD Weather Radar',
+      icon: CloudRain,
+      desc: 'Live IMD AWS precipitation & vector risk'
     },
     {
-      id: 'resources' as NavTab,
-      label: t('nav.resources'),
-      labelHi: '',
-      icon: Package,
-      desc: t('nav.resources.desc')
-    },
+      id: 'reports' as NavTab,
+      label: t('nav.reports'),
+      icon: FileText,
+      desc: t('nav.reports.desc')
+    }
+  ];
+
+  const respondItems = [
     {
       id: 'alerts' as NavTab,
       label: t('nav.alerts'),
-      labelHi: '',
       icon: AlertOctagon,
       desc: t('nav.alerts.desc'),
       badge: unacknowledgedAlertsCount
     },
     {
-      id: 'reports' as NavTab,
-      label: t('nav.reports'),
-      labelHi: '',
-      icon: FileText,
-      desc: t('nav.reports.desc')
+      id: 'resources' as NavTab,
+      label: t('nav.resources'),
+      icon: Package,
+      desc: t('nav.resources.desc')
     }
   ];
+
+  const configureItems = [
+    {
+      id: 'rag' as NavTab,
+      label: t('nav.rag'),
+      icon: Sparkles,
+      desc: t('nav.rag.desc')
+    }
+  ];
+
+  const renderNavGroup = (title: string, items: typeof monitorItems) => (
+    <div className="space-y-1">
+      <div className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#5B6663]">
+        {title}
+      </div>
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = activeTab === item.id;
+        const badgeCount = 'badge' in item ? (item as any).badge : undefined;
+
+        return (
+          <button
+            key={item.id}
+            onClick={() => onTabChange(item.id)}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all group ${
+              isActive
+                ? 'bg-[#F6F5F2] text-[#C2255C] font-bold border border-[#C2255C]/20 shadow-sm'
+                : 'text-[#1D2321] hover:bg-[#F6F5F2]/80 hover:text-[#1D2321]'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className={`p-1.5 rounded-md transition-colors ${
+                isActive ? 'bg-[#C2255C] text-white' : 'bg-[#EAE8E3] text-[#5B6663] group-hover:text-[#1D2321]'
+              }`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold leading-tight">{item.label}</div>
+                <div className="text-[10px] font-normal text-[#5B6663] leading-tight">{item.desc}</div>
+              </div>
+            </div>
+
+            {badgeCount ? (
+              <span className="bg-[#C6362C] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
+                {badgeCount}
+              </span>
+            ) : (
+              <ChevronRight className={`w-3.5 h-3.5 text-[#5B6663] transition-transform ${isActive ? 'translate-x-0.5 text-[#C2255C]' : 'opacity-0 group-hover:opacity-100'}`} />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   return (
     <aside className="w-72 bg-white border-r border-[#E2E8F0] flex flex-col h-screen sticky top-0 z-30 select-none">
@@ -113,49 +164,13 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
         </div>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Command center navigation">
-        <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-[#5B6663]">
-          Surveillance Modules
-        </div>
-
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all group ${
-                isActive
-                  ? 'bg-[#F6F5F2] text-[#C2255C] font-bold border border-[#C2255C]/20 shadow-sm'
-                  : 'text-[#1D2321] hover:bg-[#F6F5F2]/80 hover:text-[#1D2321]'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-1.5 rounded-md transition-colors ${
-                  isActive ? 'bg-[#C2255C] text-white' : 'bg-[#EAE8E3] text-[#5B6663] group-hover:text-[#1D2321]'
-                }`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm">{item.label}</span>
-                  </div>
-                  <div className="text-[10px] font-normal text-[#5B6663]">{item.desc}</div>
-                </div>
-              </div>
-
-              {item.badge ? (
-                <span className="bg-[#C6362C] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full animate-pulse">
-                  {item.badge}
-                </span>
-              ) : (
-                <ChevronRight className={`w-3.5 h-3.5 text-[#5B6663] transition-transform ${isActive ? 'translate-x-0.5 text-[#C2255C]' : 'opacity-0 group-hover:opacity-100'}`} />
-              )}
-            </button>
-          );
-        })}
+      {/* Navigation Links - 3 Grouped Sections */}
+      <nav className="flex-1 px-3 py-2 space-y-2 overflow-y-auto" aria-label="Command center navigation">
+        {renderNavGroup('Monitor', monitorItems)}
+        <div className="border-t border-[#E2E8F0]/60 my-1" />
+        {renderNavGroup('Respond', respondItems)}
+        <div className="border-t border-[#E2E8F0]/60 my-1" />
+        {renderNavGroup('Configure', configureItems)}
       </nav>
 
       {/* Jurisdiction & Officer Context */}
@@ -163,7 +178,7 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
         <div className="flex items-center justify-between text-[10px] font-bold text-[#5B6663] uppercase tracking-wider mb-1.5">
           <span>Active Command Context</span>
           <span className="text-[#146356] flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#146356] animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#146356]" />
             LIVE
           </span>
         </div>

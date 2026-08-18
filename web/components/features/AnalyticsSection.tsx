@@ -155,23 +155,58 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Age Demographics */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="w-5 h-5 text-indigo-500" />
-            <h2 className="text-lg font-bold text-slate-800">Patient Demographics (Age)</h2>
+        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-500" />
+                <h2 className="text-lg font-bold text-slate-800">Patient Demographics (Age)</h2>
+              </div>
+              <span className="text-xs font-mono text-slate-500 font-semibold">{reports.length} Total Patients</span>
+            </div>
+            <p className="text-xs text-slate-500 mb-4">Distribution across age cohorts with proportional breakdown.</p>
           </div>
-          <div className="h-64">
+
+          <div className="h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                <Pie 
+                  data={pieData} 
+                  cx="50%" 
+                  cy="50%" 
+                  innerRadius={50} 
+                  outerRadius={72} 
+                  paddingAngle={4} 
+                  minAngle={12}
+                  dataKey="value"
+                >
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip formatter={(val: any, name: any) => [`${val} patients`, `Age ${name}`]} />
+                <Legend verticalAlign="bottom" height={32} wrapperStyle={{ fontSize: '11px' }} />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Horizontal Cohort Breakdown Bars for Skewed/Uneven Distributions */}
+          <div className="space-y-2 pt-3 border-t border-slate-100 mt-2">
+            {pieData.map((entry, index) => {
+              const total = pieData.reduce((acc, curr) => acc + curr.value, 0) || 1;
+              const pct = ((entry.value / total) * 100).toFixed(1);
+              return (
+                <div key={entry.name} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <span className="font-medium text-slate-700">Age {entry.name}</span>
+                  </div>
+                  <div className="font-mono font-bold text-slate-600">
+                    {entry.value} <span className="text-[10px] font-normal text-slate-400">({pct}%)</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 

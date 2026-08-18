@@ -230,7 +230,7 @@ export function DistrictsView({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#F6F5F2] border-b border-[#E2E8F0] text-[#5B6663] font-bold uppercase tracking-wider text-[11px]">
+              <tr className="bg-[#F6F5F2] border-b border-[#E2E8F0] text-[#5B6663] font-bold uppercase tracking-wider text-[11px] whitespace-nowrap">
                 <th className="py-3.5 px-4">
                   <button 
                     onClick={() => handleSort('name')}
@@ -274,7 +274,7 @@ export function DistrictsView({
                     onClick={() => handleSort('rainfall_mm')}
                     className="flex items-center gap-1 justify-end w-full hover:text-[#1D2321]"
                   >
-                    <span>Rainfall (IMD)</span>
+                    <span>Weather (Rain & RH)</span>
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
@@ -282,7 +282,7 @@ export function DistrictsView({
                 <th className="py-3.5 px-4 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2E8F0]">
+            <tbody className="divide-y divide-[#E2E8F0] whitespace-nowrap">
               {filteredAndSortedDistricts.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-[#5B6663]">
@@ -299,7 +299,7 @@ export function DistrictsView({
                     {/* District & State */}
                     <td className="py-3 px-4">
                       <div className="font-bold text-[#1D2321] text-sm">{d.name}</div>
-                      <div className="text-[10px] text-[#5B6663]">{d.state} • {d.district_id}</div>
+                      <div className="text-[10px] text-[#5B6663] font-mono">{d.state} • {d.district_id}</div>
                     </td>
 
                     {/* Risk Badge */}
@@ -329,12 +329,12 @@ export function DistrictsView({
 
                     {/* Active Cases */}
                     <td className="py-3 px-4 text-right font-mono font-bold text-sm text-[#1D2321]">
-                      {d.active_cases}
+                      {d.active_cases.toLocaleString()}
                     </td>
 
                     {/* 7-Day Trend */}
                     <td className="py-3 px-4 text-right font-mono font-semibold">
-                      <span className={`inline-flex items-center gap-0.5 ${
+                      <span className={`inline-flex items-center justify-end gap-0.5 ${
                         d.trend_7d === 'UP' ? 'text-[#C6362C]' :
                         d.trend_7d === 'DOWN' ? 'text-[#146356]' :
                         'text-[#5B6663]'
@@ -342,7 +342,7 @@ export function DistrictsView({
                         {d.trend_7d === 'UP' && <ArrowUpRight className="w-3.5 h-3.5" />}
                         {d.trend_7d === 'DOWN' && <ArrowDownRight className="w-3.5 h-3.5" />}
                         {d.trend_7d === 'FLAT' && <Minus className="w-3.5 h-3.5" />}
-                        {d.trend_pct > 0 ? `+${d.trend_pct}%` : `${d.trend_pct}%`}
+                        <span>{d.trend_pct > 0 ? `+${d.trend_pct.toFixed(1)}%` : `${d.trend_pct.toFixed(1)}%`}</span>
                       </span>
                     </td>
 
@@ -351,14 +351,15 @@ export function DistrictsView({
                       {d.primary_suspected}
                     </td>
 
-                    {/* Rainfall */}
+                    {/* Consolidated Weather */}
                     <td className="py-3 px-4 text-right font-mono text-[#5B6663]">
-                      {d.rainfall_mm} mm
+                      <span className="font-bold text-[#1D2321]">{d.rainfall_mm.toFixed(1)} mm</span>
+                      <span className="text-[10px] text-[#5B6663] ml-1.5">({d.humidity_pct}% RH)</span>
                     </td>
 
                     {/* Active ASHA Staff */}
                     <td className="py-3 px-4 text-right font-mono font-semibold text-[#146356]">
-                      {d.asha_active_count} active
+                      {d.asha_active_count} <span className="text-[10px] font-normal text-[#5B6663]">workers</span>
                     </td>
 
                     {/* Action */}

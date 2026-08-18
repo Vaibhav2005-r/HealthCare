@@ -16,7 +16,9 @@ import {
   ExternalLink,
   ShieldAlert,
   Send,
-  Sparkles
+  Sparkles,
+  CloudRain,
+  Radio
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -162,7 +164,167 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
         </div>
       </div>
 
-      {/* 2. Main Operational Grid: Map & Top At-Risk Districts */}
+      {/* Live IMD Meteorological Telemetry Advisory Strip */}
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 bg-gradient-to-r from-blue-50/40 via-white to-sky-50/30">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-blue-50 text-[#1A5F7A] border border-blue-200">
+            <Radio className="w-4 h-4 text-blue-600 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1A5F7A] bg-blue-100/60 px-1.5 py-0.5 rounded">
+                Live IMD Feed (AWS Network)
+              </span>
+              <span className="text-xs text-[#5B6663]">•</span>
+              <span className="text-xs font-bold text-[#1D2321]">Active Monsoon Surge Across Maharashtra</span>
+            </div>
+            <p className="text-[11px] text-[#5B6663] mt-0.5">
+              36 Automatic Weather Stations streaming hourly precipitation, relative humidity, and vector gestation multipliers.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => onNavigateTab('imd' as any)}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F6F5F2] text-[#1A5F7A] border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 self-start md:self-auto"
+        >
+          <CloudRain className="w-3.5 h-3.5" />
+          <span>Inspect IMD Radar & AWS Matrix &rarr;</span>
+        </button>
+      </div>
+
+      {/* 2. HERO SECTION: Epidemiological Incidence & 14-Day ML Forecast */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column (8 cols): Primary ML Forecast Focal Point */}
+        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-6 shadow-sm flex flex-col">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#C2255C]/10 text-[#C2255C] border border-[#C2255C]/20">
+                  Primary Surveillance Model
+                </span>
+                <span className="text-xs text-[#5B6663]">•</span>
+                <span className="text-xs font-mono text-[#5B6663]">LSTM + Spatiotemporal Graph NN</span>
+              </div>
+              <h2 className="text-lg font-extrabold text-[#1D2321] mt-1 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#C2255C]" />
+                14-Day Epidemiological Incidence & Outbreak Projection
+              </h2>
+            </div>
+            
+            <div className="flex items-center gap-2 text-xs font-mono bg-[#F6F5F2] px-3 py-1.5 rounded-lg border border-[#E2E8F0] self-start sm:self-auto">
+              <span>Model R²: <strong className="text-[#146356]">0.91</strong></span>
+              <span className="text-[#5B6663]">•</span>
+              <span>MAE: <strong>3.2 cases/day</strong></span>
+            </div>
+          </div>
+
+          {/* Explicit Inline Series Disambiguation Legend */}
+          <div className="flex flex-wrap items-center gap-4 py-2 px-3 mb-4 bg-[#F6F5F2]/80 rounded-lg border border-[#E2E8F0] text-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#C6362C] ring-2 ring-[#C6362C]/20" />
+              <span className="font-bold text-[#1D2321]">Observed Cases</span>
+              <span className="text-[10px] text-[#5B6663] font-mono">(Ground Truth)</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-0.5 border-t-2 border-dashed border-[#E8901A]" />
+              <span className="font-bold text-[#1D2321]">LSTM Forecast</span>
+              <span className="text-[10px] text-[#5B6663] font-mono">(7-Day Neural Projection)</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-sm bg-[#BAE6FD]" />
+              <span className="font-medium text-[#5B6663]">Precipitation</span>
+              <span className="text-[10px] text-[#5B6663] font-mono">(IMD mm)</span>
+            </div>
+          </div>
+
+          {/* Main Chart Canvas */}
+          <div className="h-80 w-full flex-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={data.trend_series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#5B6663', fontWeight: 600 }} axisLine={{ stroke: '#E2E8F0' }} tickLine={false} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Cases / Day', angle: -90, position: 'insideLeft', offset: 25, fontSize: 10, fill: '#5B6663' }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Rain (mm)', angle: 90, position: 'insideRight', offset: 25, fontSize: 10, fill: '#5B6663' }} />
+                <Tooltip 
+                  formatter={(val: any, name: any) => {
+                    if (name === 'Actual Reported Cases') return [`${val} cases`, 'Ground Truth (Observed)'];
+                    if (name === 'ML Predicted Trajectory') return [`${val} cases`, 'LSTM Neural Forecast'];
+                    return [`${val} mm`, 'Rainfall (IMD)'];
+                  }}
+                  contentStyle={{ 
+                    backgroundColor: '#FFFFFF', 
+                    borderRadius: '10px', 
+                    border: '1px solid #E2E8F0', 
+                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.08)',
+                    fontSize: '12px',
+                    padding: '10px 14px'
+                  }} 
+                />
+                <Bar yAxisId="right" dataKey="rainfall" name="Rainfall (mm)" fill="#BAE6FD" fillOpacity={0.65} radius={[3, 3, 0, 0]} barSize={26} />
+                <Line yAxisId="left" type="monotone" dataKey="cases" name="Actual Reported Cases" stroke="#C6362C" strokeWidth={3} dot={{ r: 4.5, fill: '#C6362C', strokeWidth: 1.5, stroke: '#FFFFFF' }} activeDot={{ r: 6.5 }} />
+                <Line yAxisId="left" type="monotone" dataKey="forecast" name="ML Predicted Trajectory" stroke="#E8901A" strokeWidth={2.5} strokeDasharray="6 4" dot={false} activeDot={{ r: 5, fill: '#E8901A' }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Right Column (4 cols): Suspected Pathogen Share */}
+        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-base font-bold text-[#1D2321]">Suspected Pathogen Share</h2>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#F6F5F2] text-[#5B6663]">
+                {data.summary.active_cases_total} Total
+              </span>
+            </div>
+            <p className="text-xs text-[#5B6663]">Proportion of active cases by category</p>
+
+            <div className="h-44 w-full my-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={data.disease_breakdown}
+                    dataKey="cases"
+                    nameKey="disease"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={65}
+                    paddingAngle={3}
+                  >
+                    {data.disease_breakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(val: any, name: any) => [`${val} cases`, name]}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '12px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-3 border-t border-[#E2E8F0]/60">
+            {data.disease_breakdown.map((item, idx) => (
+              <div key={item.disease} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: pieColors[idx % pieColors.length] }} />
+                  <span className="font-medium text-[#1D2321]">{item.disease}</span>
+                </div>
+                <div className="font-mono font-bold text-[#5B6663]">
+                  {item.cases} <span className="text-[10px] font-normal text-[#5B6663]">({item.pct}%)</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. SECONDARY OPERATIONAL ROW: Spatial Map & Top At-Risk Districts */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* Left Column (7 cols): GIS Outbreak Map Preview */}
@@ -292,102 +454,6 @@ export function OverviewView({ data, activeFilter, onNavigateTab, onSelectDistri
             </button>
           </div>
         </div>
-      </div>
-
-      {/* 3. Epidemiological Trends & Disease Breakdown Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Column (8 cols): 7-Day Incidence vs Forecast */}
-        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-            <div>
-              <h2 className="text-base font-bold text-[#1D2321] flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#C2255C]" />
-                Epidemiological Incidence & ML Forecast
-              </h2>
-              <p className="text-xs text-[#5B6663]">
-                Daily reported cases (SOS Red), 7-Day LSTM projection (Amber dashed), and Precipitation correlation (Blue)
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-mono bg-[#F6F5F2] px-2.5 py-1 rounded-lg border border-[#E2E8F0]">
-              <span>R² Score: <strong>0.91</strong></span>
-              <span>•</span>
-              <span>MAE: <strong>3.2 cases</strong></span>
-            </div>
-          </div>
-
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={data.trend_series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#5B6663' }} axisLine={{ stroke: '#E2E8F0' }} tickLine={false} />
-                <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#5B6663' }} axisLine={false} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#5B6663' }} axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#FFFFFF', 
-                    borderRadius: '8px', 
-                    border: '1px solid #E2E8F0', 
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-                    fontSize: '12px' 
-                  }} 
-                />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
-                <Bar yAxisId="right" dataKey="rainfall" name="Rainfall (mm)" fill="#BAE6FD" radius={[3, 3, 0, 0]} barSize={24} />
-                <Line yAxisId="left" type="monotone" dataKey="cases" name="Actual Reported Cases" stroke="#C6362C" strokeWidth={2.5} dot={{ r: 4, fill: '#C6362C' }} />
-                <Line yAxisId="left" type="monotone" dataKey="forecast" name="ML Predicted Trajectory" stroke="#E8901A" strokeWidth={2.5} strokeDasharray="4 4" dot={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Right Column (4 cols): Suspected Disease Share */}
-        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col">
-          <div className="mb-4">
-            <h2 className="text-base font-bold text-[#1D2321]">Suspected Pathogen Share</h2>
-            <p className="text-xs text-[#5B6663]">Proportion of active cases by category</p>
-          </div>
-
-          <div className="h-48 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data.disease_breakdown}
-                  dataKey="cases"
-                  nameKey="disease"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={68}
-                  paddingAngle={3}
-                >
-                  {data.disease_breakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(val: any, name: any) => [`${val} cases`, name]}
-                  contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '12px' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-auto space-y-2 pt-3 border-t border-[#E2E8F0]/60">
-            {data.disease_breakdown.map((item, idx) => (
-              <div key={item.disease} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: pieColors[idx % pieColors.length] }} />
-                  <span className="font-medium text-[#1D2321]">{item.disease}</span>
-                </div>
-                <div className="font-mono font-bold text-[#5B6663]">
-                  {item.cases} ({item.pct}%)
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
       </div>
     </div>
   );

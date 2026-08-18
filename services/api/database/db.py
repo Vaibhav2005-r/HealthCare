@@ -49,6 +49,32 @@ async def fetch_districts_from_db(risk_filter: Optional[str] = None) -> List[Dic
             rows = await conn.fetch("SELECT * FROM public.districts ORDER BY risk_score DESC")
         return [dict(r) for r in rows]
 
+async def fetch_district_case_history_from_db(district_id: str, days: int = 14) -> List[Dict[str, Any]]:
+    """
+    Fetches genuine 14-day daily epidemiological & meteorological observations from Supabase.
+    If the district has fewer than 13 days of history (e.g. newly added district),
+    it flags data_quality='INSUFFICIENT_HISTORY' and falls back to the state-level daily moving average.
+    """
+    pool = await get_db_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            "SELECT record_date, cases_reported, rainfall_mm, temp_c, humidity_pct FROM public.district_case_history WHERE district_id = $1 ORDER BY record_date ASC LIMIT $2",
+            district_id, days
+        )
+        if len(rows) >= 13:
+            return [dict(r) for r in rows]
+        
+        # Explicit Documented Fallback: Query state-level daily average across all reporting districts
+        state_rows = await conn.fetch(
+            "SELECT record_date, ROUND(AVG(cases_reported))::INT as cases_reported, ROUND(AVG(rainfall_mm)::NUMERIC, 1)::FLOAT as rainfall_mm, ROUND(AVG(temp_c)::NUMERIC, 1)::FLOAT as temp_c, ROUND(AVG(humidity_pct)::NUMERIC, 1)::FLOAT as humidity_pct FROM public.district_case_history GROUP BY record_date ORDER BY record_date ASC LIMIT $1",
+            days
+        )
+        history = [dict(r) for r in state_rows]
+        for h in history:
+            h["fallback_applied"] = "STATE_MOVING_AVERAGE"
+            h["data_quality"] = "INSUFFICIENT_DISTRICT_HISTORY"
+        return history
+
 async def update_district_in_db(
     district_id: str,
     rainfall_mm: float,
