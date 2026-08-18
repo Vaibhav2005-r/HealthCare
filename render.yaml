@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: arogya-prahari-backend
+    runtime: python
+    region: singapore
+    plan: free
+    rootDir: services
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_DB_URL
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.10.12"
