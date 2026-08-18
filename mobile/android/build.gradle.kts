@@ -15,17 +15,21 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
-    project.evaluationDependsOn(":app")
+    afterEvaluate {
+        val android = extensions.findByName("android")
+        if (android != null) {
+            val method = android.javaClass.methods.firstOrNull { 
+                it.name == "compileSdkVersion" && it.parameterTypes.size == 1 && (it.parameterTypes[0] == Int::class.javaPrimitiveType || it.parameterTypes[0] == Integer::class.java)
+            }
+            method?.invoke(android, 36)
+        }
+    }
 }
 
 subprojects {
-    plugins.withId("com.android.library") {
-        val androidExt = project.extensions.findByName("android")
-        if (androidExt is com.android.build.gradle.BaseExtension) {
-            androidExt.compileSdkVersion(36)
-        }
-    }
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
