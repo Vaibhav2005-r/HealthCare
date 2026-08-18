@@ -22,7 +22,7 @@ class LocalDbService {
 
       _db = await openDatabase(
         path,
-        version: 1,
+        version: 3,
         onCreate: (Database db, int version) async {
           await db.execute('''
             CREATE TABLE reports (
@@ -33,6 +33,7 @@ class LocalDbService {
               contactNumber TEXT,
               village TEXT,
               symptoms TEXT,
+              customSymptoms TEXT,
               durationDays INTEGER,
               temperature REAL,
               temperatureUnit TEXT,
@@ -48,6 +49,11 @@ class LocalDbService {
               imagePath TEXT
             )
           ''');
+        },
+        onUpgrade: (Database db, int oldVersion, int newVersion) async {
+          try {
+            await db.execute('ALTER TABLE reports ADD COLUMN customSymptoms TEXT');
+          } catch (_) {}
         },
       );
       return _db;
@@ -69,11 +75,27 @@ class LocalDbService {
   Future<void> insertReport(Report report) async {
     final db = await _getDatabase();
     if (db != null) {
-      await db.insert(
-        'reports',
-        report.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      try {
+        await db.insert(
+          'reports',
+          report.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } catch (e) {
+        debugPrint('[LocalDbService] SQLite insert error: $e. Running migration retry.');
+        try {
+          await db.execute('ALTER TABLE reports ADD COLUMN customSymptoms TEXT');
+          await db.insert(
+            'reports',
+            report.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        } catch (innerErr) {
+          debugPrint('[LocalDbService] Final SQLite error, falling back to memory: $innerErr');
+          _memoryFallback.removeWhere((r) => r.id == report.id);
+          _memoryFallback.add(report);
+        }
+      }
     } else {
       _memoryFallback.removeWhere((r) => r.id == report.id);
       _memoryFallback.add(report);
