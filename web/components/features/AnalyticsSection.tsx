@@ -39,8 +39,7 @@ import {
   fetchAnalyticsDemographics, 
   AnalyticsTrendItem, 
   AnalyticsTrendResponse, 
-  DemographicsResponse,
-  FALLBACK_DISTRICTS 
+  DemographicsResponse
 } from '@/lib/api';
 import { useLanguage } from '@/lib/i18n';
 
@@ -51,7 +50,7 @@ interface AnalyticsSectionProps {
 }
 
 export default function AnalyticsSection({ 
-  districts = FALLBACK_DISTRICTS,
+  districts = [],
   selectedDistrictId = 'MH-PLG',
   onSelectDistrict
 }: AnalyticsSectionProps) {
@@ -61,10 +60,10 @@ export default function AnalyticsSection({
   const [demographics, setDemographics] = useState<DemographicsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Sorted list of all 36 districts
+  // Sorted list of all 36 districts from Supabase
   const allDistricts = districts && districts.length > 0
     ? [...districts].sort((a, b) => a.name.localeCompare(b.name))
-    : FALLBACK_DISTRICTS;
+    : [];
 
   const currentDistrict = allDistricts.find(d => d.district_id === currentDistrictId) || allDistricts[0];
 

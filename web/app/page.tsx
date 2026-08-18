@@ -12,9 +12,7 @@ import {
   fetchLiveDashboard, 
   fetchDistricts, 
   LiveDashboardData, 
-  DistrictData, 
-  FALLBACK_DISTRICTS,
-  FALLBACK_DASHBOARD 
+  DistrictData
 } from '@/lib/api';
 import { 
   RefreshCw, 
@@ -90,15 +88,16 @@ export default function ArogyaPrahariDashboard() {
   const [activeRiskFilter, setActiveRiskFilter] = useState<RiskFilterType>('ALL');
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictData | null>(null);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
-  const [dashboardData, setDashboardData] = useState<LiveDashboardData>(FALLBACK_DASHBOARD);
-  const [districts, setDistricts] = useState<DistrictData[]>(FALLBACK_DISTRICTS);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [dashboardData, setDashboardData] = useState<LiveDashboardData | null>(null);
+  const [districts, setDistricts] = useState<DistrictData[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false);
   const { t, language, setLanguage } = useLanguage();
 
-  // Load live telemetry from FastAPI backend
+  // Load live telemetry directly from Supabase via backend API
   const loadData = async () => {
     try {
+      setIsLoading(true);
       const [live, dists] = await Promise.all([
         fetchLiveDashboard(),
         fetchDistricts()
@@ -106,7 +105,10 @@ export default function ArogyaPrahariDashboard() {
       setDashboardData(live);
       setDistricts(dists);
     } catch (err) {
-      console.error('Error loading dashboard telemetry:', err);
+      console.error('Error loading dashboard telemetry from Supabase:', err);
+      toast.error('Failed to sync live data from Supabase. Reconnecting...');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -144,10 +146,13 @@ export default function ArogyaPrahariDashboard() {
             toast.error(`🚨 LIVE REALTIME SOS: ${data.alert.cases_count} cases in ${data.alert.district}!`, {
               duration: 6000,
             });
-            setDashboardData(prev => ({
-              ...prev,
-              recent_alerts: [data.alert, ...prev.recent_alerts]
-            }));
+            setDashboardData(prev => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                recent_alerts: [data.alert, ...(prev.recent_alerts || [])]
+              };
+            });
           } else if (data.type === 'NEW_FIELD_REPORT') {
             toast.info(`Field intake received from ${data.worker_id}: ${data.symptoms.join(', ')}`);
           }

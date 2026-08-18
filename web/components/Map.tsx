@@ -11,7 +11,7 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { DistrictData, FALLBACK_DISTRICTS } from '@/lib/api';
+import { DistrictData } from '@/lib/api';
 import { RiskFilterType } from './RiskPulseBar';
 import { 
   Building2, 
@@ -549,27 +549,11 @@ export default function MapComponent({
                 icon={icon}
                 eventHandlers={{
                   click: () => {
-                    if (onSelectDistrict) {
-                      const matched = (districts && districts.find(d => d.name.toLowerCase() === cluster.district.toLowerCase())) ||
-                        FALLBACK_DISTRICTS.find(d => d.name.toLowerCase() === cluster.district.toLowerCase()) || {
-                        district_id: cluster.id,
-                        name: cluster.district,
-                        state: 'Maharashtra',
-                        centroid_lat: cluster.lat,
-                        centroid_lng: cluster.lng,
-                        risk_level: cluster.risk_level,
-                        risk_score: cluster.risk_score,
-                        active_cases: cluster.cases,
-                        trend_7d: 'UP',
-                        trend_pct: 24.5,
-                        primary_suspected: cluster.disease,
-                        population: '5,000,000',
-                        asha_active_count: cluster.asha_workers,
-                        rainfall_mm: cluster.rainfall_mm,
-                        humidity_pct: cluster.humidity_pct,
-                        last_reported: 'Live'
-                      };
-                      onSelectDistrict(matched as DistrictData);
+                    if (onSelectDistrict && districts) {
+                      const matched = districts.find(d => d.name.toLowerCase() === cluster.district.toLowerCase() || d.district_id === cluster.id);
+                      if (matched) {
+                        onSelectDistrict(matched);
+                      }
                     }
                   }
                 }}

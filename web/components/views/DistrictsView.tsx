@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Building2, 
   Search, 
@@ -32,7 +32,13 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
-import { DistrictData } from '@/lib/api';
+import { 
+  DistrictData, 
+  fetchAnalyticsTrends, 
+  fetchAnalyticsDemographics, 
+  AnalyticsTrendResponse, 
+  DemographicsResponse 
+} from '@/lib/api';
 import { RiskFilterType } from '../RiskPulseBar';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
@@ -59,6 +65,32 @@ export function DistrictsView({
   const [sortField, setSortField] = useState<SortField>('risk_score');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [isExporting, setIsExporting] = useState(false);
+  const [districtTrends, setDistrictTrends] = useState<AnalyticsTrendResponse | null>(null);
+  const [demographics, setDemographics] = useState<DemographicsResponse | null>(null);
+  const [loadingTrends, setLoadingTrends] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!selectedDistrict) {
+      setDistrictTrends(null);
+      return;
+    }
+    let isMounted = true;
+    setLoadingTrends(true);
+    Promise.all([
+      fetchAnalyticsTrends(selectedDistrict.district_id),
+      fetchAnalyticsDemographics()
+    ]).then(([trends, demo]) => {
+      if (isMounted) {
+        setDistrictTrends(trends);
+        setDemographics(demo);
+        setLoadingTrends(false);
+      }
+    }).catch((err) => {
+      console.error('Failed to load district inspection trends from Supabase:', err);
+      if (isMounted) setLoadingTrends(false);
+    });
+    return () => { isMounted = false; };
+  }, [selectedDistrict]);
 
   // Sorting & Filtering
   const filteredAndSortedDistricts = useMemo(() => {
@@ -160,23 +192,24 @@ export function DistrictsView({
     }, 800);
   };
 
-  // Mock timeline data for drilldown modal
-  const districtTimelineData = [
-    { day: 'Day 1', cases: 8, threshold: 12 },
-    { day: 'Day 3', cases: 14, threshold: 12 },
-    { day: 'Day 5', cases: 19, threshold: 15 },
-    { day: 'Day 7', cases: 24, threshold: 18 },
-    { day: 'Day 9', cases: 31, threshold: 20 },
-    { day: 'Day 11', cases: 38, threshold: 22 },
-    { day: 'Day 14', cases: selectedDistrict?.active_cases || 42, threshold: 25 },
-  ];
+  // Dynamic 14-day timeline data derived from Supabase telemetry
+  const districtTimelineData = districtTrends?.data && districtTrends.data.length > 0
+    ? districtTrends.data.map(item => ({
+        day: item.date ? item.date.slice(5) : 'Day',
+        cases: item.actual_cases !== null ? item.actual_cases : (item.predicted_cases || 0),
+        threshold: Math.round((selectedDistrict?.active_cases || 25) * 1.15)
+      }))
+    : [
+        { day: 'Day 14', cases: selectedDistrict?.active_cases || 0, threshold: Math.round((selectedDistrict?.active_cases || 25) * 1.15) }
+      ];
 
-  const demographicData = [
-    { name: '0-10 Years', value: 24, color: '#C2255C' },
-    { name: '11-30 Years', value: 42, color: '#E8901A' },
-    { name: '31-60 Years', value: 28, color: '#146356' },
-    { name: '60+ Years', value: 16, color: '#5B6663' },
-  ];
+  const demographicData = demographics?.age_brackets
+    ? Object.entries(demographics.age_brackets).map(([bracket, count], idx) => ({
+        name: bracket,
+        value: count,
+        color: ['#C2255C', '#E8901A', '#146356', '#5B6663'][idx % 4]
+      }))
+    : [];
 
   return (
     <div className="space-y-4">

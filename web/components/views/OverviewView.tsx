@@ -60,30 +60,13 @@ interface OverviewViewProps {
   onSelectDistrict: (district: DistrictData) => void;
 }
 
-const FALLBACK_TRAJECTORY: FourCastNetForecastItem[] = [
-  { day: "Day +1", date: "2026-08-19", predicted_cases: 48.7, lower_bound_cases: 45.0, upper_bound_cases: 52.0, fourcastnet_rainfall_mm: 65.0, temp_c: 27.2, humidity_pct: 88.0, vector_breeding_risk: 0.82, risk_score: 0.8578, risk_level: "CRITICAL" },
-  { day: "Day +2", date: "2026-08-20", predicted_cases: 51.4, lower_bound_cases: 48.0, upper_bound_cases: 56.0, fourcastnet_rainfall_mm: 82.0, temp_c: 27.5, humidity_pct: 90.0, vector_breeding_risk: 0.88, risk_score: 0.8524, risk_level: "CRITICAL" },
-  { day: "Day +3", date: "2026-08-21", predicted_cases: 54.4, lower_bound_cases: 51.0, upper_bound_cases: 62.0, fourcastnet_rainfall_mm: 94.0, temp_c: 27.1, humidity_pct: 92.0, vector_breeding_risk: 0.94, risk_score: 0.8500, risk_level: "CRITICAL" },
-  { day: "Day +4", date: "2026-08-22", predicted_cases: 57.4, lower_bound_cases: 55.0, upper_bound_cases: 68.0, fourcastnet_rainfall_mm: 78.0, temp_c: 27.0, humidity_pct: 89.0, vector_breeding_risk: 0.85, risk_score: 0.8551, risk_level: "CRITICAL" },
-  { day: "Day +5", date: "2026-08-23", predicted_cases: 60.7, lower_bound_cases: 58.0, upper_bound_cases: 73.0, fourcastnet_rainfall_mm: 60.0, temp_c: 27.3, humidity_pct: 85.0, vector_breeding_risk: 0.78, risk_score: 0.8559, risk_level: "CRITICAL" },
-  { day: "Day +6", date: "2026-08-24", predicted_cases: 64.1, lower_bound_cases: 60.0, upper_bound_cases: 77.0, fourcastnet_rainfall_mm: 45.0, temp_c: 27.5, humidity_pct: 82.0, vector_breeding_risk: 0.72, risk_score: 0.8579, risk_level: "CRITICAL" },
-  { day: "Day +7", date: "2026-08-25", predicted_cases: 67.6, lower_bound_cases: 63.0, upper_bound_cases: 82.0, fourcastnet_rainfall_mm: 52.0, temp_c: 27.4, humidity_pct: 84.0, vector_breeding_risk: 0.76, risk_score: 0.8560, risk_level: "CRITICAL" },
-  { day: "Day +8", date: "2026-08-26", predicted_cases: 71.1, lower_bound_cases: 66.0, upper_bound_cases: 87.0, fourcastnet_rainfall_mm: 70.0, temp_c: 27.2, humidity_pct: 87.0, vector_breeding_risk: 0.84, risk_score: 0.8614, risk_level: "CRITICAL" },
-  { day: "Day +9", date: "2026-08-27", predicted_cases: 74.9, lower_bound_cases: 68.0, upper_bound_cases: 91.0, fourcastnet_rainfall_mm: 64.0, temp_c: 27.1, humidity_pct: 86.0, vector_breeding_risk: 0.80, risk_score: 0.8602, risk_level: "CRITICAL" },
-  { day: "Day +10", date: "2026-08-28", predicted_cases: 78.7, lower_bound_cases: 71.0, upper_bound_cases: 96.0, fourcastnet_rainfall_mm: 58.0, temp_c: 27.0, humidity_pct: 85.0, vector_breeding_risk: 0.75, risk_score: 0.8555, risk_level: "CRITICAL" },
-  { day: "Day +11", date: "2026-08-29", predicted_cases: 82.5, lower_bound_cases: 73.0, upper_bound_cases: 100.0, fourcastnet_rainfall_mm: 62.0, temp_c: 27.2, humidity_pct: 86.0, vector_breeding_risk: 0.79, risk_score: 0.8581, risk_level: "CRITICAL" },
-  { day: "Day +12", date: "2026-08-30", predicted_cases: 86.3, lower_bound_cases: 76.0, upper_bound_cases: 105.0, fourcastnet_rainfall_mm: 54.0, temp_c: 27.3, humidity_pct: 84.0, vector_breeding_risk: 0.74, risk_score: 0.8623, risk_level: "CRITICAL" },
-  { day: "Day +13", date: "2026-08-31", predicted_cases: 90.3, lower_bound_cases: 78.0, upper_bound_cases: 109.0, fourcastnet_rainfall_mm: 48.0, temp_c: 27.4, humidity_pct: 82.0, vector_breeding_risk: 0.70, risk_score: 0.8546, risk_level: "CRITICAL" },
-  { day: "Day +14", date: "2026-09-01", predicted_cases: 94.2, lower_bound_cases: 80.0, upper_bound_cases: 114.0, fourcastnet_rainfall_mm: 50.0, temp_c: 27.5, humidity_pct: 83.0, vector_breeding_risk: 0.72, risk_score: 0.8598, risk_level: "CRITICAL" }
-];
-
 export function OverviewView({ data, districts, activeFilter, onNavigateTab, onSelectDistrict }: OverviewViewProps) {
   const { t } = useLanguage();
   const [selectedForecastDistrict, setSelectedForecastDistrict] = useState<string>('MH-PLG');
   const [simultaneousForecast, setSimultaneousForecast] = useState<SimultaneousForecastResponse | null>(null);
   const [loadingForecast, setLoadingForecast] = useState<boolean>(false);
 
-  // Fallback / full 36-district catalog
+  // Full 36-district catalog directly from Supabase
   const allDistrictsList: DistrictData[] = districts && districts.length > 0
     ? [...districts].sort((a, b) => a.name.localeCompare(b.name))
     : data.top_at_risk;
@@ -110,7 +93,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
     : data.top_at_risk.filter(d => d.risk_level === activeFilter);
 
   const pieColors = ['#C2255C', '#C6362C', '#E8901A', '#146356'];
-  const chartData: FourCastNetForecastItem[] = simultaneousForecast?.forecast_trajectory || FALLBACK_TRAJECTORY;
+  const chartData: FourCastNetForecastItem[] = simultaneousForecast?.forecast_trajectory || [];
 
   return (
     <div className="space-y-6">
