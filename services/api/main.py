@@ -30,30 +30,55 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from routers import gis, analytics, telemetry, resources, rag_admin, exports
+try:
+    from routers import gis, analytics, telemetry, resources, rag_admin, exports
+except ImportError:
+    from api.routers import gis, analytics, telemetry, resources, rag_admin, exports
+
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 
-from database.connection import init_db_pool, close_db_pool as close_conn_pool, get_db_pool as get_conn_pool
-from database.db import (
-    get_db_pool,
-    close_db_pool,
-    fetch_districts_from_db,
-    fetch_district_case_history_from_db,
-    fetch_state_case_history_from_db,
-    update_district_in_db,
-    fetch_alerts_from_db,
-    insert_alert_to_db,
-    update_alert_status_in_db,
-    fetch_alert_audit_logs_from_db,
-    fetch_case_reports_from_db,
-    insert_case_report_to_db,
-    fetch_villages_from_db,
-    fetch_clinical_guidance_from_db,
-    fetch_worker_profile_from_db,
-    fetch_asha_workers_from_db
-)
+try:
+    from database.connection import init_db_pool, close_db_pool as close_conn_pool, get_db_pool as get_conn_pool
+    from database.db import (
+        get_db_pool,
+        close_db_pool,
+        fetch_districts_from_db,
+        fetch_district_case_history_from_db,
+        fetch_state_case_history_from_db,
+        update_district_in_db,
+        fetch_alerts_from_db,
+        insert_alert_to_db,
+        update_alert_status_in_db,
+        fetch_alert_audit_logs_from_db,
+        fetch_case_reports_from_db,
+        insert_case_report_to_db,
+        fetch_villages_from_db,
+        fetch_clinical_guidance_from_db,
+        fetch_worker_profile_from_db,
+        fetch_asha_workers_from_db
+    )
+except ImportError:
+    from api.database.connection import init_db_pool, close_db_pool as close_conn_pool, get_db_pool as get_conn_pool
+    from api.database.db import (
+        get_db_pool,
+        close_db_pool,
+        fetch_districts_from_db,
+        fetch_district_case_history_from_db,
+        fetch_state_case_history_from_db,
+        update_district_in_db,
+        fetch_alerts_from_db,
+        insert_alert_to_db,
+        update_alert_status_in_db,
+        fetch_alert_audit_logs_from_db,
+        fetch_case_reports_from_db,
+        insert_case_report_to_db,
+        fetch_villages_from_db,
+        fetch_clinical_guidance_from_db,
+        fetch_worker_profile_from_db,
+        fetch_asha_workers_from_db
+    )
 
 try:
     from ml.rag_pipeline import get_rag_engine
@@ -110,7 +135,7 @@ def load_ml_models():
         print(f"Warning: Could not initialize LSTM model: {e}")
 
 OFFLINE_SYNC_DATABASE_PATH = Path(
-    os.getenv("OFFLINE_SYNC_DATABASE_PATH", os.path.join(os.path.dirname(__file__), "offline_sync.db"))
+    os.getenv("OFFLINE_SYNC_DATABASE_PATH", "/tmp/offline_sync.db")
 )
 
 def initialise_offline_sync_database():
