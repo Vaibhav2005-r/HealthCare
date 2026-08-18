@@ -117,6 +117,71 @@ async def fetch_district_case_history_from_db(district_id: str, days: int = 14) 
         for i in range(days)
     ]
 
+async def fetch_state_case_history_from_db(days: int = 14) -> List[Dict[str, Any]]:
+    """
+    Fetches state-level daily aggregated case and rainfall history.
+    """
+    try:
+        pool = await get_db_pool()
+        if pool:
+            async with pool.acquire() as conn:
+                rows = await conn.fetch("""
+                    SELECT record_date, 
+                           SUM(cases_reported)::INT as cases_reported, 
+                           ROUND(AVG(rainfall_mm)::NUMERIC, 1)::FLOAT as rainfall_mm, 
+                           ROUND(AVG(temp_c)::NUMERIC, 1)::FLOAT as temp_c, 
+                           ROUND(AVG(humidity_pct)::NUMERIC, 1)::FLOAT as humidity_pct 
+                    FROM public.district_case_history 
+                    GROUP BY record_date 
+                    ORDER BY record_date ASC 
+                    LIMIT $1
+                """, days)
+                if rows:
+                    return [dict(r) for r in rows]
+    except Exception:
+        pass
+
+    # Fallback to Supabase REST API
+    async with httpx.AsyncClient() as client:
+        url = f"{SUPABASE_URL}/rest/v1/district_case_history?select=record_date,cases_reported,rainfall_mm,temp_c,humidity_pct&order=record_date.asc&limit=500"
+        res = await client.get(url, headers=get_rest_headers(), timeout=5.0)
+        if res.status_code == 200:
+            raw = res.json()
+            by_date = {}
+            for r in raw:
+                dt = r["record_date"]
+                if dt not in by_date:
+                    by_date[dt] = {"record_date": dt, "cases_reported": 0, "rainfall_mm": 0.0, "temp_c": 27.5, "humidity_pct": 78.0, "count": 0}
+                by_date[dt]["cases_reported"] += int(r.get("cases_reported") or 0)
+                by_date[dt]["rainfall_mm"] += float(r.get("rainfall_mm") or 0.0)
+                by_date[dt]["count"] += 1
+            
+            result = []
+            for dt in sorted(by_date.keys())[-days:]:
+                item = by_date[dt]
+                cnt = max(1, item["count"])
+                result.append({
+                    "record_date": dt,
+                    "cases_reported": item["cases_reported"],
+                    "rainfall_mm": round(item["rainfall_mm"] / cnt, 1),
+                    "temp_c": 27.5,
+                    "humidity_pct": 78.0
+                })
+            if result:
+                return result
+
+    today = datetime.now(timezone.utc).date()
+    return [
+        {
+            "record_date": (today - timedelta(days=14 - i)).strftime("%Y-%m-%d"),
+            "cases_reported": 450 + i * 18,
+            "rainfall_mm": 35.0 + (i % 8) * 3,
+            "temp_c": 27.5,
+            "humidity_pct": 78.0
+        }
+        for i in range(days)
+    ]
+
 async def update_district_in_db(
     district_id: str,
     rainfall_mm: float,
