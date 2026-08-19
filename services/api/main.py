@@ -93,7 +93,7 @@ rag_engine = None
 
 if torch is not None:
     class OutbreakForecastLSTM(torch.nn.Module):
-        def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=1):
+        def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=14):
             super(OutbreakForecastLSTM, self).__init__()
             self.hidden_size = hidden_size
             self.num_layers = num_layers
@@ -108,7 +108,7 @@ if torch is not None:
             return out
 else:
     class OutbreakForecastLSTM:
-        def __init__(self, input_size: int = 4, hidden_size: int = 32, num_layers: int = 2, output_size: int = 1):
+        def __init__(self, input_size: int = 4, hidden_size: int = 32, num_layers: int = 2, output_size: int = 14):
             self.input_size = input_size
             self.hidden_size = hidden_size
             self.num_layers = num_layers
@@ -131,10 +131,10 @@ def load_ml_models():
             print("MinMaxScaler fitted on outbreak_time_series.csv.")
             
         if os.path.exists(model_path) and torch is not None:
-            lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=1)
-            lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+            lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=14)
+            lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
             lstm_model.eval()
-            print("PyTorch LSTM Outbreak Forecast Model loaded successfully.")
+            print("PyTorch LSTM Outbreak Forecast Model loaded successfully (14-Horizon Multi-Output).")
     except Exception as e:
         lstm_model = None
         print(f"Warning: Could not initialize LSTM model: {e}")
@@ -378,9 +378,9 @@ async def refresh_district_telemetry():
                         input_tensor = torch.from_numpy(scaled_data).float().unsqueeze(0)
                         
                         with torch.no_grad():
-                            raw_pred = lstm_model(input_tensor).item()
-                            pred_cases = (raw_pred - (-1.0)) / 2.0 * (case_max - case_min) + case_min
-                            pred_cases = max(0.0, pred_cases)
+                            raw_preds_14 = lstm_model(input_tensor).numpy().flatten()
+                            pred_cases_14 = (raw_preds_14 - (-1.0)) / 2.0 * (case_max - case_min) + case_min
+                            pred_cases = max(0.0, float(pred_cases_14[0])) # Day +1 forecast case count
                             
                         # 2. CALIBRATED EPIDEMIOLOGICAL RISK INDEX:
                         # Volume Ratio: Scaled against 85-case epidemic surge threshold
@@ -813,9 +813,10 @@ def get_forecast(req: ForecastRequest):
     case_max = scaler.data_max_[3]
     
     with torch.no_grad():
-        raw_pred = lstm_model(input_tensor).item()
-        pred_cases = (raw_pred - (-1.0)) / 2.0 * (case_max - case_min) + case_min
-        pred_cases = max(0.0, pred_cases)
+        raw_preds_14 = lstm_model(input_tensor).numpy().flatten()
+        pred_cases_14 = (raw_preds_14 - (-1.0)) / 2.0 * (case_max - case_min) + case_min
+        pred_cases_14 = np.maximum(0.0, np.round(pred_cases_14, 1)).tolist()
+        pred_cases = pred_cases_14[0]
         
         # Calibrated against IDSP 85-case epidemic threshold
         vol_ratio = min(1.0, pred_cases / 85.0)
@@ -823,7 +824,8 @@ def get_forecast(req: ForecastRequest):
         
     return {
         "risk_score": risk_score,
-        "predicted_cases": round(pred_cases, 1),
+        "predicted_cases": pred_cases,
+        "predicted_cases_14_days": pred_cases_14,
         "risk_level": "CRITICAL" if risk_score >= 0.72 else ("HIGH" if risk_score >= 0.55 else ("MODERATE" if risk_score >= 0.36 else "LOW"))
     }
 

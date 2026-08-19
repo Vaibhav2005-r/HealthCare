@@ -17,7 +17,7 @@ model_path = os.path.join(ml_dir, "lstm_forecast_model.pt")
 data_path = os.path.join(ml_dir, "outbreak_time_series.csv")
 
 # 1. Load Pretrained PyTorch LSTM Model
-lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=1)
+lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=14)
 if os.path.exists(model_path):
     lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
 lstm_model.eval()
@@ -81,16 +81,15 @@ async def run_outbreak_dl_inference(timeseries_df) -> Dict[str, Any]:
         scaled_seq = scaler.transform(seq_array)
         input_tensor = torch.from_numpy(scaled_seq).float().unsqueeze(0)
         
-        # 2. Real PyTorch Forward Pass
+        # 2. Real PyTorch Forward Pass (14-Horizon Vector)
         with torch.no_grad():
-            normalized_prediction = lstm_model(input_tensor).item()
+            raw_preds_14 = lstm_model(input_tensor).numpy().flatten()
             
         # 3. Inverse transform the predicted target feature (daily_cases is feature index 3)
-        # Construct dummy vector for inverse scaling
-        dummy_row = np.zeros((1, 4))
-        dummy_row[0, 3] = normalized_prediction
-        predicted_cases = float(scaler.inverse_transform(dummy_row)[0, 3])
-        predicted_cases = max(0.0, round(predicted_cases, 1))
+        case_min = scaler.data_min_[3]
+        case_max = scaler.data_max_[3]
+        pred_cases_14 = (raw_preds_14 - (-1.0)) / 2.0 * (case_max - case_min) + case_min
+        predicted_cases = max(0.0, round(float(pred_cases_14[0]), 1))
         
         # 4. Compute epidemiological Z-Score and Risk Score
         hist_cases = seq_array[:, 3]

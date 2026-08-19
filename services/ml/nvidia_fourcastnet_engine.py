@@ -33,7 +33,7 @@ def get_ml_assets():
             from train_lstm_forecast import OutbreakForecastLSTM
         except ImportError:
             class OutbreakForecastLSTM(torch.nn.Module):
-                def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=1):
+                def __init__(self, input_size=4, hidden_size=32, num_layers=2, output_size=14):
                     super(OutbreakForecastLSTM, self).__init__()
                     self.hidden_size = hidden_size
                     self.num_layers = num_layers
@@ -55,7 +55,7 @@ def get_ml_assets():
             _scaler.fit(dummy)
             
     if _lstm_model is None:
-        _lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=1)
+        _lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=14)
         if os.path.exists(model_path):
             _lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu'), weights_only=True))
         _lstm_model.eval()
@@ -247,29 +247,27 @@ async def run_simultaneous_fourcastnet_lstm_forecast(
         current_cases
     ])
     
-    # 3. Autoregressive Roll-Forward Prediction Loop
-    simultaneous_series = []
-    simulated_case_traj = current_cases
+    # 3. Direct 14-Horizon Single Forward Pass
+    current_14_days = rolling_buffer[-14:]
+    scaled_input = scaler.transform(current_14_days)
+    input_tensor = torch.from_numpy(scaled_input).float().unsqueeze(0)
     
-    for step_idx in range(forecast_days):
+    with torch.no_grad():
+        raw_preds_14 = model(input_tensor).numpy().flatten()
+        # Inverse scale all 14 horizons to physical case counts
+        pred_cases_14 = (raw_preds_14 - (-1.0)) / 2.0 * (case_max - case_min) + case_min
+        pred_cases_14 = np.maximum(1.0, np.round(pred_cases_14, 1))
+
+    simultaneous_series = []
+    for step_idx in range(min(forecast_days, 14)):
         w_step = fcn_weather[step_idx]
         future_rain = w_step["rainfall_mm"]
         future_temp = w_step["temp_c"]
         future_rh = w_step["humidity_pct"]
         future_date = w_step["date"]
-        
-        # Build 14-step input tensor for the current forecast horizon
-        current_14_days = rolling_buffer[-14:]
-        scaled_input = scaler.transform(current_14_days)
-        input_tensor = torch.from_numpy(scaled_input).float().unsqueeze(0)
-        
-        with torch.no_grad():
-            raw_pred = model(input_tensor).item()
-            # Inverse scale to physical case count
-            pred_cases = (raw_pred - (-1.0)) / 2.0 * (case_max - case_min) + case_min
-            pred_cases = max(1.0, round(float(pred_cases), 1))
+        pred_cases = float(pred_cases_14[step_idx])
             
-        # Compute Dynamic Risk Score for Day t+k
+        # Compute Dynamic Composite Risk Score for Day t+k
         surge_ratio = min(1.0, pred_cases / 48.0) # IDSP 48-case epidemic threshold
         rain_w = min(1.0, future_rain / 80.0)      # IMD 80mm heavy rain threshold
         rh_w = max(0.0, (future_rh - 60.0) / 35.0) # WHO 70% RH vector threshold
@@ -279,7 +277,7 @@ async def run_simultaneous_fourcastnet_lstm_forecast(
         day_risk_score = round(float(np.clip(0.75 * surge_ratio + 0.25 * imd_modifier, 0.08, 0.96)), 4)
         day_risk_tier = "CRITICAL" if day_risk_score >= 0.80 else ("HIGH" if day_risk_score >= 0.65 else ("MODERATE" if day_risk_score >= 0.40 else "LOW"))
         
-        # Confidence interval estimation (95% uncertainty expands with forecast horizon)
+        # Confidence interval estimation (95% uncertainty expands with horizon distance)
         uncertainty = 1.0 + (step_idx * 0.45)
         lower_bound = max(0.0, round(pred_cases - 2.5 * uncertainty, 1))
         upper_bound = round(pred_cases + 3.0 * uncertainty, 1)
@@ -297,9 +295,6 @@ async def run_simultaneous_fourcastnet_lstm_forecast(
             "risk_score": day_risk_score,
             "risk_level": day_risk_tier
         })
-        
-        # Roll predicted value and forward weather into the rolling buffer for the next autoregressive step
-        rolling_buffer.append([future_rain, future_temp, future_rh, pred_cases])
         
     return {
         "district_id": district_id,
