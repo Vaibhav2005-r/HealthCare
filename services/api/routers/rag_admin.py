@@ -64,3 +64,20 @@ async def delete_document(doc_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/ask")
+async def ask_rag_endpoint(body: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Queries the RAG Engine with LLaMA 3.1 & Qdrant grounded clinical citations.
+    """
+    query = body.get("query", "").strip()
+    if not query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+    try:
+        engine = get_rag_engine()
+        if engine is not None:
+            return engine.ask(query)
+        raise HTTPException(status_code=503, detail="RAG Engine unavailable.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
