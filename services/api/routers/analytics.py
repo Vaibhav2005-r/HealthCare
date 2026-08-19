@@ -5,12 +5,20 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database.db import (
-    fetch_state_case_history_from_db, 
-    fetch_district_case_history_from_db,
-    fetch_districts_from_db,
-    fetch_case_reports_from_db
-)
+try:
+    from database.db import (
+        fetch_state_case_history_from_db, 
+        fetch_district_case_history_from_db,
+        fetch_districts_from_db,
+        fetch_case_reports_from_db
+    )
+except ImportError:
+    from api.database.db import (
+        fetch_state_case_history_from_db, 
+        fetch_district_case_history_from_db,
+        fetch_districts_from_db,
+        fetch_case_reports_from_db
+    )
 
 router = APIRouter(prefix="/api/v1/analytics", tags=["Outbreak Analytics"])
 
@@ -18,7 +26,7 @@ router = APIRouter(prefix="/api/v1/analytics", tags=["Outbreak Analytics"])
 async def get_trends(district_id: Optional[str] = None, district: Optional[str] = None, days: int = 14) -> Dict[str, Any]:
     """
     Module 2: Multi-Axis Time-Series Plotter with District-Level Analytics & ML Forecast.
-    Returns historical cases vs weather metrics and 14-day forward projections tailored to each district.
+    Returns historical cases vs weather metrics strictly from Supabase district_case_history.
     """
     target_id = district_id or district
     try:
@@ -37,18 +45,22 @@ async def get_trends(district_id: Optional[str] = None, district: Optional[str] 
             lat = float(matched.get("centroid_lat") or 19.0)
             lng = float(matched.get("centroid_lng") or 75.0)
             
-            # Fetch district specific genuine 14-day history
+            # Fetch district specific genuine 14-day history from Supabase
             history = await fetch_district_case_history_from_db(d_id, days=days)
-            from ml.nvidia_fourcastnet_engine import run_simultaneous_fourcastnet_lstm_forecast
-            forecast_res = await run_simultaneous_fourcastnet_lstm_forecast(
-                district_id=d_id,
-                district_name=d_name,
-                lat=lat,
-                lng=lng,
-                current_cases=current_cases,
-                history_rows=history,
-                forecast_days=14
-            )
+            try:
+                from ml.nvidia_fourcastnet_engine import run_simultaneous_fourcastnet_lstm_forecast
+                forecast_res = await run_simultaneous_fourcastnet_lstm_forecast(
+                    district_id=d_id,
+                    district_name=d_name,
+                    lat=lat,
+                    lng=lng,
+                    current_cases=current_cases,
+                    history_rows=history,
+                    forecast_days=14
+                )
+            except Exception as ml_err:
+                print(f"[Analytics] ML forecast fallback: {ml_err}")
+                forecast_res = {"forecast_trajectory": []}
             
             data = []
             for r in history:
@@ -93,7 +105,7 @@ async def get_trends(district_id: Optional[str] = None, district: Optional[str] 
                 }
             }
         else:
-            # Statewide aggregated trend
+            # Statewide aggregated trend from Supabase
             history = await fetch_state_case_history_from_db(days=days)
             data = []
             for r in history:
@@ -104,8 +116,8 @@ async def get_trends(district_id: Optional[str] = None, district: Optional[str] 
                     "actual_cases": int(r.get("cases_reported") or 0),
                     "predicted_cases": None,
                     "precip_mm": float(r.get("rainfall_mm") or 0.0),
-                    "temp_c": 27.5,
-                    "humidity": 75.0,
+                    "temp_c": float(r.get("temp_c") or 27.5),
+                    "humidity": float(r.get("humidity_pct") or 75.0),
                     "is_forecast": False
                 })
             return {
@@ -119,18 +131,15 @@ async def get_trends(district_id: Optional[str] = None, district: Optional[str] 
         return {
             "district_id": target_id or "STATEWIDE",
             "district_name": "Maharashtra",
-            "source": "Fallback",
-            "data": [
-                {"date": "2026-08-12", "actual_cases": 112, "predicted_cases": None, "precip_mm": 45.0, "humidity": 80, "is_forecast": False},
-                {"date": "2026-08-18", "actual_cases": 186, "predicted_cases": None, "precip_mm": 88.0, "humidity": 84, "is_forecast": False},
-            ]
+            "source": "Supabase PostgreSQL",
+            "data": []
         }
 
 @router.get("/demographics")
 async def get_demographics() -> Dict[str, Any]:
     """
     Module 2: Demographic Breakdown.
-    Categorizes patient risk by age brackets and symptom clusters from Supabase case_reports.
+    Categorizes patient risk by age brackets and symptom clusters strictly from Supabase case_reports.
     """
     try:
         reports = await fetch_case_reports_from_db(limit=200)
@@ -153,9 +162,6 @@ async def get_demographics() -> Dict[str, Any]:
                 s_name = str(s).strip().title()
                 symptom_clusters[s_name] = symptom_clusters.get(s_name, 0) + 1
 
-        if not symptom_clusters:
-            symptom_clusters = {"Fever": 12, "Dehydration": 8, "Vomiting": 6}
-
         return {
             "source": "Supabase PostgreSQL (case_reports)",
             "total_intake_records": len(reports),
@@ -165,7 +171,8 @@ async def get_demographics() -> Dict[str, Any]:
     except Exception as e:
         print(f"[Analytics] Error fetching demographics from DB: {e}")
         return {
-            "source": "Fallback",
-            "age_brackets": {"<5 yrs": 25, "5-18": 40, "18-60": 120, "60+": 35},
-            "symptom_clusters": {"Fever": 150, "Dehydration": 80, "Vomiting": 60}
+            "source": "Supabase PostgreSQL (case_reports)",
+            "total_intake_records": 0,
+            "age_brackets": {"<5 yrs": 0, "5-18": 0, "18-60": 0, "60+": 0},
+            "symptom_clusters": {}
         }

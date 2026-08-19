@@ -15,7 +15,7 @@ import {
   BedDouble,
   Radio
 } from 'lucide-react';
-import { fetchInventory } from '@/lib/api';
+import { fetchInventory, triggerBroadcast } from '@/lib/api';
 import { useSupabaseRealtime } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -95,17 +95,12 @@ export default function ResourceManagementPage() {
   const handleBroadcast = async (centerName: string, district: string) => {
     setBroadcastingTo(centerName);
     try {
-      const res = await fetch('http://localhost:8001/api/v1/resources/broadcast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          target_village: `${centerName} (${district})`,
-          message: 'CRITICAL SUPPLY DEFICIT: Emergency supply kits and medical team dispatched.'
-        })
-      });
-      const data = await res.json();
+      const data = await triggerBroadcast(
+        `${centerName} (${district})`,
+        'CRITICAL SUPPLY DEFICIT: Emergency supply kits and medical team dispatched.'
+      );
       toast.success(`Emergency alert dispatched to ${centerName} medical staff!`, {
-        description: data.detail || 'WhatsApp / SMS broadcast queued via Twilio.',
+        description: data.detail || 'Emergency broadcast queued for PHC staff.',
         icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
       });
     } catch (err) {

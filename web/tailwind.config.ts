@@ -1,9 +1,7 @@
 import type { Config } from 'tailwindcss';
-import { tailwindPreset } from '../shared/design-tokens/src/tailwind-preset';
 
 const config: Config = {
   darkMode: ['class'],
-  presets: [tailwindPreset as any],
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -99,4 +97,3 @@ const config: Config = {
 };
 
 export default config;
-

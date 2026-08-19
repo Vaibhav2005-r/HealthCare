@@ -14,4 +14,5 @@ scikit-learn>=1.4.0
 torch
 langchain-nvidia-ai-endpoints>=0.1.0
 pypdf>=5.0.0
+qdrant-client>=1.9.0
 twilio>=9.0.4

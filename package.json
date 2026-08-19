@@ -13,10 +13,6 @@
     "mobile": "npm run start --workspace=mobile",
     "typecheck": "npm run typecheck --workspaces --if-present"
   },
-  "dependencies": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
-  },
   "devDependencies": {
     "typescript": "^5.4.5"
   }

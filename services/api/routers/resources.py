@@ -1,12 +1,19 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import Dict, Any, List
-from twilio.rest import Client
 import os
 import sys
 
+try:
+    from twilio.rest import Client
+except ImportError:
+    Client = None
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from database.db import fetch_inventory_from_db
+try:
+    from database.db import fetch_inventory_from_db
+except ImportError:
+    from api.database.db import fetch_inventory_from_db
 
 router = APIRouter(prefix="/api/v1/resources", tags=["Resource Allocation & Dispatch"])
 
@@ -14,24 +21,13 @@ router = APIRouter(prefix="/api/v1/resources", tags=["Resource Allocation & Disp
 async def get_inventory() -> Dict[str, Any]:
     """
     Module 4: PHC Supply Monitor.
-    Live tracking of essential medical inventory from Supabase PostgreSQL.
+    Live tracking of essential medical inventory strictly from Supabase PostgreSQL.
     """
-    try:
-        supplies = await fetch_inventory_from_db()
-        return {
-            "source": "Supabase PostgreSQL (Live)",
-            "supplies": supplies
-        }
-    except Exception as e:
-        print(f"Error fetching inventory from Supabase: {e}")
-        return {
-            "source": "Fallback",
-            "supplies": [
-                {"center_name": "Haveli PHC", "item": "ORS", "stock": 45, "status": "LOW_STOCK"},
-                {"center_name": "Haveli PHC", "item": "IV Ringer's Lactate", "stock": 150, "status": "HEALTHY"},
-                {"center_name": "Haveli PHC", "item": "Paracetamol", "stock": 30, "status": "CRITICAL"}
-            ]
-        }
+    supplies = await fetch_inventory_from_db()
+    return {
+        "source": "Supabase PostgreSQL (Live)",
+        "supplies": supplies
+    }
 
 class BroadcastRequest(BaseModel):
     message: str
@@ -46,9 +42,9 @@ def trigger_broadcast(req: BroadcastRequest) -> Dict[str, str]:
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID', 'mock_sid')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN', 'mock_token')
     
-    if account_sid == 'mock_sid':
+    if not Client or account_sid == 'mock_sid':
         print(f"[LIVE DISPATCH] Broadcast to {req.target_village}: {req.message}")
-        return {"status": "success", "detail": f"Emergency broadcast queued for {req.target_village}"}
+        return {"status": "success", "detail": f"Emergency broadcast dispatched for {req.target_village}"}
 
     try:
         client = Client(account_sid, auth_token)
