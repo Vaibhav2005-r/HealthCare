@@ -107,6 +107,22 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
   const pieColors = ['#C2255C', '#C6362C', '#E8901A', '#146356'];
   const chartData: FourCastNetForecastItem[] = simultaneousForecast?.forecast_trajectory || [];
 
+  const formatPathogenShortName = (name: string): string => {
+    if (!name) return 'Dengue';
+    const lower = name.toLowerCase();
+    if (lower.includes('dengue')) return 'Dengue';
+    if (lower.includes('cholera')) return 'Cholera';
+    if (lower.includes('malaria')) return 'Malaria';
+    if (lower.includes('chikungunya')) return 'Chikungunya';
+    if (lower.includes('hepatitis')) return 'Hepatitis';
+    if (lower.includes('diarrh')) return 'Diarrhea';
+    if (lower.includes('encephalitis') || lower.includes('aes')) return 'AES';
+    if (lower.includes('leptospirosis')) return 'Lepto';
+    if (lower.includes('gastro')) return 'Gastro';
+    if (lower.includes('influenza') || lower.includes('ili')) return 'Influenza';
+    return name.length > 12 ? `${name.substring(0, 10)}..` : name;
+  };
+
   return (
     <div className="space-y-6">
       {/* Real-time Weather Strip */}
@@ -335,15 +351,15 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </div>
             <p className="text-xs text-[#5B6663] mb-3">Statewide etiology from verified ASHA test strips.</p>
 
-            <div className="h-40 sm:h-44 w-full relative flex items-center justify-center my-1">
+            <div className="h-44 w-full relative flex items-center justify-center my-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={diseaseBreakdown}
                     cx="50%"
                     cy="50%"
-                    innerRadius={46}
-                    outerRadius={68}
+                    innerRadius={50}
+                    outerRadius={72}
                     paddingAngle={3}
                     dataKey="cases"
                   >
@@ -358,29 +374,34 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                       borderRadius: '8px', 
                       border: '1px solid #E2E8F0', 
                       fontSize: '11px',
-                      padding: '6px 10px'
+                      padding: '6px 10px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                     }} 
                   />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-base font-mono font-bold text-[#1D2321]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-1">
+                <span className="text-sm sm:text-base font-mono font-bold text-[#1D2321] leading-none">
                   {diseaseBreakdown[0]?.pct || 36.5}%
                 </span>
-                <span className="text-[9px] font-bold text-[#C2255C] uppercase">
-                  {diseaseBreakdown[0]?.disease || 'Dengue'}
+                <span 
+                  className="text-[9px] font-bold text-[#C2255C] uppercase tracking-wider text-center max-w-[76px] truncate leading-tight mt-1 px-0.5" 
+                  title={diseaseBreakdown[0]?.disease || 'Dengue'}
+                >
+                  {formatPathogenShortName(diseaseBreakdown[0]?.disease || 'Dengue')}
                 </span>
+                <span className="text-[8px] text-[#5B6663] font-medium leading-none mt-0.5">Top Share</span>
               </div>
             </div>
 
-            <div className="space-y-2 mt-3">
+            <div className="space-y-2 mt-3 max-h-[160px] overflow-y-auto pr-1">
               {diseaseBreakdown.slice(0, 5).map((item, idx) => (
-                <div key={item.disease} className="flex items-center justify-between text-xs py-1 border-b border-[#E2E8F0]/50 last:border-0">
-                  <div className="flex items-center gap-2">
+                <div key={item.disease} className="flex items-center justify-between text-xs py-1 border-b border-[#E2E8F0]/50 last:border-0 gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[idx % pieColors.length] }} />
-                    <span className="font-medium text-[#1D2321] truncate max-w-[170px]">{item.disease}</span>
+                    <span className="font-medium text-[#1D2321] truncate" title={item.disease}>{item.disease}</span>
                   </div>
-                  <div className="flex items-center gap-2 font-mono">
+                  <div className="flex items-center gap-1.5 font-mono shrink-0">
                     <span className="font-bold text-[#1D2321]">{item.cases}</span>
                     <span className="text-[#5B6663] text-[10px]">({item.pct}%)</span>
                   </div>
