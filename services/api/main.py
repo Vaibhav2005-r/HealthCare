@@ -101,12 +101,13 @@ def load_ml_models():
             scaler.fit(df[features].values)
             print("MinMaxScaler fitted on outbreak_time_series.csv.")
             
-        if os.path.exists(model_path):
+        if os.path.exists(model_path) and torch is not None:
             lstm_model = OutbreakForecastLSTM(input_size=4, hidden_size=32, num_layers=2, output_size=1)
             lstm_model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
             lstm_model.eval()
             print("PyTorch LSTM Outbreak Forecast Model loaded successfully.")
     except Exception as e:
+        lstm_model = None
         print(f"Warning: Could not initialize LSTM model: {e}")
 
 OFFLINE_SYNC_DATABASE_PATH = Path(
@@ -326,7 +327,7 @@ async def refresh_district_telemetry():
                     # -------------------------------------------------------------
                     # LSTM NEURAL NETWORK INFERENCE & CALIBRATED RISK SCORING
                     # -------------------------------------------------------------
-                    if lstm_model and scaler:
+                    if torch is not None and lstm_model and scaler:
                         # 1. QUERY REAL 14-DAY OBSERVATION HISTORY FROM SUPABASE:
                         history_rows = await fetch_district_case_history_from_db(did, days=14)
                         
