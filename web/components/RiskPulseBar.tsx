@@ -25,9 +25,9 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
   const critPct = ((pulse.critical_count / total) * 100).toFixed(1);
 
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
+    <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
       {/* Header with Title and Current Filter state */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-[#5B6663]">
             Signature Surveillance Element
@@ -40,8 +40,8 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
 
         <div className="flex items-center gap-2">
           {activeFilter !== 'ALL' ? (
-            <div className="flex items-center gap-1.5 bg-[#F6F5F2] border border-[#C2255C]/30 text-[#C2255C] px-2.5 py-1 rounded-full text-xs font-semibold">
-              <Filter className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 bg-[#F6F5F2] border border-[#C2255C]/30 text-[#C2255C] px-3 py-1 rounded-full text-xs font-semibold">
+              <Filter className="w-3.5 h-3.5" />
               <span>Filtered by: <strong>{activeFilter} RISK</strong></span>
               <button 
                 onClick={() => onSelectFilter('ALL')}
@@ -49,7 +49,7 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
                 title="Clear filter"
                 aria-label="Clear active risk filter"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
@@ -62,7 +62,7 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
 
       {/* Stacked Interactive Bar */}
       <div 
-        className="w-full h-7 rounded-lg overflow-hidden flex bg-[#EAE8E3] cursor-pointer shadow-inner p-0.5 gap-0.5 border border-[#E2E8F0]"
+        className="w-full h-8 rounded-lg overflow-hidden flex bg-[#EAE8E3] cursor-pointer shadow-inner p-1 gap-1 border border-[#E2E8F0]"
         role="group"
         aria-label="Filter districts by risk level"
       >
@@ -71,14 +71,14 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
           <button
             onClick={() => onSelectFilter(activeFilter === 'CRITICAL' ? 'ALL' : 'CRITICAL')}
             style={{ width: `${critPct}%` }}
-            className={`h-full bg-[#8B0000] text-white flex items-center justify-center transition-all relative overflow-hidden group ${
+            className={`h-full bg-[#8B0000] text-white flex items-center justify-center transition-all relative overflow-hidden rounded group ${
               activeFilter === 'CRITICAL' ? 'ring-2 ring-white scale-[1.02] z-10 shadow-lg' : 'opacity-90 hover:opacity-100'
             }`}
             title={`Critical Risk: ${pulse.critical_count} districts (${critPct}%)`}
             aria-pressed={activeFilter === 'CRITICAL'}
           >
             <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-[length:12px_12px] opacity-40 animate-[pulse_2s_infinite]" />
-            <span className="relative z-10 text-[11px] font-mono font-bold tracking-tight px-1 truncate">
+            <span className="relative z-10 text-[11px] font-mono font-bold tracking-tight px-1.5 truncate">
               {pulse.critical_count} CRITICAL
             </span>
           </button>
@@ -89,13 +89,13 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
           <button
             onClick={() => onSelectFilter(activeFilter === 'HIGH' ? 'ALL' : 'HIGH')}
             style={{ width: `${highPct}%` }}
-            className={`h-full bg-[#C6362C] text-white flex items-center justify-center transition-all group ${
+            className={`h-full bg-[#C6362C] text-white flex items-center justify-center transition-all rounded group ${
               activeFilter === 'HIGH' ? 'ring-2 ring-white scale-[1.02] z-10 shadow-lg' : 'opacity-90 hover:opacity-100'
             }`}
             title={`High Risk: ${pulse.high_count} districts (${highPct}%)`}
             aria-pressed={activeFilter === 'HIGH'}
           >
-            <span className="text-[11px] font-mono font-bold tracking-tight px-1 truncate">
+            <span className="text-[11px] font-mono font-bold tracking-tight px-1.5 truncate">
               {pulse.high_count} HIGH
             </span>
           </button>
@@ -106,13 +106,13 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
           <button
             onClick={() => onSelectFilter(activeFilter === 'MODERATE' ? 'ALL' : 'MODERATE')}
             style={{ width: `${modPct}%` }}
-            className={`h-full bg-[#E8901A] text-white flex items-center justify-center transition-all group ${
+            className={`h-full bg-[#E8901A] text-white flex items-center justify-center transition-all rounded group ${
               activeFilter === 'MODERATE' ? 'ring-2 ring-white scale-[1.02] z-10 shadow-lg' : 'opacity-90 hover:opacity-100'
             }`}
             title={`Moderate Risk: ${pulse.moderate_count} districts (${modPct}%)`}
             aria-pressed={activeFilter === 'MODERATE'}
           >
-            <span className="text-[11px] font-mono font-bold tracking-tight px-1 truncate text-[#1D2321]">
+            <span className="text-[11px] font-mono font-bold tracking-tight px-1.5 truncate text-[#1D2321]">
               {pulse.moderate_count} MODERATE
             </span>
           </button>
@@ -123,13 +123,13 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
           <button
             onClick={() => onSelectFilter(activeFilter === 'LOW' ? 'ALL' : 'LOW')}
             style={{ width: `${lowPct}%` }}
-            className={`h-full bg-[#146356] text-white flex items-center justify-center transition-all group ${
+            className={`h-full bg-[#146356] text-white flex items-center justify-center transition-all rounded group ${
               activeFilter === 'LOW' ? 'ring-2 ring-white scale-[1.02] z-10 shadow-lg' : 'opacity-90 hover:opacity-100'
             }`}
             title={`Low Risk: ${pulse.low_count} districts (${lowPct}%)`}
             aria-pressed={activeFilter === 'LOW'}
           >
-            <span className="text-[11px] font-mono font-bold tracking-tight px-1 truncate">
+            <span className="text-[11px] font-mono font-bold tracking-tight px-1.5 truncate">
               {pulse.low_count} LOW
             </span>
           </button>
@@ -137,11 +137,11 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
       </div>
 
       {/* Summary Stat Pills Under Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-3 pt-3 border-t border-[#E2E8F0]/60">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4 pt-3.5 border-t border-[#E2E8F0]">
         {/* All Filter Pill */}
         <button
           onClick={() => onSelectFilter('ALL')}
-          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             activeFilter === 'ALL'
               ? 'bg-[#F6F5F2] border-[#C2255C] shadow-sm ring-1 ring-[#C2255C]'
               : 'bg-white border-[#E2E8F0] hover:bg-[#F6F5F2]'
@@ -157,14 +157,14 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
         {/* Critical Filter Pill */}
         <button
           onClick={() => onSelectFilter(activeFilter === 'CRITICAL' ? 'ALL' : 'CRITICAL')}
-          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             activeFilter === 'CRITICAL'
               ? 'bg-red-50 border-[#8B0000] shadow-sm ring-1 ring-[#8B0000]'
               : 'bg-white border-[#E2E8F0] hover:bg-red-50/40'
           }`}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#8B0000] animate-pulse" />
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#8B0000] animate-pulse" />
             <div>
               <div className="text-[10px] font-bold text-[#8B0000] uppercase">Critical</div>
               <div className="text-sm font-mono font-bold text-[#8B0000]">{pulse.critical_count} Districts</div>
@@ -176,14 +176,14 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
         {/* High Filter Pill */}
         <button
           onClick={() => onSelectFilter(activeFilter === 'HIGH' ? 'ALL' : 'HIGH')}
-          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             activeFilter === 'HIGH'
               ? 'bg-red-50/60 border-[#C6362C] shadow-sm ring-1 ring-[#C6362C]'
               : 'bg-white border-[#E2E8F0] hover:bg-red-50/30'
           }`}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#C6362C]" />
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#C6362C]" />
             <div>
               <div className="text-[10px] font-bold text-[#C6362C] uppercase">High</div>
               <div className="text-sm font-mono font-bold text-[#C6362C]">{pulse.high_count} Districts</div>
@@ -195,14 +195,14 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
         {/* Moderate Filter Pill */}
         <button
           onClick={() => onSelectFilter(activeFilter === 'MODERATE' ? 'ALL' : 'MODERATE')}
-          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             activeFilter === 'MODERATE'
               ? 'bg-amber-50 border-[#E8901A] shadow-sm ring-1 ring-[#E8901A]'
               : 'bg-white border-[#E2E8F0] hover:bg-amber-50/40'
           }`}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#E8901A]" />
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#E8901A]" />
             <div>
               <div className="text-[10px] font-bold text-[#E8901A] uppercase">Moderate</div>
               <div className="text-sm font-mono font-bold text-[#1D2321]">{pulse.moderate_count} Districts</div>
@@ -214,14 +214,14 @@ export function RiskPulseBar({ pulse, activeFilter, onSelectFilter }: RiskPulseB
         {/* Low Filter Pill */}
         <button
           onClick={() => onSelectFilter(activeFilter === 'LOW' ? 'ALL' : 'LOW')}
-          className={`flex items-center justify-between p-2 rounded-lg border text-left transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             activeFilter === 'LOW'
               ? 'bg-emerald-50 border-[#146356] shadow-sm ring-1 ring-[#146356]'
               : 'bg-white border-[#E2E8F0] hover:bg-emerald-50/40'
           }`}
         >
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#146356]" />
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#146356]" />
             <div>
               <div className="text-[10px] font-bold text-[#146356] uppercase">Low / Normal</div>
               <div className="text-sm font-mono font-bold text-[#146356]">{pulse.low_count} Districts</div>

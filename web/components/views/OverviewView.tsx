@@ -113,29 +113,29 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
       <WeatherWidget />
 
       {/* 1. Top KPI Summary Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* Total Monitored Districts */}
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5B6663] uppercase tracking-wider">
               {t('overview.monitored_districts')}
             </span>
             <Building2 className="w-4 h-4 text-[#5B6663]" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-3 mb-1 flex items-baseline gap-2">
             <span className="text-3xl font-mono font-bold text-[#1D2321]">
               {summary.total_monitored_districts}
             </span>
             <span className="text-xs text-[#5B6663] font-medium">{t('overview.districts_active')}</span>
           </div>
-          <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
+          <div className="mt-3 pt-2.5 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
             <span>{t('overview.coverage')}</span>
             <span className="font-mono text-[#146356] font-semibold">{t('overview.synced')}</span>
           </div>
         </div>
 
         {/* High & Critical Outbreaks */}
-        <div className="bg-white border-l-4 border-l-[#C6362C] border-[#E2E8F0] rounded-xl p-4 shadow-sm relative overflow-hidden">
+        <div className="bg-white border-l-4 border-l-[#C6362C] border-[#E2E8F0] rounded-xl p-5 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#C6362C] uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#C6362C] animate-pulse" />
@@ -143,15 +143,15 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </span>
             <AlertTriangle className="w-4 h-4 text-[#C6362C]" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-3 mb-1 flex items-baseline gap-2">
             <span className="text-3xl font-mono font-bold text-[#C6362C]">
               {summary.high_critical_districts}
             </span>
-            <span className="text-xs font-bold text-[#C6362C] bg-red-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold text-[#C6362C] bg-red-50 px-2.5 py-0.5 rounded-full border border-red-200">
               {t('overview.dho_action')}
             </span>
           </div>
-          <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
+          <div className="mt-3 pt-2.5 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
             <span>{t('overview.clusters')}</span>
             <button 
               onClick={() => onNavigateTab('alerts')}
@@ -163,42 +163,44 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
         </div>
 
         {/* 7-Day Net Case Delta */}
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5B6663] uppercase tracking-wider">
               {t('overview.case_velocity')}
             </span>
             <Activity className="w-4 h-4 text-[#E8901A]" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-3 mb-1 flex items-baseline gap-2">
             <span className="text-3xl font-mono font-bold text-[#1D2321]">
               {summary.case_delta_7d_pct}
             </span>
-            <span className="text-xs font-bold text-[#E8901A] flex items-center">
+            <span className="text-xs font-bold text-[#E8901A] flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
               <ArrowUpRight className="w-3.5 h-3.5" /> {t('overview.vs_prev_week')}
             </span>
           </div>
-          <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
+          <div className="mt-3 pt-2.5 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
             <span>Trajectory:</span>
             <span className="font-mono text-[#E8901A] font-semibold">Accelerating +14.8%</span>
           </div>
         </div>
 
         {/* Active Frontline ASHA Workers */}
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5B6663] uppercase tracking-wider">
               {t('overview.asha_telemetry')}
             </span>
             <Users className="w-4 h-4 text-[#146356]" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-3 mb-1 flex items-baseline gap-2">
             <span className="text-3xl font-mono font-bold text-[#1D2321]">
               {(summary.active_asha_workers || 4392).toLocaleString()}
             </span>
-            <span className="text-xs text-[#146356] font-semibold">Online</span>
+            <span className="text-xs text-[#146356] font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              Online
+            </span>
           </div>
-          <div className="mt-2 pt-2 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
+          <div className="mt-3 pt-2.5 border-t border-[#E2E8F0]/60 flex items-center justify-between text-xs text-[#5B6663]">
             <span>Mesh Status:</span>
             <span className="text-[#146356] font-semibold">Connected to Supabase</span>
           </div>
@@ -206,20 +208,20 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
       </div>
 
       {/* Meteorological Early Warning Advisory Banner */}
-      <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-white border border-blue-200/80 rounded-xl p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-50 text-[#1A5F7A] border border-blue-200">
+      <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/60 to-white border border-blue-200/80 rounded-xl p-4.5 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-lg bg-blue-50 text-[#1A5F7A] border border-blue-200 shrink-0">
             <Radio className="w-4 h-4 text-blue-600 animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1A5F7A] bg-blue-100/60 px-1.5 py-0.5 rounded">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#1A5F7A] bg-blue-100/60 px-2 py-0.5 rounded">
                 Live IMD Feed (AWS Network)
               </span>
-              <span className="text-xs text-[#5B6663]">•</span>
+              <span className="text-xs text-[#5B6663] hidden sm:inline">•</span>
               <span className="text-xs font-bold text-[#1D2321]">Active Monsoon Surge Across Maharashtra</span>
             </div>
-            <p className="text-[11px] text-[#5B6663] mt-0.5">
+            <p className="text-xs text-[#5B6663] mt-1">
               36 Automatic Weather Stations streaming hourly precipitation, relative humidity, and vector gestation multipliers.
             </p>
           </div>
@@ -227,7 +229,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
 
         <button
           onClick={() => onNavigateTab('imd' as any)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[#F6F5F2] text-[#1A5F7A] border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 self-start md:self-auto"
+          className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#F6F5F2] text-[#1A5F7A] border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 self-start md:self-auto"
         >
           <CloudRain className="w-3.5 h-3.5" />
           <span>Inspect IMD Radar & AWS Matrix &rarr;</span>
@@ -235,14 +237,14 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
       </div>
 
       {/* 2. HERO SECTION: NVIDIA FourCastNet + PyTorch LSTM Simultaneous Forecast */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column (8 cols): Cascaded Weather & Disease Forecast Engine */}
-        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 shadow-sm">
+        <div className="lg:col-span-8 bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6 shadow-sm">
           
           {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <span className="flex items-center gap-1 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#76B900]/15 text-[#2E7D32] border border-[#76B900]/30">
                   <Cpu className="w-3 h-3 text-[#76B900]" />
                   NVIDIA FourCastNet + LSTM
@@ -250,8 +252,8 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                 <span className="text-xs text-[#5B6663]">•</span>
                 <span className="text-xs font-mono text-[#5B6663]">0.25° NWP Mesh</span>
               </div>
-              <h2 className="text-base font-extrabold text-[#1D2321] flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-[#C2255C]" />
+              <h2 className="text-base font-extrabold text-[#1D2321] flex items-center gap-2">
+                <TrendingUp className="w-4.5 h-4.5 text-[#C2255C]" />
                 14-Day Simultaneous Weather & Outbreak Trajectory
               </h2>
             </div>
@@ -273,7 +275,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
           </div>
 
           {/* Compact Architecture & Legend Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-3 py-2 px-3 mb-3 bg-[#F6F5F2] rounded-lg border border-[#E2E8F0] text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 py-2.5 px-3.5 mb-4 bg-[#F6F5F2] rounded-lg border border-[#E2E8F0] text-xs">
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <span className="w-4 h-0.5 border-t-2 border-dashed border-[#C6362C]" />
@@ -291,10 +293,10 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </span>
           </div>
 
-          {/* Moderate-Sized Chart Canvas with Zero Unwanted Whitespace */}
-          <div className="h-56 sm:h-60 w-full mt-1">
+          {/* Chart Canvas */}
+          <div className="h-60 sm:h-64 w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={chartData} margin={{ top: 8, right: 10, left: -15, bottom: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 8, right: 12, left: -12, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#5B6663', fontWeight: 600 }} axisLine={{ stroke: '#E2E8F0' }} tickLine={false} />
                 <YAxis yAxisId="left" domain={[0, 'auto']} tick={{ fontSize: 10, fill: '#5B6663' }} axisLine={false} tickLine={false} label={{ value: 'Cases', angle: -90, position: 'insideLeft', offset: 20, fontSize: 10, fill: '#5B6663' }} />
@@ -323,25 +325,25 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
         </div>
 
         {/* Right Column (4 cols): Suspected Pathogen Share */}
-        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-3">
+        <div className="lg:col-span-4 bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6 shadow-sm flex flex-col justify-between gap-4">
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <h2 className="text-sm sm:text-base font-bold text-[#1D2321]">Suspected Pathogens</h2>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#F6F5F2] text-[#5B6663]">
+            <div className="flex items-center justify-between mb-1.5">
+              <h2 className="text-base font-bold text-[#1D2321]">Suspected Pathogens</h2>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#F6F5F2] text-[#5B6663] border border-[#E2E8F0]">
                 {summary.active_cases_total} Total
               </span>
             </div>
-            <p className="text-xs text-[#5B6663] mb-2.5">Statewide etiology from verified ASHA test strips.</p>
+            <p className="text-xs text-[#5B6663] mb-3">Statewide etiology from verified ASHA test strips.</p>
 
-            <div className="h-36 sm:h-40 w-full relative flex items-center justify-center">
+            <div className="h-40 sm:h-44 w-full relative flex items-center justify-center my-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={diseaseBreakdown}
                     cx="50%"
                     cy="50%"
-                    innerRadius={42}
-                    outerRadius={62}
+                    innerRadius={46}
+                    outerRadius={68}
                     paddingAngle={3}
                     dataKey="cases"
                   >
@@ -355,8 +357,9 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                       backgroundColor: '#FFFFFF', 
                       borderRadius: '8px', 
                       border: '1px solid #E2E8F0', 
-                      fontSize: '11px' 
-                    }}
+                      fontSize: '11px',
+                      padding: '6px 10px'
+                    }} 
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -370,12 +373,12 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
               </div>
             </div>
 
-            <div className="space-y-1.5 mt-2">
-              {diseaseBreakdown.map((item, idx) => (
-                <div key={item.disease} className="flex items-center justify-between text-xs py-0.5 border-b border-[#E2E8F0]/40 last:border-0">
+            <div className="space-y-2 mt-3">
+              {diseaseBreakdown.slice(0, 5).map((item, idx) => (
+                <div key={item.disease} className="flex items-center justify-between text-xs py-1 border-b border-[#E2E8F0]/50 last:border-0">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: pieColors[idx % pieColors.length] }} />
-                    <span className="font-medium text-[#1D2321]">{item.disease}</span>
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: pieColors[idx % pieColors.length] }} />
+                    <span className="font-medium text-[#1D2321] truncate max-w-[170px]">{item.disease}</span>
                   </div>
                   <div className="flex items-center gap-2 font-mono">
                     <span className="font-bold text-[#1D2321]">{item.cases}</span>
@@ -386,13 +389,13 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[#E2E8F0]">
+          <div className="pt-3.5 border-t border-[#E2E8F0]">
             <button
               onClick={() => onNavigateTab('rag')}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] rounded-lg text-xs font-semibold border border-[#E2E8F0] transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-[#F6F5F2] hover:bg-[#EAE8E3] text-[#1D2321] rounded-lg text-xs font-semibold border border-[#E2E8F0] transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C2255C]" />
-              <span>Query AI Clinical Protocols for Dengue</span>
+              <span>Query AI Clinical Protocols</span>
             </button>
           </div>
         </div>
@@ -401,12 +404,12 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
       {/* 3. LOWER SECTION: Maharashtra Outbreak Matrix & Mini-GIS Preview */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left (7 cols): District Outbreak Leaderboard */}
-        <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+        {/* Left (7 cols): District Outbreak Priority Leaderboard */}
+        <div className="lg:col-span-7 bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-bold text-[#1D2321]">District Outbreak Priority Leaderboard</h2>
-              <p className="text-xs text-[#5B6663] mt-0.5">Ranked by real-time epidemiological composite risk index</p>
+              <p className="text-xs text-[#5B6663] mt-1">Ranked by real-time epidemiological composite risk index</p>
             </div>
             <button
               onClick={() => onNavigateTab('districts')}
@@ -416,7 +419,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </button>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 mt-3">
             {filteredDistricts.map((dist, idx) => {
               const isCritical = dist.risk_level === 'CRITICAL';
               const isHigh = dist.risk_level === 'HIGH';
@@ -431,20 +434,20 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                 <div 
                   key={dist.district_id}
                   onClick={() => onSelectDistrict(dist)}
-                  className="p-3 rounded-lg border border-[#E2E8F0] hover:border-[#C2255C]/40 hover:bg-[#F6F5F2]/50 transition-all cursor-pointer flex items-center justify-between"
+                  className="p-3.5 rounded-lg border border-[#E2E8F0] hover:border-[#C2255C]/40 hover:bg-[#F6F5F2]/50 transition-all cursor-pointer flex items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-[#5B6663] w-4">
+                  <div className="flex items-center gap-3.5">
+                    <span className="font-mono text-xs font-bold text-[#5B6663] w-5">
                       #{idx + 1}
                     </span>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-sm text-[#1D2321]">{dist.name}</span>
-                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded border ${badgeBg}`}>
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${badgeBg}`}>
                           {dist.risk_level}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-[#5B6663] mt-0.5">
+                      <div className="flex items-center gap-3 text-xs text-[#5B6663] mt-1">
                         <span className="flex items-center gap-1">
                           <Droplets className="w-3 h-3 text-[#1A5F7A]" />
                           {dist.rainfall_mm}mm rain
@@ -455,11 +458,11 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
                     </div>
                   </div>
 
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     <div className="font-mono text-base font-bold text-[#1D2321]">
                       {dist.active_cases} <span className="text-xs text-[#5B6663] font-normal">cases</span>
                     </div>
-                    <div className="flex items-center justify-end gap-1 text-xs">
+                    <div className="flex items-center justify-end gap-1 text-xs mt-0.5">
                       <span className="text-[#5B6663] text-[10px]">Risk:</span>
                       <span className="font-mono font-bold text-[#C2255C]">{(dist.risk_score * 100).toFixed(0)}%</span>
                       {dist.trend_7d === 'UP' && <ArrowUpRight className="w-3 h-3 text-[#C6362C]" />}
@@ -474,12 +477,12 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
         </div>
 
         {/* Right (5 cols): Spatial Heatmap Quick View */}
-        <div className="lg:col-span-5 bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-white border border-[#E2E8F0] rounded-xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-3">
               <div>
                 <h2 className="text-base font-bold text-[#1D2321]">Spatial Outbreak Risk Preview</h2>
-                <p className="text-xs text-[#5B6663] mt-0.5">Live GIS transmission intensity map</p>
+                <p className="text-xs text-[#5B6663] mt-1">Live GIS transmission intensity map</p>
               </div>
               <button
                 onClick={() => onNavigateTab('heatmap')}
@@ -489,7 +492,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
               </button>
             </div>
 
-            <div className="h-64 w-full rounded-lg overflow-hidden border border-[#E2E8F0] my-2 relative">
+            <div className="h-64 w-full rounded-lg overflow-hidden border border-[#E2E8F0] my-3 relative">
               <CompactMap 
                 districts={data.top_at_risk} 
                 selectedDistrictId={undefined}
@@ -498,7 +501,7 @@ export function OverviewView({ data, districts, activeFilter, onNavigateTab, onS
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-between text-xs text-[#5B6663]">
+          <div className="pt-3.5 border-t border-[#E2E8F0] flex items-center justify-between text-xs text-[#5B6663]">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#146356] animate-pulse" />
               Leaflet WebGL Engine

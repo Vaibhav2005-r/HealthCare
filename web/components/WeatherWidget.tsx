@@ -112,18 +112,18 @@ export function WeatherWidget({ initialDistrict = 'pune' }: { initialDistrict?: 
   const vectorRisk = getVectorRisk();
 
   return (
-    <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm relative overflow-hidden">
+    <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm relative overflow-hidden">
       {/* Background Decorative Gradient */}
       <div className="absolute -top-6 -right-6 w-24 h-24 bg-blue-100/60 rounded-full blur-2xl pointer-events-none" />
 
       {/* Top District Selector & Status */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3.5 relative z-10">
-        <div className="flex items-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5 text-[#C2255C]" />
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-[#C2255C]" />
           <select
             value={selectedKey}
             onChange={(e) => setSelectedKey(e.target.value)}
-            className="text-xs font-extrabold text-[#1D2321] bg-[#F6F5F2] hover:bg-[#EAE8E3] border border-[#E2E8F0] rounded-lg px-2 py-1 outline-none cursor-pointer transition-colors"
+            className="text-xs font-extrabold text-[#1D2321] bg-[#F6F5F2] hover:bg-[#EAE8E3] border border-[#E2E8F0] rounded-lg px-2.5 py-1.5 outline-none cursor-pointer transition-colors shadow-2xs"
             aria-label="Select Weather Surveillance District"
           >
             <option value="pune">Pune District</option>
@@ -135,17 +135,17 @@ export function WeatherWidget({ initialDistrict = 'pune' }: { initialDistrict?: 
             <option value="mumbai">Mumbai Suburban</option>
             <option value="satara">Satara District</option>
           </select>
-          <span className="text-[10px] text-[#5B6663] hidden sm:inline">• Live IMD Feed ({lastUpdated})</span>
+          <span className="text-xs text-[#5B6663] hidden sm:inline">• Live IMD Feed ({lastUpdated})</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {weather && (
-            <span className="flex items-center gap-1 bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full text-[10px] font-bold">
+            <span className="flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-full text-xs font-bold">
               {getWeatherIcon(weather.weatherCode)}
               <span>{getWeatherLabel(weather.weatherCode)}</span>
             </span>
           )}
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${vectorRisk.color}`}>
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${vectorRisk.color}`}>
             {vectorRisk.label}
           </span>
         </div>
@@ -153,49 +153,55 @@ export function WeatherWidget({ initialDistrict = 'pune' }: { initialDistrict?: 
 
       {/* Weather Metrics Grid */}
       {loading || !weather ? (
-        <div className="py-4 flex items-center justify-center gap-2 text-xs text-[#5B6663] animate-pulse">
-          <div className="w-3.5 h-3.5 border-2 border-[#C2255C] border-t-transparent rounded-full animate-spin" />
+        <div className="py-5 flex items-center justify-center gap-2 text-xs text-[#5B6663] animate-pulse">
+          <div className="w-4 h-4 border-2 border-[#C2255C] border-t-transparent rounded-full animate-spin" />
           <span>Syncing Real-time Satellite Telemetry...</span>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 relative z-10">
-          <div className="p-2 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-[#5B6663]">
-              <Thermometer className="w-3 h-3 text-amber-600" />
-              <span className="text-[10px] font-bold uppercase">Temperature</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 relative z-10">
+          <div className="p-3 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col justify-between gap-1">
+            <div className="flex items-center gap-1.5 text-[#5B6663]">
+              <Thermometer className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Temperature</span>
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-mono font-bold text-[#1D2321]">{weather.temp}°C</span>
-              <span className="text-[10px] text-[#5B6663]">(feels {weather.apparentTemp}°)</span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <span className="text-xl font-mono font-bold text-[#1D2321]">{weather.temp}°C</span>
+              <span className="text-xs text-[#5B6663]">(feels {weather.apparentTemp}°)</span>
             </div>
           </div>
           
-          <div className="p-2 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-[#5B6663]">
-              <Droplets className="w-3 h-3 text-blue-600" />
-              <span className="text-[10px] font-bold uppercase">Humidity</span>
+          <div className="p-3 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col justify-between gap-1">
+            <div className="flex items-center gap-1.5 text-[#5B6663]">
+              <Droplets className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Humidity</span>
             </div>
-            <span className="text-lg font-mono font-bold text-[#1D2321]">{weather.humidity}%</span>
+            <div className="mt-1">
+              <span className="text-xl font-mono font-bold text-[#1D2321]">{weather.humidity}%</span>
+            </div>
           </div>
 
-          <div className="p-2 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-[#5B6663]">
-              <Wind className="w-3 h-3 text-cyan-600" />
-              <span className="text-[10px] font-bold uppercase">Wind Speed</span>
+          <div className="p-3 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col justify-between gap-1">
+            <div className="flex items-center gap-1.5 text-[#5B6663]">
+              <Wind className="w-3.5 h-3.5 text-cyan-600" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Wind Speed</span>
             </div>
-            <span className="text-lg font-mono font-bold text-[#1D2321]">
-              {weather.windSpeed} <span className="text-xs text-[#5B6663]">km/h</span>
-            </span>
+            <div className="mt-1">
+              <span className="text-xl font-mono font-bold text-[#1D2321]">
+                {weather.windSpeed} <span className="text-xs text-[#5B6663] font-normal">km/h</span>
+              </span>
+            </div>
           </div>
 
-          <div className="p-2 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col gap-0.5">
-            <div className="flex items-center gap-1 text-[#5B6663]">
-              <CloudRain className="w-3 h-3 text-indigo-600" />
-              <span className="text-[10px] font-bold uppercase">Precipitation</span>
+          <div className="p-3 bg-[#F6F5F2]/60 border border-[#E2E8F0] rounded-lg flex flex-col justify-between gap-1">
+            <div className="flex items-center gap-1.5 text-[#5B6663]">
+              <CloudRain className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Precipitation</span>
             </div>
-            <span className="text-lg font-mono font-bold text-blue-700">
-              {weather.precipitation} <span className="text-xs text-[#5B6663]">mm</span>
-            </span>
+            <div className="mt-1">
+              <span className="text-xl font-mono font-bold text-blue-700">
+                {weather.precipitation} <span className="text-xs text-[#5B6663] font-normal">mm</span>
+              </span>
+            </div>
           </div>
         </div>
       )}

@@ -212,9 +212,9 @@ export function DistrictsView({
     : [];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Controls Bar: Search, Filters & Export */}
-      <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         
         {/* Search input */}
         <div className="relative flex-1 max-w-md">
@@ -224,7 +224,7 @@ export function DistrictsView({
             placeholder="Search district name, state, or disease..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[#F6F5F2] border border-[#E2E8F0] rounded-lg text-xs text-[#1D2321] focus:outline-none focus:ring-2 focus:ring-[#C2255C]/30"
+            className="w-full pl-9 pr-4 py-2.5 bg-[#F6F5F2] border border-[#E2E8F0] rounded-lg text-xs text-[#1D2321] focus:outline-none focus:ring-2 focus:ring-[#C2255C]/30"
           />
           {searchQuery && (
             <button 
@@ -237,11 +237,11 @@ export function DistrictsView({
         </div>
 
         {/* Quick Filter buttons & Export Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={exportCSV}
             disabled={isExporting}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F6F5F2] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#F6F5F2] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5 text-[#5B6663]" />
             <span>Export CSV</span>
@@ -250,7 +250,7 @@ export function DistrictsView({
           <button
             onClick={exportExcel}
             disabled={isExporting}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F6F5F2] text-[#146356] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#F6F5F2] text-[#146356] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-[#146356]" />
             <span>Excel (.xlsx)</span>

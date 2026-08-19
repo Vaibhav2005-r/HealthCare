@@ -93,21 +93,21 @@ export function ReportsView({ data, districts }: ReportsViewProps) {
   return (
     <div className="space-y-6">
       {/* Top Action Bar (hidden during printing) */}
-      <div className="no-print bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="no-print bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-bold text-[#1D2321] flex items-center gap-2">
             <FileText className="w-4 h-4 text-[#C2255C]" />
             Official Government Record & Governance Reports
           </h2>
-          <p className="text-xs text-[#5B6663]">
+          <p className="text-xs text-[#5B6663] mt-0.5">
             Format compliant with National Health Data Standards (NHDS) and IDSP Guidelines
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#1D2321] hover:bg-[#333D3A] text-white rounded-lg text-xs font-bold transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1D2321] hover:bg-[#333D3A] text-white rounded-lg text-xs font-bold transition-colors shadow-sm"
           >
             <Printer className="w-4 h-4 text-white" />
             <span>Print Official Bulletin (Grayscale Ready)</span>
@@ -116,7 +116,7 @@ export function ReportsView({ data, districts }: ReportsViewProps) {
           <button
             onClick={handleExportExcel}
             disabled={isExporting !== null}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F6F5F2] text-[#146356] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#F6F5F2] text-[#146356] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
             <span>Excel (.xlsx)</span>
@@ -125,7 +125,7 @@ export function ReportsView({ data, districts }: ReportsViewProps) {
           <button
             onClick={handleExportCSV}
             disabled={isExporting !== null}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#F6F5F2] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#F6F5F2] text-[#1D2321] border border-[#E2E8F0] rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5" />
             <span>CSV Snapshot</span>

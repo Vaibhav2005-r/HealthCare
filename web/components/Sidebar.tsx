@@ -98,7 +98,7 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
 
   const renderNavGroup = (title: string, items: typeof monitorItems) => (
     <div className="space-y-1">
-      <div className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#5B6663]">
+      <div className="px-3 pt-3.5 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#5B6663]">
         {title}
       </div>
       {items.map((item) => {
@@ -110,7 +110,7 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
           <button
             key={item.id}
             onClick={() => onTabChange(item.id)}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all group ${
+            className={`w-full flex items-center justify-between px-3.5 py-2 rounded-lg text-left transition-all group ${
               isActive
                 ? 'bg-[#F6F5F2] text-[#C2255C] font-bold border border-[#C2255C]/20 shadow-sm'
                 : 'text-[#1D2321] hover:bg-[#F6F5F2]/80 hover:text-[#1D2321]'
@@ -124,7 +124,7 @@ export function Sidebar({ activeTab, onTabChange, unacknowledgedAlertsCount = 2 
               </div>
               <div>
                 <div className="text-xs font-bold leading-tight">{item.label}</div>
-                <div className="text-[10px] font-normal text-[#5B6663] leading-tight">{item.desc}</div>
+                <div className="text-[10px] font-normal text-[#5B6663] leading-tight mt-0.5">{item.desc}</div>
               </div>
             </div>
 

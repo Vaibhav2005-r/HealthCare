@@ -61,18 +61,18 @@ export function HeatmapView({ districts, activeFilter, selectedDistrict, onSelec
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Top Map Controls Bar */}
-      <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
         
         {/* Temporal Time-Scrubber */}
         <div className="flex-1 max-w-xl">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#1D2321] flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#C2255C]" />
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#1D2321] flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-[#C2255C]" />
               Temporal Time-Scrubber:
             </span>
-            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#F6F5F2] border border-[#E2E8F0] text-[#C2255C]">
+            <span className="text-xs font-mono font-bold px-3 py-0.5 rounded-full bg-[#F6F5F2] border border-[#E2E8F0] text-[#C2255C]">
               {dayOffset === 0 ? 'Today (Live Observations)' : dayOffset < 0 ? `${Math.abs(dayOffset)} Days Ago (Historical)` : `+${dayOffset} Days (ML Forecast)`}
             </span>
           </div>
@@ -86,7 +86,7 @@ export function HeatmapView({ districts, activeFilter, selectedDistrict, onSelec
             className="w-full h-2 bg-[#EAE8E3] rounded-lg appearance-none cursor-pointer accent-[#C2255C]"
             aria-label="Temporal time scrubber slider"
           />
-          <div className="flex justify-between text-[10px] font-mono text-[#5B6663] mt-1">
+          <div className="flex justify-between text-[10px] font-mono text-[#5B6663] mt-1.5">
             <span>-30d History</span>
             <span className="font-bold text-[#1D2321]">Today (0)</span>
             <span>+14d Spatiotemporal Forecast</span>
@@ -95,12 +95,12 @@ export function HeatmapView({ districts, activeFilter, selectedDistrict, onSelec
 
         {/* GIS Layer Toggles */}
         <div className="flex items-center gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-[#E2E8F0]">
-          <span className="text-xs font-bold text-[#5B6663] flex items-center gap-1">
-            <Layers className="w-3.5 h-3.5" /> Layers:
+          <span className="text-xs font-bold text-[#5B6663] flex items-center gap-1.5">
+            <Layers className="w-4 h-4" /> Layers:
           </span>
           <button
             onClick={() => setShowRainfallLayer(!showRainfallLayer)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
               showRainfallLayer
                 ? 'bg-blue-50 border-blue-300 text-blue-800'
                 : 'bg-white border-[#E2E8F0] text-[#5B6663] opacity-60'
@@ -112,7 +112,7 @@ export function HeatmapView({ districts, activeFilter, selectedDistrict, onSelec
 
           <button
             onClick={() => setShowPHCLayer(!showPHCLayer)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
               showPHCLayer
                 ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
                 : 'bg-white border-[#E2E8F0] text-[#5B6663] opacity-60'
